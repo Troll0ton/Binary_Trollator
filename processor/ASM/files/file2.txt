@@ -1,0 +1,9 @@
+push 10
+push 1
+:13
+push 1
+add
+jae 13:
+add
+out
+hlt

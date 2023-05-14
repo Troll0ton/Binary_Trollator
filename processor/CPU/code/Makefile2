@@ -1,0 +1,14 @@
+CC=g++
+CFLAGS=-c -Wall
+IFLAGS=-I../../
+SOURCES=main.cpp CPU.cpp stack.cpp
+OBJECTS=$(SOURCES:.cpp=.o)
+EXECUTABLE=../../../cpu
+
+all: $(SOURCES) $(EXECUTABLE)
+	
+$(EXECUTABLE): $(OBJECTS) 
+	$(CC) $(IFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
+
+.cpp.o:
+	$(CC) $(IFLAGS) $(CFLAGS) $< -o $@

@@ -1,0 +1,216 @@
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 1000
+pop 
+push 18999
+
+dump
+out
+
+hlt

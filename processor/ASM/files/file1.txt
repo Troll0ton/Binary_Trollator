@@ -1,0 +1,12 @@
+push 11
+pop rbx
+
+push 777
+pop [rbx + 2]
+
+push [13]
+
+out
+
+hlt
+

@@ -1,0 +1,17 @@
+push 17
+push 1
+push 1
+add
+
+jae 13:
+push 10
+push 10
+push 10
+push 10
+
+:13
+dump
+
+add
+out
+hlt

@@ -1,0 +1,5 @@
+funct a (){
+scan(a)
+
+print(a+180)
+}

@@ -1,0 +1,19 @@
+funct a (){
+x=0
+y=0
+z=1
+
+if(x){
+y=1000
+}
+else if(y){
+x=2000
+}
+else if(z){
+z=777
+}
+
+print(x)
+print(y)
+print(z)
+}

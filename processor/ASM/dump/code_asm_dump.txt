@@ -1,0 +1,16 @@
+66 - size, bacafe - signature
+000001 - logic pos, 000016 - phys pos || 48
+000003 - logic pos, 000017 - phys pos || 34
+000003 - logic pos, 000025 - phys pos || 47
+000005 - logic pos, 000026 - phys pos || 65
+000005 - logic pos, 000034 - phys pos || 19
+000006 - logic pos, 000035 - phys pos || -94
+000008 - logic pos, 000036 - phys pos || 97
+000008 - logic pos, 000044 - phys pos || -95
+000010 - logic pos, 000045 - phys pos || 97
+000010 - logic pos, 000053 - phys pos || 33
+000012 - logic pos, 000054 - phys pos || 180
+000012 - logic pos, 000062 - phys pos || 3
+000013 - logic pos, 000063 - phys pos || 7
+000014 - logic pos, 000064 - phys pos || 17
+000015 - logic pos, 000065 - phys pos || 0

@@ -1,0 +1,15 @@
+call 13:
+
+out
+
+hlt
+
+:13
+
+push 100
+
+push 200
+
+add
+
+ret

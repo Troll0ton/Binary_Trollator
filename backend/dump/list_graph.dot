@@ -1,0 +1,35 @@
+digraph structs {    
+rankdir = TB;        
+graph [dpi = 200];   
+ranksep = 1.5;       
+edge[penwidth = 10]; 
+cell0 [style = filled, color = black, shape=record, 
+fillcolor = paleturquoise1, label = " { <ptr> TYPE: OPERATION (0) | FUNCTION} " ];                         
+cell1 [style = filled, color = black, shape=record, 
+fillcolor = darkolivegreen2, label = " { <ptr> TYPE: VARIABLE (0) | a} " ];                         
+cell2 [style = filled, color = black, shape=record, 
+fillcolor = paleturquoise1, label = " { <ptr> TYPE: OPERATION (0) | BODY} " ];                         
+cell3 [style = filled, color = black, shape=record, 
+fillcolor = paleturquoise1, label = " { <ptr> TYPE: OPERATION (0) | STATEMENT} " ];                         
+cell4 [style = filled, color = black, shape=record, 
+fillcolor = paleturquoise1, label = " { <ptr> TYPE: OPERATION (0) | scan} " ];                         
+cell5 [style = filled, color = black, shape=record, 
+fillcolor = darkolivegreen2, label = " { <ptr> TYPE: VARIABLE (0) | a} " ];                         
+cell6 [style = filled, color = black, shape=record, 
+fillcolor = paleturquoise1, label = " { <ptr> TYPE: OPERATION (0) | out} " ];                         
+cell7 [style = filled, color = black, shape=record, 
+fillcolor = paleturquoise1, label = " { <ptr> TYPE: OPERATION (0) | add} " ];                         
+cell8 [style = filled, color = black, shape=record, 
+fillcolor = darkolivegreen2, label = " { <ptr> TYPE: VARIABLE (0) | a} " ];                         
+cell9 [style = filled, color = black, shape=record, 
+fillcolor = coral2, label = " { <ptr> TYPE: NUMERIC (0) | 180} " ];                         
+cell0 -> cell1;
+cell0 -> cell2;
+cell2 -> cell3;
+cell3 -> cell4;
+cell4 -> cell5;
+cell3 -> cell6;
+cell6 -> cell7;
+cell7 -> cell8;
+cell7 -> cell9;
+}

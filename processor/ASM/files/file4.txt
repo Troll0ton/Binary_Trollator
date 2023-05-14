@@ -1,0 +1,39 @@
+push 200
+push 50
+dump
+add
+push 100
+sub
+dump
+push 100
+div
+dump
+push 20
+mul
+dump
+push 999
+pop [2]
+push [2]
+sub
+dump
+push 98
+pop rbx
+push rbx
+add
+dump
+push 99
+pop rax
+push rax
+add
+dump
+
+:2
+push 100
+add
+je 2:
+
+dump
+out
+
+hlt
+
