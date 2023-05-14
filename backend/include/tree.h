@@ -7,7 +7,7 @@
 
 #include "backend/include/lines_handle.h"
 #include "backend/include/input_output.h"
-#include "common/include/common.h"
+#include "COMMON/include/common.h"
 
 //-----------------------------------------------------------------------------
 

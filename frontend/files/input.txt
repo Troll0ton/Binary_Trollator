@@ -1,5 +1,42 @@
 funct a (){
 scan(a)
+scan(b)
+scan(c)
 
-print(a+180)
+D=b()
+
+if((D)>(0)) c()
+else if((D)~(0)) d()
+else if((D)<(0)) e()
+else print(123456)
+}
+
+
+funct b (){
+b*b-4*a*c
+}
+
+
+
+
+funct c (){
+x=(0-b+sqrt(D))/(2*a)
+y=(0-b-sqrt(D))/(2*a)
+
+print(x)
+print(y)
+}
+
+
+
+funct d (){
+x=(0-b)/(2*a)
+
+print(x)
+}
+
+
+
+funct e (){
+print(123456)
 }

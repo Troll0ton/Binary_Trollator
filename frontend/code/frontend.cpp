@@ -275,7 +275,7 @@ Node *get_math_funct (char **grammar, char *name)
     value val = { 0 };
 
     #define OP_DEF(op, op_name, asm_name, code, ...)    \
-    if(stricmp (name, op_name) == 0)                    \
+    if(strcmp (name, op_name) == 0)                    \
     {                                                   \
         right_node = get_brackets (grammar);            \
         INIT (new_node, op, 4);                         \
@@ -285,7 +285,7 @@ Node *get_math_funct (char **grammar, char *name)
 
     //-----------------------------------------------------------------------------
 
-    #include "common/include/codegen/op_def.h"
+    #include "COMMON/include/codegen/op_def.h"
 
     //-----------------------------------------------------------------------------
 

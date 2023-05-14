@@ -4,6 +4,8 @@
 
 int main (int argc, char *argv[])
 {
+    printf ("-- executing\n\n");
+
     Processor cpu = { 0 };
 
     if(processor_ctor (&cpu) == ERROR_CTOR)

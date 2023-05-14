@@ -103,7 +103,7 @@ bool simplify_const (Node *curr_node, Tree_info *info)
         {
             //-----------------------------------------------------------------------------
 
-            #include "common/include/codegen/op_def.h"
+            #include "COMMON/include/codegen/op_def.h"
 
             //-----------------------------------------------------------------------------
 

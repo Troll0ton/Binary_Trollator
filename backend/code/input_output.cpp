@@ -76,11 +76,16 @@ int get_num_of_strs (File *File_input)
 
 int get_file_size (FILE *file)
 {
-    struct stat file_stat = {0};
+    int file_size = 0;
 
-    fstat (fileno (file), &file_stat);
+    while (fgetc (file) != EOF)
+    {
+        file_size++;
+    }
 
-    return file_stat.st_size;
+    fseek (file, 0, SEEK_SET);
+
+    return file_size;
 }
 
 //-----------------------------------------------------------------------------

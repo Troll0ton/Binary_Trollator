@@ -4,11 +4,13 @@
 
 int main (int argc, char *argv[])
 {
+    printf ("-- assembling\n\n");
+
     Assembler Asm = { 0 };
 
     if(assembler_ctor (&Asm, argv) == ERROR_CTOR)
     {
-        printf ("----ERROR Asm----");
+        printf ("ERROR (while assembling)\n\n");
     }
 
     assembling (&Asm);

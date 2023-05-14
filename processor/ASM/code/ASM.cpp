@@ -165,7 +165,7 @@ void parse_cmd (Assembler *Asm, Command *cmd, Argument *arg)
 
         for(int num_cmd = 0; num_cmd < N(SUPPORTED_CMD); num_cmd++)
         {
-            if(stricmp (cmd_name, cmd_names[num_cmd]) == 0)
+            if(strcmp (cmd_name, cmd_names[num_cmd]) == 0)
             {
                 cmd->code = num_cmd;
                 cmd->is_label = true;
@@ -211,7 +211,7 @@ void parse_arg (Assembler *Asm, Command *cmd, Argument *arg)
 
         //-----------------------------------------------------------------------------
 
-        #include "COMMON/include/codegen/Asm_codegen.h"
+        #include "COMMON/include/codegen/asm_codegen.h"
 
         //-----------------------------------------------------------------------------
 

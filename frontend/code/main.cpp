@@ -5,6 +5,8 @@
 
 int main ()
 {
+    printf ("-- frontend working\n\n");
+
     Text_info text_info = { 0 };
     text_info_ctor (&text_info);
 
