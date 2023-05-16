@@ -1,5 +1,4 @@
 #include "binary_translator/include/IR-parser.h" 
-#include "binary_translator/include/common.h"
 
 //-----------------------------------------------------------------------------
 
@@ -136,13 +135,30 @@ void IrDump (Intrm_represent *intrm_repres)
     for(int i = 0; i < intrm_repres->size; i++)
     {
         fprintf (dump_file,
-                "- IR code %d\n"
-                "       - command:   %d\n"
+                "- IR code %d\n", i);
+
+        #define CMD_DEF(cmd, name, code, ...)       \
+        case cmd:                                   \
+        {                                           \
+            fprintf (dump_file,                     \
+                "       - command:   %s\n", name);  \
+            break;                                  \
+        }
+
+        switch(intrm_repres->buffer[i].command)
+        {
+            #include "processor/COMMON/include/codegen/codegen.h"
+
+            default:
+                fprintf (dump_file,
+                "       - NUL \n"  );
+                break;
+        }
+
+        fprintf (dump_file,
                 "       - imm_value: %d\n"
                 "       - reg_num:   %d\n"
                 "       - ram_flag:  %d\n",
-                i,
-                ir_code[i].command,
                 ir_code[i].imm_value,
                 ir_code[i].reg_num,
                 ir_code[i].ram_flag        );

@@ -9,37 +9,13 @@
 
 //-----------------------------------------------------------------------------
 
-#define Struct Processor
-#define Name   cpu
-
-//-----------------------------------------------------------------------------
-
-typedef double signature;
-typedef double elem_t;
-
-typedef unsigned int cmd_code;
-
-//-----------------------------------------------------------------------------
-
-#define DELETED_PAR -1
+#define DELETED_PAR 0xBADBED
 #define NOT_FOUND   -1
 
 //-----------------------------------------------------------------------------
 
 #define N(suffix)  NUM_OF_##suffix
 #define O(suffix)  OFFSET_##suffix
-
-//-----------------------------------------------------------------------------
-
-enum CMD_CODES
-{
-    #define CMD_DEF(cmd, ...) \
-    cmd,
-
-    #include "processor/COMMON/include/codegen/codegen.h"
-
-    #undef CMD_DEF
-};
 
 //-----------------------------------------------------------------------------
 
@@ -76,22 +52,6 @@ typedef struct Bin_code
     char *buffer;
     int   size;
 } Bin_code;
-
-//-----------------------------------------------------------------------------
-
-typedef struct Ir_code
-{
-    cmd_code command;
-    int  imm_value;
-    int  reg_num;
-    char ram_flag;
-} Ir_code;
-
-typedef struct Intrm_represent
-{
-    Ir_code *buffer;
-    int size;
-} Intrm_represent;
 
 //-----------------------------------------------------------------------------
 
