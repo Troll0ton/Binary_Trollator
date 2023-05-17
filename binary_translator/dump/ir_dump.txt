@@ -2,7 +2,7 @@
                        Intermediate Representation Dump                      
 -----------------------------------------------------------------------------
 
-- Intermediate Representation size: 4
+- Intermediate Representation size: 5
 
 - IR node 0
        - command:   push
@@ -10,16 +10,21 @@
        - imm_value: 100
        - ram_flag:  0
 - IR node 1
-       - command:   pop
+       - command:   push
        - reg_value: 0
-       - imm_value: 0
+       - imm_value: 200
        - ram_flag:  0
 - IR node 2
-       - command:   out
+       - command:   add
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 3
+       - command:   pop
+       - reg_value: 0
+       - imm_value: 0
+       - ram_flag:  0
+- IR node 4
        - command:   hlt
        - reg_value: 0
        - imm_value: 0

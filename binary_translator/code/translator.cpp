@@ -15,7 +15,7 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres)
 
     char *curr_pos = x86_represent->code;
 
-    emitCmd (&curr_pos, (char*) &X86_MOV_R10, 2 );
+    emitCmd (&curr_pos, (char*) &X86_MOV_R10, 2);
     emitAbsPtr (&curr_pos, (unsigned long long int) curr_pos);
 
     for(int i = 0; i < intrm_repres->size; i++)
@@ -26,10 +26,9 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres)
         case cmd:                         \
         {                                 \
             __VA_ARGS__                   \
-            break;                        \
         }
 
-        switch(intrm_repres->buffer[i].command)
+        switch(CURR_CMD.command)
         {
             #include "binary_translator/include/codegen/translations_x86.h"
 
@@ -52,9 +51,11 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres)
 
 void printLongLongInt ()
 {
-    printf ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n\n");
+    printf ("hello world\n\n");
 }
 
+//-----------------------------------------------------------------------------
+//                              EMITING
 //-----------------------------------------------------------------------------
 
 void emitCmd (char **code, char *cmd, int size)
@@ -91,6 +92,8 @@ void emitNum (char **code, long long int num)
     *code += 8;
 }
 
+//-----------------------------------------------------------------------------
+//                              RUNNING
 //-----------------------------------------------------------------------------
 
 void runCode (char *code, int size)
