@@ -1,145 +1,118 @@
 
-CMD_DEF(HLT, "hlt",
+CMD_EMIT(HLT, "hlt",
 {
-    cpu->is_stop = true; //0
+    
 })
 
-CMD_DEF(PUSH, "push",
+CMD_EMIT(PUSH, "push",
 {
-    stack_push (&cpu->Stk, arg_value); //1
+    emitCmd (&curr_pos, (char*) &X86_PUSH_RAX, 1);
 })
 
-CMD_DEF(POP, "pop",
+CMD_EMIT(POP, "pop",
 {
-    *curr_arg = stack_pop (&cpu->Stk); //2
+    emitCmd (&curr_pos, (char*) &X86_POP_RBX, 1); 
 })
 
-CMD_DEF(ADD, "add",
+CMD_EMIT(ADD, "add",
 {
-    stack_push (&cpu->Stk, stack_pop (&cpu->Stk) + stack_pop (&cpu->Stk)); //3
+    
 })
 
-CMD_DEF(SUB, "sub",
+CMD_EMIT(SUB, "sub",
 {
-    stack_push (&cpu->Stk, -(stack_pop (&cpu->Stk) - stack_pop (&cpu->Stk))); //4
+    
 })
 
-CMD_DEF(MUL, "mul",
+CMD_EMIT(MUL, "mul",
 {
-    stack_push (&cpu->Stk, stack_pop (&cpu->Stk) * stack_pop (&cpu->Stk)); //5
+   
 })
 
-CMD_DEF(DIV, "div",
+CMD_EMIT(DIV, "div",
 {
-    stack_push (&cpu->Stk, 1 / stack_pop (&cpu->Stk) * stack_pop (&cpu->Stk)); //6
+    
 })
 
-CMD_DEF(OUT, "out",
+CMD_EMIT(OUT, "out",
 {
-    double value = stack_pop (&cpu->Stk); //7
+    emitCmd (&curr_pos, (char*) &X86_PUSHA, 6);
 
-    if(value == POISON_STK)
-    {
-        printf ("not existed\n");
-    }
+    emitCmd (&curr_pos, (char*) &X86_CALL, 1);
+    uint32_t out_ptr = (uint64_t) printLongLongInt - (uint64_t)(curr_pos + 5);                              
+    emitPtr (&curr_pos, out_ptr);
 
-    else
-    {
-        printf ("result: %lg\n", value);
-    }
+    emitCmd (&curr_pos, (char*) &X86_POPA, 6);
+
 })
 
-CMD_DEF(DUMP, "dump", 
+CMD_EMIT(DUMP, "dump", 
 {
-    stack_dumps (&cpu->Stk, cpu->info.file_out); //8
+  
 })
 
-CMD_DEF(JBE, "jbe",
+CMD_EMIT(JBE, "jbe",
 {
-    CJMP(first_number <= second_number); //9
+  
 })
 
-CMD_DEF(JAE, "jae",
+CMD_EMIT(JAE, "jae",
 {
-    CJMP(first_number >= second_number); //10
+  
 })
 
-CMD_DEF(JA, "ja",
+CMD_EMIT(JA, "ja",
 {
-    CJMP(first_number > second_number); //11
+    
 })
 
-CMD_DEF(JB, "jb",
+CMD_EMIT(JB, "jb",
 {
-    CJMP(first_number < second_number); //12
+    
 })
 
-CMD_DEF(JE, "je",
+CMD_EMIT(JE, "je",
 {
-    CJMP(is_equal(first_number, second_number)); //13
+    
 })
 
-CMD_DEF(JNE, "jne",
+CMD_EMIT(JNE, "jne",
 {
-    CJMP(!is_equal(first_number, second_number)); //14
+    
 })
 
 
-CMD_DEF(JMP, "jmp",
+CMD_EMIT(JMP, "jmp",
 {
-    int pos_ch = arg_value; //15
-    curr_pos = pos_ch - 1;
+    
 })
 
-CMD_DEF(CALL, "call",
+CMD_EMIT(CALL, "call",
 {
-    stack_push (&cpu->Stk_call, ++curr_pos); //16
-
-    int pos_ch = arg_value;
-    curr_pos   = pos_ch - 1;
+    
 })
 
-CMD_DEF(RET, "ret",
+CMD_EMIT(RET, "ret",
 {
-    curr_pos = stack_pop (&cpu->Stk_call) - 1; //17
+    
 })
 
-CMD_DEF(SQRT, "sqrt",
+CMD_EMIT(SQRT, "sqrt",
 {
-    double value = stack_pop (&cpu->Stk); //18
-
-    if(value >= 0)
-    {
-        stack_push (&cpu->Stk, sqrt (value));
-    }
-
-    else
-    {
-        printf ("ERROR - sqrt below zero!\n");
-    }
+    
 })
 
-CMD_DEF(IN, "in",
+CMD_EMIT(IN, "in",
 {
-    printf("\nENTER YOUR NUMBER:\n"); //19
-
-    double value = 0;
-
-    scanf ("%lg", &value);
-
-    stack_push (&cpu->Stk, value);
+    
 })
 
-CMD_DEF(SIN, "sin",
+CMD_EMIT(SIN, "sin",
 {
-    double value = stack_pop (&cpu->Stk); //20
-
-    stack_push (&cpu->Stk, sin(value));
+   
 })
 
-CMD_DEF(COS, "cos",
+CMD_EMIT(COS, "cos",
 {
-    double value = stack_pop (&cpu->Stk); //21
-
-    stack_push (&cpu->Stk, cos(value));
+    
 })

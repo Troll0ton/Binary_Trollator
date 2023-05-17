@@ -9,9 +9,23 @@
 
 //-----------------------------------------------------------------------------
 
-void translateIrToX86 (Intrm_represent *intrm_repres);
+X86_represent *translateIrToX86 (Intrm_represent *intrm_repres);
 
-void runCode (char *buffer);
+void runCode (char *code, int size);
+
+void emitCmd (char **code, char *cmd, int size);
+
+void emitPtr (char **code, unsigned int addr);
+
+void emitAbsPtr (char **code, unsigned long long int addr);
+
+void emitNum (char **code, long long int num);
+
+void handleMprotextError (int mprotect_status);
+
+void Codex86Dump (char *code, int size);
+
+void printLongLongInt ();
 
 //-----------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall
 IFLAGS=-I../../
-SOURCES=main.cpp IR-parser.cpp
+SOURCES=main.cpp IR-parser.cpp translator.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=../../trollator
 

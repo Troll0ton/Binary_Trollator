@@ -26,7 +26,7 @@ Bin_code *readCodeFile (FILE *code_file)
         bin_code->buffer = (char*) calloc (bin_code->size, sizeof (char));
 
         *(elem_t*)(bin_code->buffer) = res_sum;
-        *(elem_t*)(bin_code->buffer + O(ARG)) = code_signature;
+        *(elem_t*)(bin_code->buffer + OFFSET_ARG) = code_signature;
 
         if(bin_code->buffer == NULL)
         {
@@ -84,11 +84,12 @@ void handleBinCode (Intrm_represent *intrm_repres, Bin_code *bin_code)
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
         int curr_cmd = bin_code->buffer[curr_pos];
+
         int offset = 0;
 
         if(curr_cmd & MASK_REG)
         {
-            ir_code[num_cmd].reg_num = (int) *(elem_t*)(bin_code->buffer + curr_pos + O(CMD));
+            ir_code[num_cmd].reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + O(CMD));
             offset += OFFSET_ARG;
         }
 
@@ -135,9 +136,9 @@ void IrDump (Intrm_represent *intrm_repres)
     for(int i = 0; i < intrm_repres->size; i++)
     {
         fprintf (dump_file,
-                "- IR code %d\n", i);
+                "- IR node %d\n", i);
 
-        #define CMD_DEF(cmd, name, code, ...)       \
+        #define CMD_DEF(cmd, name, ...)             \
         case cmd:                                   \
         {                                           \
             fprintf (dump_file,                     \
@@ -156,11 +157,11 @@ void IrDump (Intrm_represent *intrm_repres)
         }
 
         fprintf (dump_file,
+                "       - reg_value: %d\n"
                 "       - imm_value: %d\n"
-                "       - reg_num:   %d\n"
                 "       - ram_flag:  %d\n",
+                ir_code[i].reg_value,
                 ir_code[i].imm_value,
-                ir_code[i].reg_num,
                 ir_code[i].ram_flag        );
     }
 

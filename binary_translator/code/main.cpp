@@ -1,4 +1,5 @@
 #include "binary_translator/include/IR-parser.h"
+#include "binary_translator/include/translator.h"
 #include "binary_translator/include/common.h"
 
 //-----------------------------------------------------------------------------
@@ -14,6 +15,11 @@ int main ()
     IrDump (intrm_repres);
 
     fclose (code_file);
+
+    X86_represent *x86_represent = translateIrToX86 (intrm_repres);
+    Codex86Dump (x86_represent->code, x86_represent->size);
+
+    runCode (x86_represent->code, x86_represent->size);
 
     printf ("-- finishing\n\n");
 
