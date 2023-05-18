@@ -88,7 +88,7 @@ const uint32_t X86_ADDSD  = 0xC8580FF2; // addsd xmm1, xmm0
 const uint32_t X86_SUBSD  = 0xC85C0FF2; // subsd xmm1, xmm0
 const uint32_t X86_MULSD  = 0xC8590FF2; // mulsd xmm1, xmm0
 const uint32_t X86_DIVSD  = 0xC85E0FF2; // divsd xmm1, xmm0
-const uint32_t X86_SQRTPD = 0xC0510F66; // sqrtpd xmm0, xmm0
+const uint32_t X86_STPD = 0xC0510F66; // sqrtpd xmm0, xmm0
 
 //-----------------------------------------------------------------------------
 //                                 MOVES
@@ -131,11 +131,15 @@ typedef struct Ir_code
     int  bin_pos;
 } Ir_code;
 
+// IR
+
 typedef struct Intrm_represent
 {
     Ir_code *buffer;
     int size;
 } Intrm_represent;
+
+// IR_buffer
 
 typedef struct X86_represent
 {
@@ -143,6 +147,8 @@ typedef struct X86_represent
     char *prev_ptr;
     int size;
 } X86_represent;
+
+// X86_code
 
 typedef struct Jump_table
 {

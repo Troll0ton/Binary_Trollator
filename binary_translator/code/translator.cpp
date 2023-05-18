@@ -15,6 +15,9 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size)
 {
     printf ("-- emit commands\n\n");
 
+
+    // aligned_alloc 
+
     X86_represent *x86_represent = (X86_represent*) calloc (1, sizeof (X86_represent));
     x86_represent->code = (char*) calloc (intrm_repres->size * tmp_size + PAGESIZE - 1, sizeof (char));
     x86_represent->prev_ptr = x86_represent->code;
@@ -31,6 +34,8 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size)
                                     //        V        
     emitCmd (&curr_pos, (char*) &X86_MOV_R10, 2);
     emitAbsPtr (&curr_pos, (unsigned long long int) curr_pos);
+
+    // copyCmd
 
     for(int i = 0; i < intrm_repres->size; i++)
     {
@@ -85,7 +90,7 @@ void emitPtr (char **code, unsigned int addr)
 
 //-----------------------------------------------------------------------------
 
-void emitAbsPtr (char **code, unsigned long long int addr)
+void emitAbsPtr (char **code, unsigned long long addr)
 {
     memcpy (*code, &addr, size_abs_ptr);
 
@@ -122,6 +127,7 @@ void runCode (char *code, int size)
             "-- executing completed!\n\n");
 
     mprotect_status = mprotect (prev_ptr, size, PROT_READ | PROT_WRITE);
+    // perror("mprotect error:");
     handleMprotextError (mprotect_status);
 }
 
