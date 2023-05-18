@@ -1,6 +1,7 @@
 
 CMD_EMIT(HLT, "hlt",
 {
+    emitCmd (&curr_pos, (char*) &X86_RET, 1);
     break;
 })
 
@@ -8,10 +9,27 @@ CMD_EMIT(HLT, "hlt",
 
 CMD_EMIT(PUSH, "push",
 {
-    emitCmd (&curr_pos, (char*) &X86_MOV_R13, 2);  // mov r13, imm64
-    emitNum (&curr_pos, (long long int) num); 
+    if(!CURR_CMD.ram_flag)
+    {
+        emitCmd (&curr_pos, (char*) &X86_MOV_R13, 2);  // mov r13, imm64
+        emitNum (&curr_pos, (double) num); 
 
-    emitCmd (&curr_pos, (char*) &X86_PUSH_R13, 2); // push r13
+        if(CURR_CMD.reg_value)
+        {
+            uint32_t tmp_cmd = MASK_X86_ADD_R13_R_X | 
+                              (X86_ADD_R13_R_X[CURR_CMD.reg_value - 1] << X86_ADD_R13_R_X_OFFSET);
+
+            emitCmd (&curr_pos, (char*) &(tmp_cmd), 3); // add r13, r_x
+        }
+
+        emitCmd (&curr_pos, (char*) &X86_PUSH_R13, 2);  // push r13
+    }
+
+    else
+    {
+        //
+    }
+
     break;
 })
 
@@ -19,8 +37,15 @@ CMD_EMIT(PUSH, "push",
 
 CMD_EMIT(POP, "pop",
 {
-    emitCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);
+    if(!CURR_CMD.ram_flag)
+    {
+        uint32_t tmp_cmd = X86_POP_R_X[CURR_CMD.reg_value - 1];
+        emitCmd (&curr_pos, (char*) &(tmp_cmd), 1);
+    }
+
     break;
+
+    //emitCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);
 })
 
 //-----------------------------------------------------------------------------
@@ -73,13 +98,21 @@ CMD_EMIT(DIV, "div",
 
 CMD_EMIT(OUT, "out",
 {
+    emitCmd (&curr_pos, (char*) &X86_LEA_RDI_RSP, 4);
+
+    emitCmd (&curr_pos, (char*) &X86_PUSH_RBP, 1);
     emitCmd (&curr_pos, (char*) &X86_PUSHA, 6);
+    emitCmd (&curr_pos, (char*) &X86_MOV_RBP_RSP, 3);
 
     emitCmd (&curr_pos, (char*) &X86_CALL, 1);
-    uint32_t out_ptr = (uint64_t) printLongLongInt - (uint64_t)(curr_pos + 5);                              
+    uint32_t out_ptr = (uint64_t) double_printf - (uint64_t)(curr_pos + 4); 
     emitPtr (&curr_pos, out_ptr);
 
+    emitCmd (&curr_pos, (char*) &X86_MOV_RSP_RBP, 3);
     emitCmd (&curr_pos, (char*) &X86_POPA, 6);
+    emitCmd (&curr_pos, (char*) &X86_POP_RBP, 1);
+
+    emitCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);
     break;
 })
 
@@ -94,38 +127,31 @@ CMD_EMIT(DUMP, "dump",
 
 CMD_EMIT(JBE, "jbe",
 {
-    break;
+    // look for jmp
 })
-
-//-----------------------------------------------------------------------------
 
 CMD_EMIT(JAE, "jae",
 {
-    break;
+    // look for jmp
 })
-
-//-----------------------------------------------------------------------------
 
 CMD_EMIT(JA, "ja",
 {
-    break;
+    // look for jmp
 })
-
-//-----------------------------------------------------------------------------
 
 CMD_EMIT(JB, "jb",
 {
-    break;
+    // look for jmp
 })
-
-//-----------------------------------------------------------------------------
 
 CMD_EMIT(JE, "je",
 {
-    break; 
+    // look for jmp
 })
 
-//-----------------------------------------------------------------------------
+    //int pos_ch = arg_value; //15
+    //curr_pos = pos_ch - 1;
 
 CMD_EMIT(JNE, "jne",
 {
@@ -136,6 +162,9 @@ CMD_EMIT(JNE, "jne",
 
 CMD_EMIT(JMP, "jmp",
 {
+
+    //////////////////
+
     break;
 })
 
@@ -157,6 +186,9 @@ CMD_EMIT(RET, "ret",
 
 CMD_EMIT(SQRT, "sqrt",
 {
+    emitCmd (&curr_pos, (char*) &X86_MOV_XMM0_STK, 6);  // pop  xmm0
+    emitCmd (&curr_pos, (char*) &X86_SQRTPD, 4);        // sqrt xmm0
+    emitCmd (&curr_pos, (char*) &X86_MOV_STK_XMM0, 6);  // push xmm0  
     break;
 })
 
@@ -164,6 +196,7 @@ CMD_EMIT(SQRT, "sqrt",
 
 CMD_EMIT(IN, "in",
 {
+    //
     break;
 })
 
@@ -171,13 +204,15 @@ CMD_EMIT(IN, "in",
 
 CMD_EMIT(SIN, "sin",
 {
-   break;
+    //
+    break;
 })
 
 //-----------------------------------------------------------------------------
 
 CMD_EMIT(COS, "cos",
 {
+    //
     break;
 })
 

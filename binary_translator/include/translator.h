@@ -9,7 +9,17 @@
 
 //-----------------------------------------------------------------------------
 
-X86_represent *translateIrToX86 (Intrm_represent *intrm_repres);
+const uint32_t tmp_size = 20;
+
+//-----------------------------------------------------------------------------
+
+const uint32_t size_ptr = 4;
+const uint32_t size_abs_ptr = 8;
+const uint32_t size_num = 8;
+
+//-----------------------------------------------------------------------------
+
+X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size);
 
 void runCode (char *code, int size);
 
@@ -19,13 +29,15 @@ void emitPtr (char **code, unsigned int addr);
 
 void emitAbsPtr (char **code, unsigned long long int addr);
 
-void emitNum (char **code, long long int num);
+void emitNum (char **code, double num);
 
 void handleMprotextError (int mprotect_status);
 
 void Codex86Dump (char *code, int size);
 
-void printLongLongInt ();
+int double_printf (double *value);
+
+void X86RepresentDtor (X86_represent *x86_represent);
 
 //-----------------------------------------------------------------------------
 

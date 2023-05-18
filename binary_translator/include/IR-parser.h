@@ -19,6 +19,12 @@
 
 //-----------------------------------------------------------------------------
 
+#define IS_JUMP(i)                                                     \
+    (i == JMP) || (i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
+    (i == JA) || (i == JAE)
+
+//-----------------------------------------------------------------------------
+
 enum OFFSETS
 {
     OFFSET_CMD = 1,
@@ -47,14 +53,6 @@ enum BIT_MASKS
 
 //-----------------------------------------------------------------------------
 
-typedef struct Bin_code
-{
-    char *buffer;
-    int   size;
-} Bin_code;
-
-//-----------------------------------------------------------------------------
-
 Bin_code *readCodeFile (FILE *code_file);
 
 Intrm_represent *translateBinToIR (Bin_code *bin_code);
@@ -62,6 +60,10 @@ Intrm_represent *translateBinToIR (Bin_code *bin_code);
 void handleBinCode (Intrm_represent *intrm_repres, Bin_code *bin_code);
 
 void IrDump (Intrm_represent *intrm_repres);
+
+void IntrmRepresentDtor (Intrm_represent *intrm_repres);
+
+void BinCodeDtor (Bin_code *bin_code);
 
 //-----------------------------------------------------------------------------
 

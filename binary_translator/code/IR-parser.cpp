@@ -44,6 +44,7 @@ Bin_code *readCodeFile (FILE *code_file)
     }
 
     printf ("__________|WRONG SIGNATURE!|__________\n\n");
+    
     free (bin_code);
 
     return NULL;
@@ -58,17 +59,12 @@ Intrm_represent *translateBinToIR (Bin_code *bin_code)
     printf ("-- translating to Intermediate Representation\n\n");
 
     Intrm_represent *intrm_repres = (Intrm_represent*) calloc (1, sizeof (intrm_repres));
-    intrm_repres->buffer = (Ir_code*) calloc (bin_code->size, sizeof(Ir_code));
+    intrm_repres->buffer = (Ir_code*) calloc (bin_code->size, sizeof (Ir_code));
 
     printf ("-------- ir start size: %d\n\n", bin_code->size);
 
     handleBinCode (intrm_repres, bin_code);
-    /*
-    if(intrm_repres->size + 1 < bin_code->size)
-    {
-        ir_code = (Ir_code*) realloc (ir_code, intrm_repres->size + 1);    
-    }
-    */
+
     printf ("-------- ir final size: %d\n\n", intrm_repres->size + 1);
     printf ("-- successful translating\n\n");
 
@@ -84,18 +80,19 @@ void handleBinCode (Intrm_represent *intrm_repres, Bin_code *bin_code)
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
         int curr_cmd = bin_code->buffer[curr_pos];
+        ir_code[num_cmd].bin_pos = curr_pos; // here we input pos in our bin file
 
         int offset = 0;
 
         if(curr_cmd & MASK_REG)
         {
-            ir_code[num_cmd].reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + O(CMD));
+            ir_code[num_cmd].reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
             offset += OFFSET_ARG;
         }
 
         if(curr_cmd & MASK_IMM)
         {
-            ir_code[num_cmd].imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + O(CMD));
+            ir_code[num_cmd].imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
             offset += OFFSET_ARG;
         }
 
@@ -108,7 +105,8 @@ void handleBinCode (Intrm_represent *intrm_repres, Bin_code *bin_code)
 
         curr_pos += offset;
         curr_cmd &= MASK_CMD;
-        ir_code[num_cmd++].command = curr_cmd;
+        ir_code[num_cmd].command = curr_cmd;
+        num_cmd++;
     }
 
     intrm_repres->size = num_cmd;
@@ -171,5 +169,21 @@ void IrDump (Intrm_represent *intrm_repres)
 }
 
 #undef ir_code
+
+//-----------------------------------------------------------------------------
+
+void IntrmRepresentDtor (Intrm_represent *intrm_repres)
+{
+    free (intrm_repres->buffer);
+    intrm_repres->size = deleted;
+}
+
+//-----------------------------------------------------------------------------
+
+void BinCodeDtor (Bin_code *bin_code)
+{
+    free (bin_code->buffer);
+    bin_code->size = deleted;
+}
 
 //-----------------------------------------------------------------------------

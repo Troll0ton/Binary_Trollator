@@ -4,23 +4,39 @@
 
 #define CURR_CMD intrm_repres->buffer[i]
 
-X86_represent *translateIrToX86 (Intrm_represent *intrm_repres)
+int double_printf (double *value)
+{
+    return printf("%lg\n\n", *value);
+}
+
+//-----------------------------------------------------------------------------
+
+X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size)
 {
     printf ("-- emit commands\n\n");
 
     X86_represent *x86_represent = (X86_represent*) calloc (1, sizeof (X86_represent));
-    x86_represent->code = (char*) calloc (intrm_repres->size * 20 + PAGESIZE - 1, sizeof (char));
+    x86_represent->code = (char*) calloc (intrm_repres->size * tmp_size + PAGESIZE - 1, sizeof (char));
+    x86_represent->prev_ptr = x86_represent->code;
+
+    Jump_table jump_table = { 0 };
+    jump_table.x86_pos = (char**) calloc (bin_size, sizeof (char*));
     
+    // need to change allignment
     x86_represent->code = (char*)(((uint64_t) (x86_represent->code) + PAGESIZE - 1) & ~(PAGESIZE - 1));
 
     char *curr_pos = x86_represent->code;
-
+                                    // there and in other places - SIZE of command
+                                    //        |
+                                    //        V        
     emitCmd (&curr_pos, (char*) &X86_MOV_R10, 2);
     emitAbsPtr (&curr_pos, (unsigned long long int) curr_pos);
 
     for(int i = 0; i < intrm_repres->size; i++)
     {
         double num = (double) CURR_CMD.imm_value;
+
+        jump_table.x86_pos[CURR_CMD.bin_pos] = curr_pos;
 
         #define CMD_EMIT(cmd, code, ...)  \
         case cmd:                         \
@@ -48,13 +64,6 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres)
 #undef CURR_CMD
 
 //-----------------------------------------------------------------------------
-
-void printLongLongInt ()
-{
-    printf ("hello world\n\n");
-}
-
-//-----------------------------------------------------------------------------
 //                              EMITING
 //-----------------------------------------------------------------------------
 
@@ -69,27 +78,27 @@ void emitCmd (char **code, char *cmd, int size)
 
 void emitPtr (char **code, unsigned int addr)
 {
-    memcpy (*code, &addr, 4);
+    memcpy (*code, &addr, size_ptr);
 
-    *code += 4;
+    *code += size_ptr;
 }
 
 //-----------------------------------------------------------------------------
 
 void emitAbsPtr (char **code, unsigned long long int addr)
 {
-    memcpy (*code, &addr, 8);
+    memcpy (*code, &addr, size_abs_ptr);
 
-    *code += 8;
+    *code += size_abs_ptr;
 }
 
 //-----------------------------------------------------------------------------
 
-void emitNum (char **code, long long int num)
+void emitNum (char **code, double num)
 {
-    memcpy (*code, &num, 8);
+    memcpy (*code, &num, size_num);
 
-    *code += 8;
+    *code += size_num;
 }
 
 //-----------------------------------------------------------------------------
@@ -98,19 +107,21 @@ void emitNum (char **code, long long int num)
 
 void runCode (char *code, int size)
 {
-    printf ("-- executing\n\n");
-
-    printf ("--     execiting buffer size: %d\n\n", size);
-
     int mprotect_status = mprotect (code, size, PROT_READ | PROT_WRITE | PROT_EXEC);
     handleMprotextError (mprotect_status);
 
-    void (*execute_code)(void) = (void (*) (void))(code);
+    char *prev_ptr = code;
+
+    printf ("-- executing...       \n\n"
+            "o o o o o o o o o o o \n\n");
+
+    void (*execute_code) (void) = (void (*) (void)) (code);
     execute_code ();
 
-    printf ("-- translated code done\n\n");
+    printf ("o o o o o o o o o o o  \n\n"
+            "-- executing completed!\n\n");
 
-    mprotect_status = mprotect (code, size, PROT_READ | PROT_WRITE);
+    mprotect_status = mprotect (prev_ptr, size, PROT_READ | PROT_WRITE);
     handleMprotextError (mprotect_status);
 }
 
@@ -118,11 +129,11 @@ void runCode (char *code, int size)
 
 void handleMprotextError (int mprotect_status)
 {
-    if(mprotect_status == -1)
+    if(mprotect_status == mprotect_error)
     {
-        printf ("-- ERROR, mprotect\n\n");
-
-        printf ("-- pagesize: %d\n\n", PAGESIZE);
+        printf ("-- ERROR, mprotect\n\n"
+                "-- pagesize: %d\n\n", 
+                PAGESIZE                );
 
         printf ("-- ERROR CODES: %d - EINVAL\n"
                 "                %d - EFAULT\n"
@@ -147,7 +158,7 @@ void Codex86Dump (char *code, int size)
             "                          X86 TRANSLATED BIN CODE                            \n"
             "-----------------------------------------------------------------------------\n\n");
 
-    fprintf (dump_file, "- x86 translared code size: %d\n\n", size);
+    fprintf (dump_file, "- x86 translated code size: %d\n\n", size);
 
     for(int i = 0; i < size; i++)
     {
@@ -156,6 +167,16 @@ void Codex86Dump (char *code, int size)
     }
 
     fclose (dump_file);
+}
+
+//-----------------------------------------------------------------------------
+//                             CTORS AND DTORS
+//-----------------------------------------------------------------------------
+
+void X86RepresentDtor (X86_represent *x86_represent)
+{
+    free (x86_represent->prev_ptr);
+    x86_represent->size = deleted;
 }
 
 //-----------------------------------------------------------------------------
