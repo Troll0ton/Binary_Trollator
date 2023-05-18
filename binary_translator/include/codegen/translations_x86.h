@@ -8,7 +8,7 @@ CMD_EMIT(HLT, "hlt",
 
 CMD_EMIT(PUSH, "push",
 {
-    emitCmd (&curr_pos, (char*) &X86_MOV_R13, 2);        // mov r13, imm64
+    emitCmd (&curr_pos, (char*) &X86_MOV_R13, 2);  // mov r13, imm64
     emitNum (&curr_pos, (long long int) num); 
 
     emitCmd (&curr_pos, (char*) &X86_PUSH_R13, 2); // push r13
@@ -19,7 +19,7 @@ CMD_EMIT(PUSH, "push",
 
 CMD_EMIT(POP, "pop",
 {
-    emitCmd (&curr_pos, (char*) &X86_POP_RBX, 1); 
+    emitCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);
     break;
 })
 
@@ -64,8 +64,8 @@ CMD_EMIT(DIV, "div",
     }
     emitCmd (&curr_pos, sel_cmd, 4);                    // op xmm1, xmm0 -> xmm1
 
-    emitCmd (&curr_pos, (char*) &X86_MOV_STK_XMM1, 6);  // push xmm1
-    emitCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);        
+    emitCmd (&curr_pos, (char*) &X86_ADD_RSP, 4); 
+    emitCmd (&curr_pos, (char*) &X86_MOV_STK_XMM1, 6);  // push xmm1     
     break;
 })
 

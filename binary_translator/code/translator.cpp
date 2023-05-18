@@ -20,7 +20,7 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres)
 
     for(int i = 0; i < intrm_repres->size; i++)
     {
-        long long int num = CURR_CMD.imm_value;
+        double num = (double) CURR_CMD.imm_value;
 
         #define CMD_EMIT(cmd, code, ...)  \
         case cmd:                         \

@@ -68,10 +68,13 @@ const uint64_t X86_PUSHA = 0x505152535241;
 const uint64_t X86_POPA = 0x5A415B5A5958; 
                              
 const uint32_t X86_ADD_RSP = 0x08C48348; // add rsp, 8
+const uint32_t X86_SUB_RSP = 0x08EC8348; // sub rsp, 8
+const uint32_t X86_MOV_RBP_RSP = 0xE58948; // mov rbp, rsp
 
-const uint64_t X86_MOV_XMM0_STK = 0x082444100FF2; // movsd xmm0, [rsp+8]
-const uint64_t X86_MOV_XMM1_STK = 0x10244C100FF2; // movsd xmm1, [rsp+16]
-const uint64_t X86_MOV_STK_XMM1 = 0x10244CD60F66; // movq [rsp+16], xmm1
+const uint64_t X86_MOV_XMM0_STK = 0x002444100FF2; // movsd xmm0, [rsp]
+const uint64_t X86_MOV_XMM1_STK = 0x08244C100FF2; // movsd xmm1, [rsp+8]
+
+const uint64_t X86_MOV_STK_XMM1 = 0x00244C110FF2; // movq [rsp], xmm1
 
 //-----------------------------------------------------------------------------
 //                               SSE CODES
