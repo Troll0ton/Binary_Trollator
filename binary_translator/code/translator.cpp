@@ -253,7 +253,73 @@ void translateDump (IR_node *curr_node, char **curr_pos)
 
 void translateConditionalJmps (IR_node *curr_node, char **curr_pos)
 {
-    /// ? ? ? ?
+    // mov xmm0, [rsp]
+    // mov xmm1, [rsp+8]
+    // add rsp, 16
+    // ucomisd xmm0, xmm1
+    // j?? ptr
+
+    EMIT(movsd_xmm0_rsp, MOV_XMM_RSP | XMM0_MASK << BYTE(3), SIZE_MOV_XMM_RSP);
+    EMIT(movsd_xmm1_rsp_8, MOV_XMM_RSP | XMM1_MASK << BYTE(3) | (WORD_SIZE) << BYTE(5), SIZE_MOV_XMM_RSP);
+
+    EMIT(add_rsp_16, ADD_RSP | (WORD_SIZE * 2) << BYTE(3), SIZE_ADD_RSP);
+    EMIT(cmp_xmm0_xmm1, CMP_XMM0_XMM1, SIZE_CMP_XMM);
+
+    Opcode cond_jmp = {
+        .code = COND_JMP,
+        .size = SIZE_COND_JMP};
+        
+    writeCmd (curr_pos, (char*) &X86_MOV_XMM0_STK, 6); // pop xmm0
+    writeCmd (curr_pos, (char*) &X86_MOV_XMM1_STK, 6); // pop xmm1
+
+    char *sel_cmd = NULL;
+
+    switch(curr_node->command)
+    {
+        case JBE:
+            break;
+        case JAE:
+            break;
+        case JA:
+            break;
+        case JB:
+            break;
+        case JE:
+            break;
+        case JNE:
+            break;
+    }
+
+    switch (jmp_cmd->name)
+    {
+    case JE:
+        cond_jmp.code |= JE_MASK << BYTE(1);
+        break;
+    case JNE:
+        cond_jmp.code |= JNE_MASK << BYTE(1);
+        break;
+    case JG:
+        cond_jmp.code |= JG_MASK << BYTE(1);
+        break;
+    case JAE:
+        cond_jmp.code |= JAE_MASK << BYTE(1);
+        break;
+    case JGE:
+        cond_jmp.code |= JGE_MASK << BYTE(1);
+        break;
+    case JA:
+        cond_jmp.code |= JA_MASK << BYTE(1);
+        break;
+
+    default:
+        LOG("No such conditional jmp!\n");
+        break;
+    }
+
+    uint32_t rel_ptr = jmp_cmd->value - (jmp_cmd->x86_ip + 2 + sizeof(int) + 20);
+
+    WriteCmd(self, cond_jmp);
+    WritePtr(self, rel_ptr);
 }
 
 //-----------------------------------------------------------------------------
