@@ -21,18 +21,21 @@
 
 //-----------------------------------------------------------------------------
 
+#define N(suffix) NUM_OF_##suffix
+#define O(suffix) OFFSET_##suffix
+#define S(suffix) SIZE_OF_##suffix
+
+//-----------------------------------------------------------------------------
+
+static const int absence = 0xBEDBAD;
+static const int deleted = 0xDEDAC;
+static const int mprotect_error = -1;
+
+//-----------------------------------------------------------------------------
+
 typedef double signature;
 typedef double elem_t;
-typedef unsigned int cmd_code;
-
-//-----------------------------------------------------------------------------
-
-const int absence = 0xBEDBAD;
-const int deleted = 0xDEDAC;
-
-//-----------------------------------------------------------------------------
-
-const int mprotect_error = -1;
+typedef uint32_t cmd_code;
 
 //-----------------------------------------------------------------------------
 
@@ -47,10 +50,55 @@ enum CMD_CODES
 };
 
 //-----------------------------------------------------------------------------
-//                             STACK UTILS CODES
+
+enum X86_INFO
+{
+    SIZE_OF_PTR = 4,
+    SIZE_OF_ABS_PTR = 8,
+    SIZE_OF_NUM = 8,
+};
+
 //-----------------------------------------------------------------------------
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CRINGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+typedef struct Troll_code
+{
+    char *buffer;
+    int   size;
+} Troll_code;
+
+//-----------------------------------------------------------------------------
+
+typedef struct IR_node
+{
+    cmd_code command;
+    int  imm_value;
+    int  reg_value;
+    char ram_flag;
+    int  bin_pos;
+} IR_node;
+
+typedef struct IR
+{
+    IR_node *buffer;
+    int size;
+} IR;
+
+//-----------------------------------------------------------------------------
+
+typedef struct X86_code
+{
+    char *buffer;
+    int size;
+} X86_code;
+
+typedef struct Jump_table
+{
+    char **x86_pos;
+} Jump_table;
+
+//-----------------------------------------------------------------------------
+//                             STACK UTILS CODES
+//-----------------------------------------------------------------------------
 
 const uint32_t X86_PUSH_RAX = 0x50;
 const uint32_t X86_PUSH_R13 = 0x5541;
@@ -118,40 +166,5 @@ const uint32_t X86_ADD_R13_R_X[]  = {MASK_X86_ADD_R13_RAX,
 
 //-----------------------------------------------------------------------------
 
-typedef struct Bin_code
-{
-    char *buffer;
-    int   size;
-} Bin_code;
-
-typedef struct Ir_node
-{
-    cmd_code command;
-    int  imm_value;
-    int  reg_value;
-    char ram_flag;
-    int  bin_pos;
-} Ir_node;
-
-typedef struct IR
-{
-    Ir_node *buffer;
-    int size;
-} IR;
-
-typedef struct X86_code
-{
-    char *buffer;
-    int size;
-} X86_code;
-
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CRINGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-typedef struct Jump_table
-{
-    char **x86_pos;
-} Jump_table;
-
-//-----------------------------------------------------------------------------
 
 #endif //BT_COMMON_H

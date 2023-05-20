@@ -9,23 +9,6 @@
 
 //-----------------------------------------------------------------------------
 
-#define DELETED_PAR 0xBADBED
-#define NOT_FOUND   -1
-
-//-----------------------------------------------------------------------------
-
-#define N(suffix) NUM_OF_##suffix
-#define O(suffix) OFFSET_##suffix
-
-//-----------------------------------------------------------------------------
-
-//cringe
-#define IS_JUMP(i)                                                     \
-    (i == JMP) || (i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
-    (i == JA) || (i == JAE)
-
-//-----------------------------------------------------------------------------
-
 enum OFFSETS
 {
     OFFSET_CMD = 1,
@@ -54,17 +37,16 @@ enum BIT_MASKS
 
 //-----------------------------------------------------------------------------
 
-Bin_code *readCodeFile (FILE *code_file);
+Troll_code *readCodeFile (FILE *code_file);
 
-IR *translateBinToIR (Bin_code *bin_code);
+IR *translateBinToIr (Troll_code *bin_code);
+    void handleBinCode (IR *ir, Troll_code *bin_code);
 
-void handleBinCode (IR *intrm_repres, Bin_code *bin_code);
+void IrDump (IR *ir);
 
-void IrDump (IR *intrm_repres);
+void IrDtor (IR *ir);
 
-void IntrmRepresentDtor (IR *intrm_repres);
-
-void BinCodeDtor (Bin_code *bin_code);
+void BinCodeDtor (Troll_code *bin_code);
 
 //-----------------------------------------------------------------------------
 

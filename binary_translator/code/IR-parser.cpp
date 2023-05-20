@@ -2,11 +2,11 @@
 
 //-----------------------------------------------------------------------------
 
-Bin_code *readCodeFile (FILE *code_file)
+Troll_code *readCodeFile (FILE *code_file)
 {
     printf ("-- open the code.bin\n\n");
 
-    Bin_code *bin_code = (Bin_code*) calloc (1, sizeof (Bin_code));
+    Troll_code *bin_code = (Troll_code*) calloc (1, sizeof (Troll_code));
 
     elem_t code_signature = 0;
     elem_t res_sum        = 0;
@@ -16,7 +16,7 @@ Bin_code *readCodeFile (FILE *code_file)
 
     bin_code->size = res_sum;
 
-    printf ("-------- bin res sum: %d\n\n", bin_code->size);
+    printf ("-------- bin res sum: %d   \n\n", bin_code->size);
     printf ("-- code.bin SIGNATURE: %llx\n\n", code_signature);
 
     if(code_signature == SIGNATURE)
@@ -52,14 +52,14 @@ Bin_code *readCodeFile (FILE *code_file)
 
 //-----------------------------------------------------------------------------
 
-#define curr_node ir->buffer 
+#define curr_node ir->buffer[num_cmd]
 
-IR *translateBinToIR (Bin_code *bin_code)
+IR *translateBinToIr (Troll_code *bin_code)
 {
     printf ("-- translating to Intermediate Representation\n\n");
 
     IR *ir = (IR*) calloc (1, sizeof (IR));
-    ir->buffer = (Ir_node*) calloc (bin_code->size, sizeof (Ir_node));
+    ir->buffer = (IR_node*) calloc (bin_code->size, sizeof (IR_node));
 
     printf ("-------- ir start size: %d\n\n", bin_code->size);
 
@@ -73,40 +73,40 @@ IR *translateBinToIR (Bin_code *bin_code)
 
 //-----------------------------------------------------------------------------
 
-void handleBinCode (IR *ir, Bin_code *bin_code)
+void handleBinCode (IR *ir, Troll_code *bin_code)
 {
     int num_cmd = 0;
-
+                    // skip signature and result sum
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
         int curr_cmd = bin_code->buffer[curr_pos];
-        curr_node[num_cmd].bin_pos = curr_pos; // here we input pos in our bin file
+        curr_node.bin_pos = curr_pos; // here we input pos in our bin file
 
         int offset = 0;
 
         if(curr_cmd & MASK_REG)
         {
-            curr_node[num_cmd].reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
+            curr_node.reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
             offset += OFFSET_ARG;
         }
 
         if(curr_cmd & MASK_IMM)
         {
-            curr_node[num_cmd].imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
+            curr_node.imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
             offset += OFFSET_ARG;
         }
 
-        curr_node[num_cmd].ram_flag = 0;
+        curr_node.ram_flag = 0;
         
         if(curr_cmd & MASK_RAM)
         {
-            curr_node[num_cmd].ram_flag = 1;
+            curr_node.ram_flag = 1;
         }
 
         curr_pos += offset;
         curr_cmd &= MASK_CMD;
 
-        curr_node[num_cmd].command = curr_cmd;
+        curr_node.command = curr_cmd;
         num_cmd++;
     }
 
@@ -132,10 +132,10 @@ void IrDump (IR *ir)
     // to find out commands numeration check processor/COMMON/include/codegen/codegen.h
     //-----------------------------------------------------------------------------
 
-    for(int i = 0; i < ir->size; i++)
+    for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
     {
         fprintf (dump_file,
-                "- IR node %d\n", i);
+                "- IR node %d\n", num_cmd);
 
         #define CMD_DEF(cmd, name, ...)             \
         case cmd:                                   \
@@ -145,7 +145,7 @@ void IrDump (IR *ir)
             break;                                  \
         }
 
-        switch(ir->buffer[i].command)
+        switch(curr_node.command)
         {
             #include "processor/COMMON/include/codegen/codegen.h"
 
@@ -159,9 +159,9 @@ void IrDump (IR *ir)
                 "       - reg_value: %d\n"
                 "       - imm_value: %d\n"
                 "       - ram_flag:  %d\n",
-                curr_node[i].reg_value,
-                curr_node[i].imm_value,
-                curr_node[i].ram_flag        );
+                curr_node.reg_value,
+                curr_node.imm_value,
+                curr_node.ram_flag         );
     }
 
     printf ("-- successful dumping\n\n");
@@ -173,7 +173,7 @@ void IrDump (IR *ir)
 
 //-----------------------------------------------------------------------------
 
-void IntrmRepresentDtor (IR *ir)
+void IrDtor (IR *ir)
 {
     free (ir->buffer);
     ir->size = deleted;
@@ -181,7 +181,7 @@ void IntrmRepresentDtor (IR *ir)
 
 //-----------------------------------------------------------------------------
 
-void BinCodeDtor (Bin_code *bin_code)
+void BinCodeDtor (Troll_code *bin_code)
 {
     free (bin_code->buffer);
     bin_code->size = deleted;

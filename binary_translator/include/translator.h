@@ -9,33 +9,36 @@
 
 //-----------------------------------------------------------------------------
 
-const uint32_t tmp_size = 20;
+static const uint32_t tmp_size = 20;
 
 //-----------------------------------------------------------------------------
 
-const uint32_t size_ptr = 4;
-const uint32_t size_abs_ptr = 8;
-const uint32_t size_num = 8;
+X86_code *translateIrToX86 (IR *ir, int bin_size);
 
-//-----------------------------------------------------------------------------
+void translateCmd (IR_node *curr_node, char **curr_pos);
 
-X86_code *translateIrToX86 (IR *intrm_repres, int bin_size);
+    void translateHlt (IR_node *curr_node, char **curr_pos);
+    void translatePush (IR_node *curr_node, char **curr_pos);
+    void translatePop (IR_node *curr_node, char **curr_pos);
+    void translateArithmOperations (IR_node *curr_node, char **curr_pos);
+    void translateOut (IR_node *curr_node, char **curr_pos);
+    void translateDump (IR_node *curr_node, char **curr_pos);
+    void translateConditionalJmps (IR_node *curr_node, char **curr_pos);
+    void translateJmp (IR_node *curr_node, char **curr_pos);
+    void translateCall (IR_node *curr_node, char **curr_pos);
+    void translateRet (IR_node *curr_node, char **curr_pos);
+    void translateMathFunctions (IR_node *curr_node, char **curr_pos);
+
+    void writeCmd (char **code, char *cmd, int size);
+    void writePtr (char **code, uint32_t addr);
+    void writeAbsPtr (char **code, uint64_t addr);
+    void writeNum (char **code, double num);
+
+int double_printf (double *value);
 
 void runCode (char *code, int size);
 
-void writeCmd (char **code, char *cmd, int size);
-
-void writePtr (char **code, unsigned int addr);
-
-void writeAbsPtr (char **code, unsigned long long int addr);
-
-void writeNum (char **code, double num);
-
-void handleMprotextError (int mprotect_status);
-
-void Codex86Dump (char *code, int size);
-
-int double_printf (double *value);
+void CodeX86Dump (char *code, int size);
 
 void X86RepresentDtor (X86_code *X86_code);
 

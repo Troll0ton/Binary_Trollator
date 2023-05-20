@@ -10,22 +10,22 @@ int main ()
 
     FILE *code_file = fopen ("processor/COMMON/files/code.bin", "rb");
 
-    Bin_code *bin_code = readCodeFile (code_file);
+    Troll_code *bin_code = readCodeFile (code_file);
     int bin_size = bin_code->size;
     
-    IR *intrm_repres = translateBinToIR (bin_code);
-    IrDump (intrm_repres);
+    IR *ir = translateBinToIr (bin_code);
+    IrDump (ir);
 
     fclose (code_file);
 
-    X86_code *x86_code = translateIrToX86 (intrm_repres, bin_size);
-    Codex86Dump (x86_code->buffer, x86_code->size);
+    X86_code *x86_code = translateIrToX86 (ir, bin_size);
+    CodeX86Dump (x86_code->buffer, x86_code->size);
 
     runCode (x86_code->buffer, x86_code->size);
 
     BinCodeDtor (bin_code);
     X86RepresentDtor (x86_code);
-    IntrmRepresentDtor (intrm_repres);
+    IrDtor (ir);
 
     printf ("-- finishing\n\n");
 
