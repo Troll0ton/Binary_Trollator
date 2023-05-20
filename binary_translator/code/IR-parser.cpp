@@ -31,7 +31,7 @@ Bin_code *readCodeFile (FILE *code_file)
         if(bin_code->buffer == NULL)
         {
             printf ("__________|ERROR - NULL pointer code|__________\n\n");
-        }
+        } 
 
         fread (bin_code->buffer + OFFSET_CODE_SIGNATURE, 
                sizeof(char), 
@@ -52,69 +52,70 @@ Bin_code *readCodeFile (FILE *code_file)
 
 //-----------------------------------------------------------------------------
 
-#define ir_code intrm_repres->buffer 
+#define curr_node ir->buffer 
 
-Intrm_represent *translateBinToIR (Bin_code *bin_code)
+IR *translateBinToIR (Bin_code *bin_code)
 {
     printf ("-- translating to Intermediate Representation\n\n");
 
-    Intrm_represent *intrm_repres = (Intrm_represent*) calloc (1, sizeof (intrm_repres));
-    intrm_repres->buffer = (Ir_code*) calloc (bin_code->size, sizeof (Ir_code));
+    IR *ir = (IR*) calloc (1, sizeof (IR));
+    ir->buffer = (Ir_node*) calloc (bin_code->size, sizeof (Ir_node));
 
     printf ("-------- ir start size: %d\n\n", bin_code->size);
 
-    handleBinCode (intrm_repres, bin_code);
+    handleBinCode (ir, bin_code);
 
-    printf ("-------- ir final size: %d\n\n", intrm_repres->size + 1);
+    printf ("-------- ir final size: %d\n\n", ir->size + 1);
     printf ("-- successful translating\n\n");
 
-    return intrm_repres;
+    return ir;
 }
 
 //-----------------------------------------------------------------------------
 
-void handleBinCode (Intrm_represent *intrm_repres, Bin_code *bin_code)
+void handleBinCode (IR *ir, Bin_code *bin_code)
 {
     int num_cmd = 0;
 
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
         int curr_cmd = bin_code->buffer[curr_pos];
-        ir_code[num_cmd].bin_pos = curr_pos; // here we input pos in our bin file
+        curr_node[num_cmd].bin_pos = curr_pos; // here we input pos in our bin file
 
         int offset = 0;
 
         if(curr_cmd & MASK_REG)
         {
-            ir_code[num_cmd].reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
+            curr_node[num_cmd].reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
             offset += OFFSET_ARG;
         }
 
         if(curr_cmd & MASK_IMM)
         {
-            ir_code[num_cmd].imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
+            curr_node[num_cmd].imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
             offset += OFFSET_ARG;
         }
 
-        ir_code[num_cmd].ram_flag = 0;
+        curr_node[num_cmd].ram_flag = 0;
         
         if(curr_cmd & MASK_RAM)
         {
-            ir_code[num_cmd].ram_flag = 1;
+            curr_node[num_cmd].ram_flag = 1;
         }
 
         curr_pos += offset;
         curr_cmd &= MASK_CMD;
-        ir_code[num_cmd].command = curr_cmd;
+
+        curr_node[num_cmd].command = curr_cmd;
         num_cmd++;
     }
 
-    intrm_repres->size = num_cmd;
+    ir->size = num_cmd;
 }
 
 //-----------------------------------------------------------------------------
 
-void IrDump (Intrm_represent *intrm_repres)
+void IrDump (IR *ir)
 {
     printf ("-- generate dump Intermediate Representation\n\n");
 
@@ -125,13 +126,13 @@ void IrDump (Intrm_represent *intrm_repres)
             "                       Intermediate Representation Dump                      \n"
             "-----------------------------------------------------------------------------\n\n");
 
-    fprintf (dump_file, "- Intermediate Representation size: %d\n\n", intrm_repres->size);
+    fprintf (dump_file, "- Intermediate Representation size: %d\n\n", ir->size);
 
     //-----------------------------------------------------------------------------  
     // to find out commands numeration check processor/COMMON/include/codegen/codegen.h
     //-----------------------------------------------------------------------------
 
-    for(int i = 0; i < intrm_repres->size; i++)
+    for(int i = 0; i < ir->size; i++)
     {
         fprintf (dump_file,
                 "- IR node %d\n", i);
@@ -144,7 +145,7 @@ void IrDump (Intrm_represent *intrm_repres)
             break;                                  \
         }
 
-        switch(intrm_repres->buffer[i].command)
+        switch(ir->buffer[i].command)
         {
             #include "processor/COMMON/include/codegen/codegen.h"
 
@@ -158,9 +159,9 @@ void IrDump (Intrm_represent *intrm_repres)
                 "       - reg_value: %d\n"
                 "       - imm_value: %d\n"
                 "       - ram_flag:  %d\n",
-                ir_code[i].reg_value,
-                ir_code[i].imm_value,
-                ir_code[i].ram_flag        );
+                curr_node[i].reg_value,
+                curr_node[i].imm_value,
+                curr_node[i].ram_flag        );
     }
 
     printf ("-- successful dumping\n\n");
@@ -168,14 +169,14 @@ void IrDump (Intrm_represent *intrm_repres)
     fclose (dump_file);
 }
 
-#undef ir_code
+#undef curr_node
 
 //-----------------------------------------------------------------------------
 
-void IntrmRepresentDtor (Intrm_represent *intrm_repres)
+void IntrmRepresentDtor (IR *ir)
 {
-    free (intrm_repres->buffer);
-    intrm_repres->size = deleted;
+    free (ir->buffer);
+    ir->size = deleted;
 }
 
 //-----------------------------------------------------------------------------

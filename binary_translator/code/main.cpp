@@ -13,18 +13,18 @@ int main ()
     Bin_code *bin_code = readCodeFile (code_file);
     int bin_size = bin_code->size;
     
-    Intrm_represent *intrm_repres = translateBinToIR (bin_code);
+    IR *intrm_repres = translateBinToIR (bin_code);
     IrDump (intrm_repres);
 
     fclose (code_file);
 
-    X86_represent *x86_represent = translateIrToX86 (intrm_repres, bin_size);
-    Codex86Dump (x86_represent->code, x86_represent->size);
+    X86_code *x86_code = translateIrToX86 (intrm_repres, bin_size);
+    Codex86Dump (x86_code->buffer, x86_code->size);
 
-    runCode (x86_represent->code, x86_represent->size);
+    runCode (x86_code->buffer, x86_code->size);
 
     BinCodeDtor (bin_code);
-    X86RepresentDtor (x86_represent);
+    X86RepresentDtor (x86_code);
     IntrmRepresentDtor (intrm_repres);
 
     printf ("-- finishing\n\n");

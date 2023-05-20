@@ -14,11 +14,12 @@
 
 //-----------------------------------------------------------------------------
 
-#define N(suffix)  NUM_OF_##suffix
-#define O(suffix)  OFFSET_##suffix
+#define N(suffix) NUM_OF_##suffix
+#define O(suffix) OFFSET_##suffix
 
 //-----------------------------------------------------------------------------
 
+//cringe
 #define IS_JUMP(i)                                                     \
     (i == JMP) || (i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
     (i == JA) || (i == JAE)
@@ -55,13 +56,13 @@ enum BIT_MASKS
 
 Bin_code *readCodeFile (FILE *code_file);
 
-Intrm_represent *translateBinToIR (Bin_code *bin_code);
+IR *translateBinToIR (Bin_code *bin_code);
 
-void handleBinCode (Intrm_represent *intrm_repres, Bin_code *bin_code);
+void handleBinCode (IR *intrm_repres, Bin_code *bin_code);
 
-void IrDump (Intrm_represent *intrm_repres);
+void IrDump (IR *intrm_repres);
 
-void IntrmRepresentDtor (Intrm_represent *intrm_repres);
+void IntrmRepresentDtor (IR *intrm_repres);
 
 void BinCodeDtor (Bin_code *bin_code);
 

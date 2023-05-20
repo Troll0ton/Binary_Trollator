@@ -2,7 +2,7 @@
 
 //-----------------------------------------------------------------------------
 
-#define CURR_CMD intrm_repres->buffer[i]
+#define CURR_CMD ir->buffer[i]
 
 int double_printf (double *value)
 {
@@ -11,39 +11,32 @@ int double_printf (double *value)
 
 //-----------------------------------------------------------------------------
 
-X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size)
+X86_code *translateIrToX86 (IR *ir, int bin_size)
 {
-    printf ("-- emit commands\n\n");
+    printf ("-- write commands\n\n");
 
-
-    // aligned_alloc 
-
-    X86_represent *x86_represent = (X86_represent*) calloc (1, sizeof (X86_represent));
-    x86_represent->code = (char*) calloc (intrm_repres->size * tmp_size + PAGESIZE - 1, sizeof (char));
-    x86_represent->prev_ptr = x86_represent->code;
+    X86_code *x86_code = (X86_code*) calloc (1, sizeof (X86_code));
+    x86_code->buffer = (char*) aligned_alloc (PAGESIZE, ir->size * tmp_size);
 
     Jump_table jump_table = { 0 };
     jump_table.x86_pos = (char**) calloc (bin_size, sizeof (char*));
-    
-    // need to change allignment
-    x86_represent->code = (char*)(((uint64_t) (x86_represent->code) + PAGESIZE - 1) & ~(PAGESIZE - 1));
 
-    char *curr_pos = x86_represent->code;
-                                    // there and in other places - SIZE of command
-                                    //        |
-                                    //        V        
-    emitCmd (&curr_pos, (char*) &X86_MOV_R10, 2);
-    emitAbsPtr (&curr_pos, (unsigned long long int) curr_pos);
+    char *curr_pos = x86_code->buffer;
+                                     // there and in other places - SIZE of command
+                                     //        |
+                                     //        V        
+    writeCmd (&curr_pos, (char*) &X86_MOV_R10, 2);
+    writeAbsPtr (&curr_pos, (unsigned long long int) curr_pos);
 
     // copyCmd
 
-    for(int i = 0; i < intrm_repres->size; i++)
+    for(int i = 0; i < ir->size; i++)
     {
         double num = (double) CURR_CMD.imm_value;
 
         jump_table.x86_pos[CURR_CMD.bin_pos] = curr_pos;
 
-        #define CMD_EMIT(cmd, code, ...)  \
+        #define WRITE_CMD(cmd, code, ...)  \
         case cmd:                         \
         {                                 \
             __VA_ARGS__                   \
@@ -59,20 +52,20 @@ X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size)
         }
     }
 
-    emitCmd (&curr_pos, (char*) &X86_RET, 1);
+    writeCmd (&curr_pos, (char*) &X86_RET, 1);
 
-    x86_represent->size = curr_pos - x86_represent->code + 1;
+    x86_code->size = curr_pos - x86_code->buffer + 1;
 
-    return x86_represent;
+    return x86_code;
 }
 
 #undef CURR_CMD
 
 //-----------------------------------------------------------------------------
-//                              EMITING
+//                              writeING
 //-----------------------------------------------------------------------------
 
-void emitCmd (char **code, char *cmd, int size)
+void writeCmd (char **code, char *cmd, int size)
 {
     memcpy (*code, cmd, size);
 
@@ -81,7 +74,7 @@ void emitCmd (char **code, char *cmd, int size)
 
 //-----------------------------------------------------------------------------
 
-void emitPtr (char **code, unsigned int addr)
+void writePtr (char **code, unsigned int addr)
 {
     memcpy (*code, &addr, size_ptr);
 
@@ -90,7 +83,7 @@ void emitPtr (char **code, unsigned int addr)
 
 //-----------------------------------------------------------------------------
 
-void emitAbsPtr (char **code, unsigned long long addr)
+void writeAbsPtr (char **code, unsigned long long addr)
 {
     memcpy (*code, &addr, size_abs_ptr);
 
@@ -99,7 +92,7 @@ void emitAbsPtr (char **code, unsigned long long addr)
 
 //-----------------------------------------------------------------------------
 
-void emitNum (char **code, double num)
+void writeNum (char **code, double num)
 {
     memcpy (*code, &num, size_num);
 
@@ -125,6 +118,8 @@ void runCode (char *code, int size)
 
     printf ("o o o o o o o o o o o  \n\n"
             "-- executing completed!\n\n");
+
+    // HOW WORKS?
 
     mprotect_status = mprotect (prev_ptr, size, PROT_READ | PROT_WRITE);
     // perror("mprotect error:");
@@ -179,10 +174,10 @@ void Codex86Dump (char *code, int size)
 //                             CTORS AND DTORS
 //-----------------------------------------------------------------------------
 
-void X86RepresentDtor (X86_represent *x86_represent)
+void X86RepresentDtor (X86_code *x86_code)
 {
-    free (x86_represent->prev_ptr);
-    x86_represent->size = deleted;
+    free (x86_code->buffer);
+    x86_code->size = deleted;
 }
 
 //-----------------------------------------------------------------------------

@@ -19,17 +19,17 @@ const uint32_t size_num = 8;
 
 //-----------------------------------------------------------------------------
 
-X86_represent *translateIrToX86 (Intrm_represent *intrm_repres, int bin_size);
+X86_code *translateIrToX86 (IR *intrm_repres, int bin_size);
 
 void runCode (char *code, int size);
 
-void emitCmd (char **code, char *cmd, int size);
+void writeCmd (char **code, char *cmd, int size);
 
-void emitPtr (char **code, unsigned int addr);
+void writePtr (char **code, unsigned int addr);
 
-void emitAbsPtr (char **code, unsigned long long int addr);
+void writeAbsPtr (char **code, unsigned long long int addr);
 
-void emitNum (char **code, double num);
+void writeNum (char **code, double num);
 
 void handleMprotextError (int mprotect_status);
 
@@ -37,7 +37,7 @@ void Codex86Dump (char *code, int size);
 
 int double_printf (double *value);
 
-void X86RepresentDtor (X86_represent *x86_represent);
+void X86RepresentDtor (X86_code *X86_code);
 
 //-----------------------------------------------------------------------------
 

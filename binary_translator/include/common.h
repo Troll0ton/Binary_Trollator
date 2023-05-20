@@ -50,6 +50,8 @@ enum CMD_CODES
 //                             STACK UTILS CODES
 //-----------------------------------------------------------------------------
 
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CRINGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 const uint32_t X86_PUSH_RAX = 0x50;
 const uint32_t X86_PUSH_R13 = 0x5541;
 
@@ -88,7 +90,7 @@ const uint32_t X86_ADDSD  = 0xC8580FF2; // addsd xmm1, xmm0
 const uint32_t X86_SUBSD  = 0xC85C0FF2; // subsd xmm1, xmm0
 const uint32_t X86_MULSD  = 0xC8590FF2; // mulsd xmm1, xmm0
 const uint32_t X86_DIVSD  = 0xC85E0FF2; // divsd xmm1, xmm0
-const uint32_t X86_STPD = 0xC0510F66; // sqrtpd xmm0, xmm0
+const uint32_t X86_SQRTPD = 0xC0510F66; // sqrtpd xmm0, xmm0
 
 //-----------------------------------------------------------------------------
 //                                 MOVES
@@ -122,33 +124,28 @@ typedef struct Bin_code
     int   size;
 } Bin_code;
 
-typedef struct Ir_code
+typedef struct Ir_node
 {
     cmd_code command;
     int  imm_value;
     int  reg_value;
     char ram_flag;
     int  bin_pos;
-} Ir_code;
+} Ir_node;
 
-// IR
-
-typedef struct Intrm_represent
+typedef struct IR
 {
-    Ir_code *buffer;
+    Ir_node *buffer;
     int size;
-} Intrm_represent;
+} IR;
 
-// IR_buffer
-
-typedef struct X86_represent
+typedef struct X86_code
 {
-    char *code;
-    char *prev_ptr;
+    char *buffer;
     int size;
-} X86_represent;
+} X86_code;
 
-// X86_code
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CRINGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 typedef struct Jump_table
 {
