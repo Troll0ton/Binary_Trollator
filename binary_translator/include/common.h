@@ -117,6 +117,7 @@ static const uint32_t X86_POP_RBP = 0x5D;
                              
 static const uint32_t X86_ADD_RSP = 0x08C48348; // add rsp, 8
 static const uint32_t X86_SUB_RSP = 0x08EC8348; // sub rsp, 8
+static const uint32_t X86_SUB_RSP_16 = 0x10ED8348; // sub rsp, 16
 
 static const uint32_t X86_MOV_RBP_RSP = 0xE58948; // mov rbp, rsp
 static const uint32_t X86_MOV_RSP_RBP = 0xEC8948; // mov rbp, rsp
@@ -132,6 +133,8 @@ static const uint32_t X86_AND_RSP_FF = 0xF0E48348;
 
 static const uint32_t X86_CALL = 0xE8;
 static const uint32_t X86_RET = 0xC3;
+
+static const uint32_t X86_ADD_RBP_8 = 0x08C58348; 
 
 // rax, rbx, rcx, rdx
 static const uint32_t X86_POP_R_X[] = {0x58, 0x5B, 0x59, 0x5A};

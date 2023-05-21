@@ -43,7 +43,7 @@ void CodeX86Dump (char *code, int size);
 
 void jumpTableDump (char **jump_table, int size);
 
-void *alligned_calloc (int alignment, int size);
+void *aligned_calloc (int alignment, int size);
 
 void X86RepresentDtor (X86_code *X86_code);
 

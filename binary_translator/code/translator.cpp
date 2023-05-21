@@ -11,7 +11,7 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
     printf ("-- write commands\n\n");
 
     X86_code *x86_code = (X86_code*) calloc (1, sizeof (X86_code));
-    x86_code->buffer = (char*) alligned_calloc (PAGESIZE, ir->size * tmp_size);
+    x86_code->buffer = (char*) aligned_calloc (PAGESIZE, ir->size * tmp_size);
 
     char **jump_table = (char**) calloc (ir->size, sizeof (char*));
 
@@ -43,7 +43,7 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
 
 //-----------------------------------------------------------------------------
 
-void *alligned_calloc (int alignment, int size)
+void *aligned_calloc (int alignment, int size)
 {
     void *buffer = (void*) aligned_alloc (PAGESIZE, size);
     memset (buffer, 0, size);
@@ -66,8 +66,6 @@ void translateJmpTargetsX86 (IR *ir, char **jump_table)
             uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
                                (uint64_t)(curr_pos + 24); 
 
-            printf ("ADDR: %X\n\n", out_ptr);
-
             curr_pos += 20;
 
             writePtr (&curr_pos, out_ptr);
@@ -78,9 +76,17 @@ void translateJmpTargetsX86 (IR *ir, char **jump_table)
             uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
                                (uint64_t)(curr_pos + 5); 
 
-            printf ("ADDR: %X\n\n", out_ptr);
-            
             curr_pos += 1;
+
+            writePtr (&curr_pos, out_ptr);
+        }
+
+        else if(CURR_CMD.command == CALL)
+        {
+            uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
+                               (uint64_t)(curr_pos + 21); 
+
+            curr_pos += 17;
 
             writePtr (&curr_pos, out_ptr);
         }
@@ -127,7 +133,7 @@ void writeNum (char **code, double num)
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-//                                 STDIO
+//                              SPECIAL UTILS
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
@@ -135,6 +141,13 @@ int double_printf (double *value)
 {
     return printf("%lg\n\n", *value);
 }
+
+void troll_dump ()
+{
+    printf ("-- HELLO DUMP!\n\n");
+}
+
+//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -163,6 +176,8 @@ void translateCmd (IR_node *curr_node, char **curr_pos)
             break;
         case OUT:
             translateOut (curr_node, curr_pos);
+            break;
+        case IN:
             break;
         case DUMP:
             translateDump (curr_node, curr_pos);
@@ -231,9 +246,17 @@ void translatePop (IR_node *curr_node, char **curr_pos)
 {
     if(!curr_node->ram_flag)
     {
-        uint32_t tmp_cmd = X86_POP_R_X[curr_node->reg_value - 1]; 
-                                        // rax -> 0, rbx -> 1, ...
-        writeCmd (curr_pos, (char*) &(tmp_cmd), 1);
+        if(curr_node->reg_value)
+        {
+            uint32_t tmp_cmd = X86_POP_R_X[curr_node->reg_value - 1]; 
+                                            // rax -> 0, rbx -> 1, ...
+            writeCmd (curr_pos, (char*) &(tmp_cmd), 1);
+        }
+
+        else
+        {
+            writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4); // pop 
+        }
     }
 
     //writeCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);
@@ -294,7 +317,18 @@ void translateOut (IR_node *curr_node, char **curr_pos)
 
 void translateDump (IR_node *curr_node, char **curr_pos)
 {
-    /// ? ? ? ?
+    writeCmd (curr_pos, (char*) &X86_PUSH_RBP, 1);
+    writeCmd (curr_pos, (char*) &X86_PUSHA, 6);
+    writeCmd (curr_pos, (char*) &X86_MOV_RBP_RSP, 3);
+
+    // You can change troll_print on your purposes
+    writeCmd (curr_pos, (char*) &X86_CALL, 1);
+    uint32_t out_ptr = (uint64_t) troll_dump - (uint64_t)(*curr_pos + 4); 
+    writePtr (curr_pos, out_ptr);
+
+    writeCmd (curr_pos, (char*) &X86_MOV_RSP_RBP, 3);
+    writeCmd (curr_pos, (char*) &X86_POPA, 6);
+    writeCmd (curr_pos, (char*) &X86_POP_RBP, 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -345,14 +379,23 @@ void translateJmp (IR_node *curr_node, char **curr_pos)
 
 void translateCall (IR_node *curr_node, char **curr_pos)
 {
-    /// ? ? ? ?
+    writeCmd (curr_pos, (char*) &X86_MOV_R13, 2);   // mov r13, abs ret address
+    uint64_t out_ptr = (uint64_t) &curr_pos; 
+    writeAbsPtr (curr_pos, out_ptr);
+    writeCmd (curr_pos, (char*) &X86_PUSH_R13, 2);  // push r13
+
+    writeCmd (curr_pos, (char*) &X86_SUB_RSP, 4);   // need to aligned stack - 16 
+
+    writeCmd (curr_pos, (char*) &X86_JMP, 1);
+    *curr_pos += 4; // skip ptr
 }
 
 //-----------------------------------------------------------------------------
 
 void translateRet (IR_node *curr_node, char **curr_pos)
 {
-    /// ? ? ? ?
+    writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4);
+    writeCmd (curr_pos, (char*) &X86_RET, 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -386,7 +429,7 @@ void runCode (char *code, int size)
     void (*execute_code) (void) = (void (*) (void)) (code);
     execute_code ();
 
-    printf ("   o o o o o o o oo o  \n\n"
+    printf ("   o o o o o o o o o  \n\n"
             "-- executing completed!\n\n");
 }
 

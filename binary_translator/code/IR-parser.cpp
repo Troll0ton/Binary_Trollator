@@ -133,7 +133,8 @@ int translateJmpTargetsIR (IR *ir)
 {
     for(int i = 0; i < ir->size; i++)
     {
-        if(IS_JUMP (ir->buffer[i].command))
+        if(IS_JUMP (ir->buffer[i].command) || 
+           ir->buffer[i].command == CALL)
         {
             char find_flag = 0;
 

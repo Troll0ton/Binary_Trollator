@@ -27,6 +27,8 @@ out
 
 :14
 
+call 66:
+
 push 23
 out
 
@@ -34,3 +36,8 @@ pop rax
 pop rax
 
 hlt
+
+:66
+push 1005
+out
+ret
