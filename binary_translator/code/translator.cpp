@@ -13,9 +13,6 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
     X86_code *x86_code = (X86_code*) calloc (1, sizeof (X86_code));
     x86_code->buffer = (char*) aligned_alloc (PAGESIZE, ir->size * tmp_size);
 
-    Jump_table jump_table = { 0 };
-    jump_table.x86_pos = (char**) calloc (bin_size, sizeof (char*));
-
     char *curr_pos = x86_code->buffer;
                                      // there and in other places - SIZE of command
                                      //        |
@@ -25,8 +22,6 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
 
     for(int i = 0; i < ir->size; i++)
     {
-        jump_table.x86_pos[CURR_CMD.bin_pos] = curr_pos;
-
         translateCmd (&CURR_CMD, &curr_pos);
     }
 
@@ -258,7 +253,7 @@ void translateConditionalJmps (IR_node *curr_node, char **curr_pos)
     // add rsp, 16
     // ucomisd xmm0, xmm1
     // j?? ptr
-
+    /*
     EMIT(movsd_xmm0_rsp, MOV_XMM_RSP | XMM0_MASK << BYTE(3), SIZE_MOV_XMM_RSP);
     EMIT(movsd_xmm1_rsp_8, MOV_XMM_RSP | XMM1_MASK << BYTE(3) | (WORD_SIZE) << BYTE(5), SIZE_MOV_XMM_RSP);
 
@@ -319,7 +314,8 @@ void translateConditionalJmps (IR_node *curr_node, char **curr_pos)
     uint32_t rel_ptr = jmp_cmd->value - (jmp_cmd->x86_ip + 2 + sizeof(int) + 20);
 
     WriteCmd(self, cond_jmp);
-    WritePtr(self, rel_ptr);
+    WritePtr(self, rel_ptr); 
+    */
 }
 
 //-----------------------------------------------------------------------------
@@ -369,12 +365,12 @@ void runCode (char *code, int size)
     }
 
     printf ("-- executing...       \n\n"
-            "o o o o o o o o o o o \n\n");
+            "   o o o o o o o o o  \n\n");
 
     void (*execute_code) (void) = (void (*) (void)) (code);
     execute_code ();
 
-    printf ("o o o o o o o o o o o  \n\n"
+    printf ("   o o o o o o o oo o  \n\n"
             "-- executing completed!\n\n");
 }
 
@@ -417,5 +413,13 @@ void X86RepresentDtor (X86_code *x86_code)
     free (x86_code->buffer);
     x86_code->size = deleted;
 }
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//                            JUMP TABLE UTILS
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+
 
 //-----------------------------------------------------------------------------

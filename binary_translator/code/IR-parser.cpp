@@ -80,9 +80,9 @@ void handleBinCode (IR *ir, Troll_code *bin_code)
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
         int curr_cmd = bin_code->buffer[curr_pos];
-        curr_node.bin_pos = curr_pos; // here we input pos in our bin file
-
         int offset = 0;
+
+        curr_node.troll_pos = curr_pos; // this is position in troll file
 
         if(curr_cmd & MASK_REG)
         {
@@ -107,10 +107,39 @@ void handleBinCode (IR *ir, Troll_code *bin_code)
         curr_cmd &= MASK_CMD;
 
         curr_node.command = curr_cmd;
+        handleJumps (ir, &curr_node.imm_value, num_cmd);
         num_cmd++;
     }
 
     ir->size = num_cmd;
+}
+
+//-----------------------------------------------------------------------------
+
+// changed addressing of jumps into Intermediate representation
+
+void handleJumps (IR *ir, int *target, int curr_pos, char *double_pass_flag)
+{
+    char find_flag = 0;
+
+    for(int num_cmd = 0; num_cmd < curr_pos; num_cmd++)
+    {
+        if(curr_node.troll_pos == *target)
+        {
+            *target = num_cmd;
+            find_flag = 1;
+        }
+
+        if(!curr_node.troll_pos)
+        {
+            
+        }
+    } 
+
+    if(!find_flag)  
+    {
+        *double_pass_flag = 1;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -170,6 +199,13 @@ void IrDump (IR *ir)
 }
 
 #undef curr_node
+
+//-----------------------------------------------------------------------------
+
+void handleJump (IR *ir)
+{
+
+}
 
 //-----------------------------------------------------------------------------
 

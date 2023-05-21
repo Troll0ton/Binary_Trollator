@@ -74,7 +74,8 @@ typedef struct IR_node
     int  imm_value;
     int  reg_value;
     char ram_flag;
-    int  bin_pos;
+    int troll_pos;
+    char *x86_pos;
 } IR_node;
 
 typedef struct IR
@@ -90,11 +91,6 @@ typedef struct X86_code
     char *buffer;
     int size;
 } X86_code;
-
-typedef struct Jump_table
-{
-    char **x86_pos;
-} Jump_table;
 
 //-----------------------------------------------------------------------------
 //                             STACK UTILS CODES
@@ -167,8 +163,6 @@ static const uint32_t X86_ADD_R13_R_X[]  = {MASK_X86_ADD_R13_RAX,
 //-----------------------------------------------------------------------------
 //                                  JUMPS
 //-----------------------------------------------------------------------------
-//
-//
 
 static const uint32_t X86_JNE = 0x850F;
 static const uint32_t X86_JE = 0x840F;
@@ -178,6 +172,5 @@ static const uint32_t X86_JB = 0x8C0F;
 static const uint32_t X86_JBE = 0x8E0F;
 
 //-----------------------------------------------------------------------------
-
 
 #endif //BT_COMMON_H
