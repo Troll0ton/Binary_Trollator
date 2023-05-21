@@ -13,6 +13,8 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
     X86_code *x86_code = (X86_code*) calloc (1, sizeof (X86_code));
     x86_code->buffer = (char*) aligned_alloc (PAGESIZE, ir->size * tmp_size);
 
+    char **jump_table = (char**) calloc (ir->size, sizeof (char*));
+
     char *curr_pos = x86_code->buffer;
                                      // there and in other places - SIZE of command
                                      //        |
@@ -22,15 +24,46 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
 
     for(int i = 0; i < ir->size; i++)
     {
+        jump_table[i] = curr_pos;
+        CURR_CMD.x86_pos = curr_pos;
+
         translateCmd (&CURR_CMD, &curr_pos);
     }
+
+    jumpTableDump (jump_table, ir->size);
+
+    translateJmpTargetsX86 (ir, jump_table);
 
     writeCmd (&curr_pos, (char*) &X86_RET, 1);
 
     x86_code->size = curr_pos - x86_code->buffer + 1;
+    free (jump_table);
 
     return x86_code;
 }
+
+//-----------------------------------------------------------------------------
+
+#define TARGET CURR_CMD.imm_value
+
+void translateJmpTargetsX86 (IR *ir, char **jump_table)
+{
+    for(int i = 0; i < ir->size; i++)
+    {
+        char *curr_pos = CURR_CMD.x86_pos;
+        if(IS_JUMP (CURR_CMD.command))
+        {
+            writeCmd (&curr_pos, (char*) &X86_JMP, 1);
+
+            uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
+                               (uint64_t)(curr_pos + 4); 
+
+            writePtr (&curr_pos, out_ptr);
+        }
+    }
+}
+
+#undef TARGET
 
 #undef CURR_CMD
 
@@ -146,14 +179,10 @@ void translateHlt (IR_node *curr_node, char **curr_pos)
 
 void translatePush (IR_node *curr_node, char **curr_pos)
 {
-    printf ("HANDLE PUSH:\n");
-
     if(!curr_node->ram_flag)
     {
         writeCmd (curr_pos, (char*) &X86_MOV_R13, 2);  // mov r13, imm64
         writeNum (curr_pos, (double) curr_node->imm_value); 
-
-        printf ("handled val: %lg\n", (double) curr_node->imm_value);
 
         if(curr_node->reg_value)
         {
@@ -397,6 +426,29 @@ void CodeX86Dump (char *code, int size)
     {
         uint32_t num = (uint32_t) (uint8_t) code[i];
         fprintf (dump_file, "%X ", num);
+    }
+
+    fclose (dump_file);
+}
+
+//-----------------------------------------------------------------------------
+
+void jumpTableDump (char **jump_table, int size)
+{
+    printf ("-- dump jump table\n\n");
+
+    FILE *dump_file = fopen ("binary_translator/dump/jump_table.txt", "w+");
+
+    fprintf (dump_file, 
+            "-----------------------------------------------------------------------------\n"
+            "                               JUMP TABLE                                    \n"
+            "-----------------------------------------------------------------------------\n\n");
+
+    fprintf (dump_file, "- jump table size: %d\n\n", size);
+
+    for(int i = 0; i < size; i++)
+    {
+        fprintf (dump_file, "%p\n", jump_table[i]);
     }
 
     fclose (dump_file);

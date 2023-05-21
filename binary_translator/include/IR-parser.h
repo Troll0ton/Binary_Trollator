@@ -9,6 +9,10 @@
 
 //-----------------------------------------------------------------------------
 
+static const int jump_fill_error = 0xEAEAEA;
+
+//-----------------------------------------------------------------------------
+
 enum OFFSETS
 {
     OFFSET_CMD = 1,
@@ -40,7 +44,11 @@ enum BIT_MASKS
 Troll_code *readCodeFile (FILE *code_file);
 
 IR *translateBinToIr (Troll_code *bin_code);
+
     void handleBinCode (IR *ir, Troll_code *bin_code);
+
+        int translateJmpTargetsIR (IR *ir);
+        int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos);
 
 void IrDump (IR *ir);
 

@@ -4,16 +4,22 @@ pop rbx
 push rbx
 out
 
+jmp 14:
+
 push 100
 push 200
 add
 out
+
+
 
 push 100
 push 50
 sub
 out
 
+
+
 push 23
 push 4
 div
@@ -21,7 +27,12 @@ out
 
 push 23
 push 4
+
+:78
+
 div
 out
+
+:14
 
 hlt

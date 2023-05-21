@@ -39,6 +39,12 @@ typedef uint32_t cmd_code;
 
 //-----------------------------------------------------------------------------
 
+#define IS_JUMP(i)                                                       \
+    ((i == JMP) || (i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
+    (i == JA) || (i == JAE))
+
+//-----------------------------------------------------------------------------
+
 enum CMD_CODES
 {
     #define CMD_DEF(cmd, ...) \
@@ -74,6 +80,7 @@ typedef struct IR_node
     int  imm_value;
     int  reg_value;
     char ram_flag;
+    
     int troll_pos;
     char *x86_pos;
 } IR_node;
@@ -170,6 +177,7 @@ static const uint32_t X86_JA = 0x8F0F;
 static const uint32_t X86_JAE = 0x8D0F;
 static const uint32_t X86_JB = 0x8C0F;
 static const uint32_t X86_JBE = 0x8E0F;
+static const uint32_t X86_JMP = 0xE9;
 
 //-----------------------------------------------------------------------------
 

@@ -52,7 +52,7 @@ Troll_code *readCodeFile (FILE *code_file)
 
 //-----------------------------------------------------------------------------
 
-#define curr_node ir->buffer[num_cmd]
+#define CURR_CMD ir->buffer[num_cmd]
 
 IR *translateBinToIr (Troll_code *bin_code)
 {
@@ -76,71 +76,92 @@ IR *translateBinToIr (Troll_code *bin_code)
 void handleBinCode (IR *ir, Troll_code *bin_code)
 {
     int num_cmd = 0;
-                    // skip signature and result sum
+                        // skip signature and result sum
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
-        int curr_cmd = bin_code->buffer[curr_pos];
-        int offset = 0;
+        CURR_CMD.troll_pos = curr_pos; // this is position in troll file
 
-        curr_node.troll_pos = curr_pos; // this is position in troll file
+        curr_pos += handleTrollMask (&ir->buffer[num_cmd], bin_code, curr_pos);            
 
-        if(curr_cmd & MASK_REG)
-        {
-            curr_node.reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
-            offset += OFFSET_ARG;
-        }
-
-        if(curr_cmd & MASK_IMM)
-        {
-            curr_node.imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
-            offset += OFFSET_ARG;
-        }
-
-        curr_node.ram_flag = 0;
-        
-        if(curr_cmd & MASK_RAM)
-        {
-            curr_node.ram_flag = 1;
-        }
-
-        curr_pos += offset;
-        curr_cmd &= MASK_CMD;
-
-        curr_node.command = curr_cmd;
-        handleJumps (ir, &curr_node.imm_value, num_cmd);
-        num_cmd++;
+        ir->size = ++num_cmd;
     }
 
     ir->size = num_cmd;
+
+    translateJmpTargetsIR (ir);
 }
 
 //-----------------------------------------------------------------------------
 
-// changed addressing of jumps into Intermediate representation
-
-void handleJumps (IR *ir, int *target, int curr_pos, char *double_pass_flag)
+int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos)
 {
-    char find_flag = 0;
+    int curr_cmd = bin_code->buffer[curr_pos];
+    int offset = 0;
 
-    for(int num_cmd = 0; num_cmd < curr_pos; num_cmd++)
+    if(curr_cmd & MASK_REG)
     {
-        if(curr_node.troll_pos == *target)
-        {
-            *target = num_cmd;
-            find_flag = 1;
-        }
-
-        if(!curr_node.troll_pos)
-        {
-            
-        }
-    } 
-
-    if(!find_flag)  
-    {
-        *double_pass_flag = 1;
+        ir_node->reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
+        offset += OFFSET_ARG;
     }
+
+    if(curr_cmd & MASK_IMM)
+    {
+        ir_node->imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
+        offset += OFFSET_ARG;
+    }
+
+    ir_node->ram_flag = 0;
+            
+    if(curr_cmd & MASK_RAM)
+    {
+        ir_node->ram_flag = 1;
+    }
+
+    curr_cmd &= MASK_CMD;
+    ir_node->command = curr_cmd;
+    
+    return offset;
 }
+
+//-----------------------------------------------------------------------------
+
+#define TARGET ir->buffer[i].imm_value
+
+// changed addressing of jumps into Intermediate Representation
+
+int translateJmpTargetsIR (IR *ir)
+{
+    for(int i = 0; i < ir->size; i++)
+    {
+        if(IS_JUMP (ir->buffer[i].command))
+        {
+            char find_flag = 0;
+
+            for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
+            {
+                if(CURR_CMD.troll_pos == TARGET)
+                {
+                    TARGET = num_cmd;
+                    find_flag = 1;
+                }
+
+                if(!CURR_CMD.troll_pos)
+                {
+                    break;
+                }
+            } 
+
+            if(!find_flag)
+            {
+                return jump_fill_error;
+            }
+        }
+    }
+
+    return 0;
+}
+
+#undef TARGET
 
 //-----------------------------------------------------------------------------
 
@@ -174,7 +195,7 @@ void IrDump (IR *ir)
             break;                                  \
         }
 
-        switch(curr_node.command)
+        switch(CURR_CMD.command)
         {
             #include "processor/COMMON/include/codegen/codegen.h"
 
@@ -188,9 +209,9 @@ void IrDump (IR *ir)
                 "       - reg_value: %d\n"
                 "       - imm_value: %d\n"
                 "       - ram_flag:  %d\n",
-                curr_node.reg_value,
-                curr_node.imm_value,
-                curr_node.ram_flag         );
+                CURR_CMD.reg_value,
+                CURR_CMD.imm_value,
+                CURR_CMD.ram_flag         );
     }
 
     printf ("-- successful dumping\n\n");
@@ -198,14 +219,7 @@ void IrDump (IR *ir)
     fclose (dump_file);
 }
 
-#undef curr_node
-
-//-----------------------------------------------------------------------------
-
-void handleJump (IR *ir)
-{
-
-}
+#undef CURR_CMD
 
 //-----------------------------------------------------------------------------
 

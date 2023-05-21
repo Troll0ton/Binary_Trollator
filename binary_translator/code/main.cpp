@@ -16,16 +16,15 @@ int main ()
     IR *ir = translateBinToIr (bin_code);
     IrDump (ir);
 
+    BinCodeDtor (bin_code);
     fclose (code_file);
-
+    
     X86_code *x86_code = translateIrToX86 (ir, bin_size);
     CodeX86Dump (x86_code->buffer, x86_code->size);
+    IrDtor (ir);
 
     runCode (x86_code->buffer, x86_code->size);
-
-    BinCodeDtor (bin_code);
     X86RepresentDtor (x86_code);
-    IrDtor (ir);
 
     printf ("-- finishing\n\n");
 
