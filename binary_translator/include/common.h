@@ -39,9 +39,12 @@ typedef uint32_t cmd_code;
 
 //-----------------------------------------------------------------------------
 
-#define IS_JUMP(i)                                                       \
-    ((i == JMP) || (i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
+#define IS_CONDITION_JUMP(i)                               \
+    ((i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
     (i == JA) || (i == JAE))
+
+#define IS_JUMP(i)                       \
+    (IS_CONDITION_JUMP(i) || (i == JMP))
 
 //-----------------------------------------------------------------------------
 
@@ -171,13 +174,17 @@ static const uint32_t X86_ADD_R13_R_X[]  = {MASK_X86_ADD_R13_RAX,
 //                                  JUMPS
 //-----------------------------------------------------------------------------
 
-static const uint32_t X86_JNE = 0x850F;
-static const uint32_t X86_JE = 0x840F;
-static const uint32_t X86_JA = 0x8F0F;
-static const uint32_t X86_JAE = 0x8D0F;
-static const uint32_t X86_JB = 0x8C0F;
-static const uint32_t X86_JBE = 0x8E0F;
+static const uint32_t X86_MASK_JNE = 0b0101;
+static const uint32_t X86_MASK_JE = 0b0100;
+static const uint32_t X86_MASK_JA = 0b0111;
+static const uint32_t X86_MASK_JAE = 0b0011;
+static const uint32_t X86_MASK_JB = 0b0010;
+static const uint32_t X86_MASK_JBE = 0b0110;
+static const uint32_t X86_MASK_JMP = 0x800F;
+
 static const uint32_t X86_JMP = 0xE9;
+
+static const uint32_t X86_CMP_XMM0_XMM1 = 0xC12E0F66;
 
 //-----------------------------------------------------------------------------
 

@@ -11,7 +11,7 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
     printf ("-- write commands\n\n");
 
     X86_code *x86_code = (X86_code*) calloc (1, sizeof (X86_code));
-    x86_code->buffer = (char*) aligned_alloc (PAGESIZE, ir->size * tmp_size);
+    x86_code->buffer = (char*) alligned_calloc (PAGESIZE, ir->size * tmp_size);
 
     char **jump_table = (char**) calloc (ir->size, sizeof (char*));
 
@@ -31,7 +31,6 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
     }
 
     jumpTableDump (jump_table, ir->size);
-
     translateJmpTargetsX86 (ir, jump_table);
 
     writeCmd (&curr_pos, (char*) &X86_RET, 1);
@@ -44,6 +43,16 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
 
 //-----------------------------------------------------------------------------
 
+void *alligned_calloc (int alignment, int size)
+{
+    void *buffer = (void*) aligned_alloc (PAGESIZE, size);
+    memset (buffer, 0, size);
+
+    return buffer;
+}
+
+//-----------------------------------------------------------------------------
+
 #define TARGET CURR_CMD.imm_value
 
 void translateJmpTargetsX86 (IR *ir, char **jump_table)
@@ -51,12 +60,27 @@ void translateJmpTargetsX86 (IR *ir, char **jump_table)
     for(int i = 0; i < ir->size; i++)
     {
         char *curr_pos = CURR_CMD.x86_pos;
-        if(IS_JUMP (CURR_CMD.command))
-        {
-            writeCmd (&curr_pos, (char*) &X86_JMP, 1);
 
+        if(IS_CONDITION_JUMP (CURR_CMD.command))
+        {
             uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
-                               (uint64_t)(curr_pos + 4); 
+                               (uint64_t)(curr_pos + 24); 
+
+            printf ("ADDR: %X\n\n", out_ptr);
+
+            curr_pos += 20;
+
+            writePtr (&curr_pos, out_ptr);
+        }
+
+        else if(CURR_CMD.command == JMP)
+        {
+            uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
+                               (uint64_t)(curr_pos + 5); 
+
+            printf ("ADDR: %X\n\n", out_ptr);
+            
+            curr_pos += 1;
 
             writePtr (&curr_pos, out_ptr);
         }
@@ -277,81 +301,44 @@ void translateDump (IR_node *curr_node, char **curr_pos)
 
 void translateConditionalJmps (IR_node *curr_node, char **curr_pos)
 {
-    // mov xmm0, [rsp]
-    // mov xmm1, [rsp+8]
-    // add rsp, 16
-    // ucomisd xmm0, xmm1
-    // j?? ptr
-    /*
-    EMIT(movsd_xmm0_rsp, MOV_XMM_RSP | XMM0_MASK << BYTE(3), SIZE_MOV_XMM_RSP);
-    EMIT(movsd_xmm1_rsp_8, MOV_XMM_RSP | XMM1_MASK << BYTE(3) | (WORD_SIZE) << BYTE(5), SIZE_MOV_XMM_RSP);
+    writeCmd (curr_pos, (char*) &X86_MOV_XMM0_STK, 6); 
+    writeCmd (curr_pos, (char*) &X86_MOV_XMM1_STK, 6); 
+    writeCmd (curr_pos, (char*) &X86_CMP_XMM0_XMM1, 6); 
 
-    EMIT(add_rsp_16, ADD_RSP | (WORD_SIZE * 2) << BYTE(3), SIZE_ADD_RSP);
-    EMIT(cmp_xmm0_xmm1, CMP_XMM0_XMM1, SIZE_CMP_XMM);
-
-    Opcode cond_jmp = {
-        .code = COND_JMP,
-        .size = SIZE_COND_JMP};
-        
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM0_STK, 6); // pop xmm0
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM1_STK, 6); // pop xmm1
-
-    char *sel_cmd = NULL;
-
+    uint32_t curr_cmd = X86_MASK_JMP;
+    
     switch(curr_node->command)
     {
         case JBE:
+            curr_cmd |= (X86_MASK_JBE << 8);
             break;
         case JAE:
+            curr_cmd |= (X86_MASK_JAE << 8);
             break;
         case JA:
+            curr_cmd |= (X86_MASK_JA << 8);    
             break;
         case JB:
+            curr_cmd |= (X86_MASK_JB << 8);
             break;
         case JE:
+            curr_cmd |= (X86_MASK_JE << 8);
             break;
         case JNE:
+            curr_cmd |= (X86_MASK_JNE << 8);
             break;
     }
-
-    switch (jmp_cmd->name)
-    {
-    case JE:
-        cond_jmp.code |= JE_MASK << BYTE(1);
-        break;
-    case JNE:
-        cond_jmp.code |= JNE_MASK << BYTE(1);
-        break;
-    case JG:
-        cond_jmp.code |= JG_MASK << BYTE(1);
-        break;
-    case JAE:
-        cond_jmp.code |= JAE_MASK << BYTE(1);
-        break;
-    case JGE:
-        cond_jmp.code |= JGE_MASK << BYTE(1);
-        break;
-    case JA:
-        cond_jmp.code |= JA_MASK << BYTE(1);
-        break;
-
-    default:
-        LOG("No such conditional jmp!\n");
-        break;
-    }
-
-    uint32_t rel_ptr = jmp_cmd->value - (jmp_cmd->x86_ip + 2 + sizeof(int) + 20);
-
-    WriteCmd(self, cond_jmp);
-    WritePtr(self, rel_ptr); 
-    */
+    
+    writeCmd (curr_pos, (char*) &curr_cmd, 2);
+    *curr_pos += 4; // skip ptr for now
 }
 
 //-----------------------------------------------------------------------------
 
 void translateJmp (IR_node *curr_node, char **curr_pos)
 {
-    /// ? ? ? ?
+    writeCmd (curr_pos, (char*) &X86_JMP, 1); 
+    *curr_pos += 4;
 }
 
 //-----------------------------------------------------------------------------
@@ -422,10 +409,19 @@ void CodeX86Dump (char *code, int size)
 
     fprintf (dump_file, "- x86 translated code size: %d\n\n", size);
 
+    int line_len = 0;
+
     for(int i = 0; i < size; i++)
     {
+        if(line_len > 15)
+        {
+            fprintf (dump_file, "\n\n");
+            line_len = 0;
+        }
+
         uint32_t num = (uint32_t) (uint8_t) code[i];
-        fprintf (dump_file, "%X ", num);
+        fprintf (dump_file, "%02X ", num);
+        line_len++;
     }
 
     fclose (dump_file);
@@ -465,13 +461,5 @@ void X86RepresentDtor (X86_code *x86_code)
     free (x86_code->buffer);
     x86_code->size = deleted;
 }
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//                            JUMP TABLE UTILS
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
-
 
 //-----------------------------------------------------------------------------

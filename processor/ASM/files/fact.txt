@@ -1,20 +1,15 @@
 push 6
 
 pop rax
-
 push 1
 pop rbx
 
 call 13:
 
 push rbx
-
 out
 
 hlt
-
-
-
 
 :13
 
