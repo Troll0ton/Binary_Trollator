@@ -32,12 +32,16 @@ call 66:
 push 23
 out
 
-pop rax
-pop rax
+pop 
+pop 
 
 hlt
 
 :66
 push 1005
 out
+
+push 100
+pop 
+
 ret

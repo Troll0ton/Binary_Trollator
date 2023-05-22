@@ -136,8 +136,7 @@ static const uint32_t X86_RET = 0xC3;
 
 static const uint32_t X86_ADD_RBP_8 = 0x08C58348; 
 
-// rax, rbx, rcx, rdx
-static const uint32_t X86_POP_R_X[] = {0x58, 0x5B, 0x59, 0x5A};
+static const uint32_t X86_MOV_R_X_STK = 0x24008B48;
 
 //-----------------------------------------------------------------------------
 //                             SSE UTILS CODES
@@ -161,17 +160,18 @@ static const uint64_t X86_MOV_RDI_XMM0 = 0xC77E0F4866;
 //                                 MASKS
 //-----------------------------------------------------------------------------
 
+static const uint32_t MASK_X86_RAX = 0b1;
+static const uint32_t MASK_X86_RBX = 0b111;
+static const uint32_t MASK_X86_RCX = 0b11;
+static const uint32_t MASK_X86_RDX = 0b101;
+
 static const uint32_t MASK_X86_ADD_R13_R_X = 0xC10149; // add r13, r_x
-static const uint32_t MASK_X86_ADD_R13_RAX = 0b1;
-static const uint32_t MASK_X86_ADD_R13_RBX = 0b111;
-static const uint32_t MASK_X86_ADD_R13_RCX = 0b11;
-static const uint32_t MASK_X86_ADD_R13_RDX = 0b101;
 static const uint32_t X86_ADD_R13_R_X_OFFSET = 18; 
 
-static const uint32_t X86_ADD_R13_R_X[]  = {MASK_X86_ADD_R13_RAX, 
-                                     MASK_X86_ADD_R13_RBX, 
-                                     MASK_X86_ADD_R13_RCX, 
-                                     MASK_X86_ADD_R13_RDX};
+static const uint32_t X86_R_X[]  = {MASK_X86_RAX, 
+                                    MASK_X86_RBX, 
+                                    MASK_X86_RCX, 
+                                    MASK_X86_RDX};
 
 //-----------------------------------------------------------------------------
 //                                  JUMPS

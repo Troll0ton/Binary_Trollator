@@ -226,7 +226,7 @@ void translatePush (IR_node *curr_node, char **curr_pos)
         if(curr_node->reg_value)
         {
             uint32_t tmp_cmd = MASK_X86_ADD_R13_R_X | 
-                              (X86_ADD_R13_R_X[curr_node->reg_value - 1] << X86_ADD_R13_R_X_OFFSET);
+                              (X86_R_X[curr_node->reg_value - 1] << X86_ADD_R13_R_X_OFFSET);
 
             writeCmd (curr_pos, (char*) &(tmp_cmd), 3); // add r13, r_x
         }
@@ -248,9 +248,10 @@ void translatePop (IR_node *curr_node, char **curr_pos)
     {
         if(curr_node->reg_value)
         {
-            uint32_t tmp_cmd = X86_POP_R_X[curr_node->reg_value - 1]; 
-                                            // rax -> 0, rbx -> 1, ...
-            writeCmd (curr_pos, (char*) &(tmp_cmd), 1);
+            uint32_t tmp_cmd = X86_MOV_R_X_STK | 
+                              (X86_R_X[curr_node->reg_value - 1] << 18);
+            writeCmd (curr_pos, (char*) &(tmp_cmd), 4);
+            writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4);
         }
 
         else
@@ -380,7 +381,7 @@ void translateJmp (IR_node *curr_node, char **curr_pos)
 void translateCall (IR_node *curr_node, char **curr_pos)
 {
     writeCmd (curr_pos, (char*) &X86_MOV_R13, 2);   // mov r13, abs ret address
-    uint64_t out_ptr = (uint64_t) &curr_pos; 
+    uint64_t out_ptr = (uint64_t) (*curr_pos + 17); 
     writeAbsPtr (curr_pos, out_ptr);
     writeCmd (curr_pos, (char*) &X86_PUSH_R13, 2);  // push r13
 
