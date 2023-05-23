@@ -88,7 +88,10 @@ void handleBinCode (IR *ir, Troll_code *bin_code)
 
     ir->size = num_cmd;
 
-    translateJmpTargetsIR (ir);
+    if(translateJmpTargetsIR (ir) == jump_fill_error)
+    {
+        printf ("ERROR: jump targets translating!\n\n");
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -100,7 +103,7 @@ int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos)
 
     if(curr_cmd & MASK_REG)
     {
-        ir_node->reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + 1; // rax = 1, ...
+        ir_node->reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + ir_reg_mask; // rax = 1, ...
         offset += OFFSET_ARG;
     }
 
@@ -134,7 +137,7 @@ int translateJmpTargetsIR (IR *ir)
     for(int i = 0; i < ir->size; i++)
     {
         if(IS_JUMP (ir->buffer[i].command) || 
-           ir->buffer[i].command == CALL)
+           ir->buffer[i].command == CALL     )
         {
             char find_flag = 0;
 

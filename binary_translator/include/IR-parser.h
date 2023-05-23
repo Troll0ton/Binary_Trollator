@@ -9,7 +9,7 @@
 
 //-----------------------------------------------------------------------------
 
-static const int jump_fill_error = 0xEAEAEA;
+static const uint32_t jump_fill_error = 0xEAEAEA;
 
 //-----------------------------------------------------------------------------
 
@@ -45,10 +45,11 @@ Troll_code *readCodeFile (FILE *code_file);
 
 IR *translateBinToIr (Troll_code *bin_code);
 
-    void handleBinCode (IR *ir, Troll_code *bin_code);
+void handleBinCode (IR *ir, Troll_code *bin_code);
 
-        int translateJmpTargetsIR (IR *ir);
-        int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos);
+int translateJmpTargetsIR (IR *ir);
+
+int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos);
 
 void IrDump (IR *ir);
 

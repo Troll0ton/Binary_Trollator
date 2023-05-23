@@ -1,10 +1,29 @@
 push 200
 push 100
-jb 14:
+pop
+pop
 
 push 100
 push 200
 add
+out
+
+push 1777
+pop rax
+
+push rax
+out
+
+push 666
+pop [123]
+
+push 101
+pop rax
+
+push rax
+out
+
+in 
 out
 
 push 100
@@ -16,32 +35,4 @@ push 23
 push 4
 div
 out
-
-push 23
-push 4
-
-:78
-
-div
-out
-
-:14
-
-call 66:
-
-push 23
-out
-
-pop 
-pop 
-
 hlt
-
-:66
-push 1005
-out
-
-push 100
-pop 
-
-ret

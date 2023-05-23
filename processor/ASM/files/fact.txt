@@ -25,11 +25,8 @@ pop rax
 
 push 1
 push rax
-
-jae 5: 
 pop
 pop
-call 13:
 
 :5
 ret

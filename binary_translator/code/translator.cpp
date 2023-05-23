@@ -11,16 +11,14 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
     printf ("-- write commands\n\n");
 
     X86_code *x86_code = (X86_code*) calloc (1, sizeof (X86_code));
-    x86_code->buffer = (char*) aligned_calloc (PAGESIZE, ir->size * tmp_size);
+    x86_code->buffer = (char*) aligned_calloc (PAGESIZE, X86_CODE_SIZE);
+    char *memory = (char*) aligned_calloc (PAGESIZE, MEMORY_SIZE);
 
     char **jump_table = (char**) calloc (ir->size, sizeof (char*));
 
     char *curr_pos = x86_code->buffer;
-                                     // there and in other places - SIZE of command
-                                     //        |
-                                     //        V        
-    writeCmd (&curr_pos, (char*) &X86_MOV_R10, 2);
-    writeAbsPtr (&curr_pos, (uint64_t) curr_pos);
+
+    saveDataAddress (&curr_pos, memory);
 
     for(int i = 0; i < ir->size; i++)
     {
@@ -30,15 +28,43 @@ X86_code *translateIrToX86 (IR *ir, int bin_size)
         translateCmd (&CURR_CMD, &curr_pos);
     }
 
+    writeCmd_(&curr_pos, X86_RET);
+
     jumpTableDump (jump_table, ir->size);
     translateJmpTargetsX86 (ir, jump_table);
 
-    writeCmd (&curr_pos, (char*) &X86_RET, 1);
-
     x86_code->size = curr_pos - x86_code->buffer + 1;
+
     free (jump_table);
+    free (memory);
 
     return x86_code;
+}
+
+//-----------------------------------------------------------------------------
+
+void writePrologue (char **curr_pos)
+{
+    writeCmd_(curr_pos, X86_PUSH_RBP);
+    writeCmd_(curr_pos, X86_PUSHA);
+    writeCmd_(curr_pos, X86_MOV_RBP_RSP);
+}
+
+void writeEpilogue (char **curr_pos)
+{
+    writeCmd_(curr_pos, X86_MOV_RSP_RBP);
+    writeCmd_(curr_pos, X86_POPA);
+    writeCmd_(curr_pos, X86_POP_RBP);
+}
+
+//-----------------------------------------------------------------------------
+
+void saveDataAddress (char **curr_pos, char *memory) // r12 <- ptr to 'ram' (troll-code representation)
+{
+    writeCmd_(curr_pos, X86_MOV_R12);
+
+    uint64_t ptr = (uint64_t)(memory); 
+    writeAbsPtr (curr_pos, ptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -47,7 +73,6 @@ void *aligned_calloc (int alignment, int size)
 {
     void *buffer = (void*) aligned_alloc (PAGESIZE, size);
     memset (buffer, 0, size);
-
     return buffer;
 }
 
@@ -63,33 +88,35 @@ void translateJmpTargetsX86 (IR *ir, char **jump_table)
 
         if(IS_CONDITION_JUMP (CURR_CMD.command))
         {
-            uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
-                               (uint64_t)(curr_pos + 24); 
+            uint32_t ptr = (uint64_t) jump_table[TARGET] - 
+                               (uint64_t)(X86_CONDITIONAL_JUMP_OFFSET + SIZE_OF_PTR); 
 
-            curr_pos += 20;
+            curr_pos += X86_CONDITIONAL_JUMP_OFFSET;
 
-            writePtr (&curr_pos, out_ptr);
+            writePtr (&curr_pos, ptr);
         }
 
         else if(CURR_CMD.command == JMP)
         {
-            uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
-                               (uint64_t)(curr_pos + 5); 
+            uint32_t ptr = (uint64_t) jump_table[TARGET] - 
+                               (uint64_t)(curr_pos + X86_JUMP_OFFSET + SIZE_OF_PTR); 
 
-            curr_pos += 1;
+            curr_pos += X86_JUMP_OFFSET;
 
-            writePtr (&curr_pos, out_ptr);
+            writePtr (&curr_pos, ptr);
         }
 
         else if(CURR_CMD.command == CALL)
         {
-            uint32_t out_ptr = (uint64_t) jump_table[TARGET] - 
-                               (uint64_t)(curr_pos + 21); 
+            uint32_t ptr = (uint64_t) jump_table[TARGET] - 
+                               (uint64_t)(curr_pos + X86_CALL_OFFSET + SIZE_OF_PTR); 
 
-            curr_pos += 17;
+            curr_pos += X86_CALL_OFFSET;
 
-            writePtr (&curr_pos, out_ptr);
+            writePtr (&curr_pos, ptr);
         }
+
+        // else skip this command -> not jump type
     }
 }
 
@@ -103,32 +130,39 @@ void translateJmpTargetsX86 (IR *ir, char **jump_table)
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-void writeCmd (char **code, char *cmd, int size)
+void writeCmd (char **curr_pos, char *cmd, int size)
 {
-    memcpy (*code, cmd, size);
+    memcpy (*curr_pos, cmd, size);
 
-    *code += size;
+    *curr_pos += size;
 }
 
-void writePtr (char **code, uint32_t addr)
+void writePtr (char **curr_pos, uint32_t addr)
 {
-    memcpy (*code, &addr, SIZE_OF_PTR);
+    memcpy (*curr_pos, &addr, SIZE_OF_PTR);
 
-    *code += SIZE_OF_PTR;
+    *curr_pos += SIZE_OF_PTR;
 }
 
-void writeAbsPtr (char **code, uint64_t addr)
+void writeAbsPtr (char **curr_pos, uint64_t addr)
 {
-    memcpy (*code, &addr, SIZE_OF_ABS_PTR);
+    memcpy (*curr_pos, &addr, SIZE_OF_ABS_PTR);
 
-    *code += SIZE_OF_ABS_PTR;
+    *curr_pos += SIZE_OF_ABS_PTR;
 }
 
-void writeNum (char **code, double num)
+void writeDouble (char **curr_pos, double num)
 {
-    memcpy (*code, &num, SIZE_OF_NUM);
+    memcpy (*curr_pos, &num, SIZE_OF_NUM);
 
-    *code += SIZE_OF_NUM;
+    *curr_pos += SIZE_OF_NUM;
+}
+
+void writeInt (char **curr_pos, uint64_t num)
+{
+    memcpy (*curr_pos, &num, SIZE_OF_NUM);
+
+    *curr_pos += SIZE_OF_NUM;
 }
 
 //-----------------------------------------------------------------------------
@@ -137,9 +171,14 @@ void writeNum (char **code, double num)
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-int double_printf (double *value)
+void double_printf (double *value)
 {
-    return printf("%lg\n\n", *value);
+    printf("%lg\n\n", *value);
+}
+
+void double_scanf (double *value)
+{
+    scanf ("%lg", value);
 }
 
 void troll_dump ()
@@ -175,9 +214,8 @@ void translateCmd (IR_node *curr_node, char **curr_pos)
             translateArithmOperations (curr_node, curr_pos);
             break;
         case OUT:
-            translateOut (curr_node, curr_pos);
-            break;
         case IN:
+            translateStdio (curr_node, curr_pos);
             break;
         case DUMP:
             translateDump (curr_node, curr_pos);
@@ -211,33 +249,42 @@ void translateCmd (IR_node *curr_node, char **curr_pos)
 
 void translateHlt (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_RET, 1);
+    writeCmd_(curr_pos, X86_RET);
 }
 
 //-----------------------------------------------------------------------------
 
 void translatePush (IR_node *curr_node, char **curr_pos)
 {
+    writeCmd_(curr_pos, X86_MOV_R13);  // mov r13, imm64
+
     if(!curr_node->ram_flag)
     {
-        writeCmd (curr_pos, (char*) &X86_MOV_R13, 2);  // mov r13, imm64
-        writeNum (curr_pos, (double) curr_node->imm_value); 
-
-        if(curr_node->reg_value)
-        {
-            uint32_t tmp_cmd = MASK_X86_ADD_R13_R_X | 
-                              (X86_R_X[curr_node->reg_value - 1] << X86_ADD_R13_R_X_OFFSET);
-
-            writeCmd (curr_pos, (char*) &(tmp_cmd), 3); // add r13, r_x
-        }
-
-        writeCmd (curr_pos, (char*) &X86_PUSH_R13, 2);  // push r13
+        writeDouble (curr_pos, (double) curr_node->imm_value);
     }
 
-    else
+    else 
     {
-        //
+        writeInt (curr_pos, (long long int) curr_node->imm_value);
+    } 
+
+    if(curr_node->reg_value)
+    {
+        uint32_t tmp_cmd = MASK_X86_ADD_R13_R_X | 
+                          (X86_R_X[curr_node->reg_value - ir_reg_mask] 
+                        << X86_ADD_R13_R_X_OFFSET);
+
+        writeCmd (curr_pos, (char*) &(tmp_cmd), 3); // add r13, r_x
     }
+
+    if(curr_node->ram_flag)
+    {
+        writeCmd_(curr_pos, X86_MUL_R13_8);   // mul r13, 8
+        writeCmd_(curr_pos, X86_ADD_R13_R12); // add r13, data address
+        writeCmd_(curr_pos, X86_MOV_R13_R13); // mov r13, [r13]
+    }
+
+    writeCmd_(curr_pos, X86_PUSH_R13);  // push r13
 }
 
 //-----------------------------------------------------------------------------
@@ -249,26 +296,56 @@ void translatePop (IR_node *curr_node, char **curr_pos)
         if(curr_node->reg_value)
         {
             uint32_t tmp_cmd = X86_MOV_R_X_STK | 
-                              (X86_R_X[curr_node->reg_value - 1] << 18);
-            writeCmd (curr_pos, (char*) &(tmp_cmd), 4);
-            writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4);
+                              (X86_R_X[curr_node->reg_value - ir_reg_mask] 
+                            << X86_MOV_R_X_STK_MASK_LEN);
+
+            writeCmd (curr_pos, (char*) &tmp_cmd, X86_MOV_R_X_STK_SIZE);
+            writeCmd_(curr_pos, X86_ADD_RSP);
         }
 
         else
         {
-            writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4); // pop 
-        }
+            writeCmd_(curr_pos, X86_ADD_RSP); // pop 
+        } 
     }
 
-    //writeCmd (&curr_pos, (char*) &X86_ADD_RSP, 4);
+    else
+    {
+        writeCmd_(curr_pos, X86_MOV_XMM0_STK); // pop xmm0
+        writeCmd_(curr_pos, X86_ADD_RSP);
+        writeCmd_(curr_pos, X86_MOV_R13);  // mov r13, imm64
+
+        if(!curr_node->ram_flag)
+        {
+            writeDouble (curr_pos, (double) curr_node->imm_value);
+        }
+
+        else 
+        {
+            writeInt (curr_pos, (long long int) curr_node->imm_value);
+        } 
+
+        if(curr_node->reg_value)
+        {
+            uint32_t tmp_cmd = MASK_X86_ADD_R13_R_X | 
+                              (X86_R_X[curr_node->reg_value - ir_reg_mask] 
+                            << X86_ADD_R13_R_X_OFFSET);
+
+            writeCmd (curr_pos, (char*) &(tmp_cmd), MASK_X86_ADD_R13_R_X_SIZE); // add r13, r_x
+        }
+
+        writeCmd_(curr_pos, X86_MUL_R13_8);   // mul r13, 8
+        writeCmd_(curr_pos, X86_ADD_R13_R12);
+        writeCmd_(curr_pos, X86_MOV_MEM_XMM0);
+    }
 }
 
 //-----------------------------------------------------------------------------
 
 void translateArithmOperations (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM0_STK, 6); // pop xmm0
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM1_STK, 6); // pop xmm1
+    writeCmd_(curr_pos, X86_MOV_XMM0_STK); // pop xmm0
+    writeCmd_(curr_pos, X86_MOV_XMM1_STK); // pop xmm1
 
     char *sel_cmd = NULL;
 
@@ -286,117 +363,133 @@ void translateArithmOperations (IR_node *curr_node, char **curr_pos)
         case DIV:
             sel_cmd = (char*) &X86_DIVSD;
             break;
+        default:
+            printf ("UNKNOWN COMMAND!\n");
+            break;
     }
-    writeCmd (curr_pos, sel_cmd, 4);                    // op xmm1, xmm0 -> xmm1
+    writeCmd (curr_pos, sel_cmd, X86_OPSD_SIZE); // op xmm1, xmm0 -> xmm1
 
-    writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4); 
-    writeCmd (curr_pos, (char*) &X86_MOV_STK_XMM1, 6);  // push xmm1   
+    writeCmd_(curr_pos, X86_ADD_RSP); 
+    writeCmd_(curr_pos, X86_MOV_STK_XMM1);  // push xmm1   
 }
 
 //-----------------------------------------------------------------------------
 
-void translateOut (IR_node *curr_node, char **curr_pos)
+void translateStdio (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_LEA_RDI_RSP, 4);
+    if(curr_node->command == IN)
+    {
+        writeCmd_(curr_pos, X86_SUB_RSP);
+    }
 
-    writeCmd (curr_pos, (char*) &X86_PUSH_RBP, 1);
-    writeCmd (curr_pos, (char*) &X86_PUSHA, 6);
-    writeCmd (curr_pos, (char*) &X86_MOV_RBP_RSP, 3);
+    writeCmd_(curr_pos, X86_LEA_RDI_RSP);
 
-    writeCmd (curr_pos, (char*) &X86_CALL, 1);
-    uint32_t out_ptr = (uint64_t) double_printf - (uint64_t)(*curr_pos + 4); 
-    writePtr (curr_pos, out_ptr);
+    writePrologue (curr_pos);
+    writeCmd_(curr_pos, X86_ALIGN_STK); 
 
-    writeCmd (curr_pos, (char*) &X86_MOV_RSP_RBP, 3);
-    writeCmd (curr_pos, (char*) &X86_POPA, 6);
-    writeCmd (curr_pos, (char*) &X86_POP_RBP, 1);
+    writeCmd_(curr_pos, X86_CALL);
+    uint64_t ptr = 0;
 
-    writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4);
+    if(curr_node->command == OUT)
+    {
+        ptr = (uint64_t) double_printf;
+    }
+
+    else
+    {
+        ptr = (uint64_t) double_scanf;
+    }
+
+    ptr -= (uint64_t)(*curr_pos + SIZE_OF_PTR); 
+    writePtr (curr_pos, (uint32_t) ptr);
+
+    writeEpilogue (curr_pos);
+
+    if(curr_node->command == OUT)
+    {
+        writeCmd_(curr_pos, X86_ADD_RSP);
+    }
 }
 
 //-----------------------------------------------------------------------------
 
 void translateDump (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_PUSH_RBP, 1);
-    writeCmd (curr_pos, (char*) &X86_PUSHA, 6);
-    writeCmd (curr_pos, (char*) &X86_MOV_RBP_RSP, 3);
+    writePrologue (curr_pos);
 
     // You can change troll_print on your purposes
-    writeCmd (curr_pos, (char*) &X86_CALL, 1);
-    uint32_t out_ptr = (uint64_t) troll_dump - (uint64_t)(*curr_pos + 4); 
-    writePtr (curr_pos, out_ptr);
+    writeCmd_(curr_pos, X86_CALL);
+    uint32_t ptr = (uint64_t) troll_dump - (uint64_t)(*curr_pos + SIZE_OF_PTR); 
+    writePtr (curr_pos, ptr);
 
-    writeCmd (curr_pos, (char*) &X86_MOV_RSP_RBP, 3);
-    writeCmd (curr_pos, (char*) &X86_POPA, 6);
-    writeCmd (curr_pos, (char*) &X86_POP_RBP, 1);
+    writeEpilogue (curr_pos);
 }
 
 //-----------------------------------------------------------------------------
 
 void translateConditionalJmps (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM0_STK, 6); 
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM1_STK, 6); 
-    writeCmd (curr_pos, (char*) &X86_CMP_XMM0_XMM1, 6); 
+    writeCmd_(curr_pos, X86_MOV_XMM0_STK); 
+    writeCmd_(curr_pos, X86_MOV_XMM1_STK); 
+    writeCmd_(curr_pos, X86_CMP_XMM0_XMM1); 
 
     uint32_t curr_cmd = X86_MASK_JMP;
     
     switch(curr_node->command)
     {
         case JBE:
-            curr_cmd |= (X86_MASK_JBE << 8);
+            curr_cmd |= (X86_MASK_JBE << JMP_MASK_LEN);
             break;
         case JAE:
-            curr_cmd |= (X86_MASK_JAE << 8);
+            curr_cmd |= (X86_MASK_JAE << JMP_MASK_LEN);
             break;
         case JA:
-            curr_cmd |= (X86_MASK_JA << 8);    
+            curr_cmd |= (X86_MASK_JA << JMP_MASK_LEN);    
             break;
         case JB:
-            curr_cmd |= (X86_MASK_JB << 8);
+            curr_cmd |= (X86_MASK_JB << JMP_MASK_LEN);
             break;
         case JE:
-            curr_cmd |= (X86_MASK_JE << 8);
+            curr_cmd |= (X86_MASK_JE << JMP_MASK_LEN);
             break;
         case JNE:
-            curr_cmd |= (X86_MASK_JNE << 8);
+            curr_cmd |= (X86_MASK_JNE << JMP_MASK_LEN);
+            break;
+        default:
+            printf ("UNKNOWN COMMAND!\n");
             break;
     }
     
-    writeCmd (curr_pos, (char*) &curr_cmd, 2);
-    *curr_pos += 4; // skip ptr for now
+    writeCmd (curr_pos, (char*) &curr_cmd, X86_MASK_JMP_SIZE);
+    *curr_pos += SIZE_OF_PTR; // skip ptr for now
 }
 
 //-----------------------------------------------------------------------------
 
 void translateJmp (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_JMP, 1); 
-    *curr_pos += 4;
+    writeCmd_(curr_pos, X86_JMP); 
+    *curr_pos += SIZE_OF_PTR;
 }
 
 //-----------------------------------------------------------------------------
 
 void translateCall (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_MOV_R13, 2);   // mov r13, abs ret address
-    uint64_t out_ptr = (uint64_t) (*curr_pos + 17); 
-    writeAbsPtr (curr_pos, out_ptr);
-    writeCmd (curr_pos, (char*) &X86_PUSH_R13, 2);  // push r13
+    writePrologue (curr_pos);
+    writeCmd_(curr_pos, X86_ALIGN_STK);
 
-    writeCmd (curr_pos, (char*) &X86_SUB_RSP, 4);   // need to aligned stack - 16 
-
-    writeCmd (curr_pos, (char*) &X86_JMP, 1);
-    *curr_pos += 4; // skip ptr
+    writeCmd_(curr_pos, X86_CALL);
+    *curr_pos += SIZE_OF_PTR; // skip ptr
 }
 
 //-----------------------------------------------------------------------------
 
 void translateRet (IR_node *curr_node, char **curr_pos)
 {
-    writeCmd (curr_pos, (char*) &X86_ADD_RSP, 4);
-    writeCmd (curr_pos, (char*) &X86_RET, 1);
+    writeCmd_(curr_pos, X86_RET);
+
+    writeEpilogue (curr_pos);
 }
 
 //-----------------------------------------------------------------------------
@@ -404,9 +497,9 @@ void translateRet (IR_node *curr_node, char **curr_pos)
 void translateMathFunctions (IR_node *curr_node, char **curr_pos)
 {
     // NEED to add SIN and COS
-    writeCmd (curr_pos, (char*) &X86_MOV_XMM0_STK, 6);  // pop  xmm0
-    writeCmd (curr_pos, (char*) &X86_SQRTPD, 4);        // sqrt xmm0
-    writeCmd (curr_pos, (char*) &X86_MOV_STK_XMM0, 6);  // push xmm0 
+    writeCmd_(curr_pos, X86_MOV_XMM0_STK);  // pop  xmm0
+    writeCmd_(curr_pos, X86_SQRTPD);        // sqrt xmm0
+    writeCmd_(curr_pos, X86_MOV_STK_XMM0);  // push xmm0 
 }
 
 //-----------------------------------------------------------------------------
@@ -457,7 +550,7 @@ void CodeX86Dump (char *code, int size)
 
     for(int i = 0; i < size; i++)
     {
-        if(line_len > 15)
+        if(line_len > max_len_dump)
         {
             fprintf (dump_file, "\n\n");
             line_len = 0;
