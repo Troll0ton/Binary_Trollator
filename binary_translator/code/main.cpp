@@ -19,12 +19,12 @@ int main ()
     BinCodeDtor (bin_code);
     fclose (code_file);
     
-    X86_code *x86_code = translateIrToX86 (ir, bin_size);
-    CodeX86Dump (x86_code->buffer, x86_code->size);
+    X64_code *x64_code = translateIrToX64 (ir, bin_size);
+    CodeX64Dump (x64_code->buffer, x64_code->size);
     IrDtor (ir);
 
-    runCode (x86_code->buffer, x86_code->size);
-    X86RepresentDtor (x86_code);
+    runCode (x64_code->buffer, x64_code->size);
+    X64RepresentDtor (x64_code);
 
     printf ("-- finishing\n\n");
 

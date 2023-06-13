@@ -13,6 +13,14 @@ static const uint32_t jump_fill_error = 0xEAEAEA;
 
 //-----------------------------------------------------------------------------
 
+typedef struct Troll_code
+{
+    char *buffer;
+    int size;
+} Troll_code;
+
+//-----------------------------------------------------------------------------
+
 enum OFFSETS
 {
     OFFSET_CMD = 1,

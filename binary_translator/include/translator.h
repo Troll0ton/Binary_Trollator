@@ -1,10 +1,11 @@
-//! @file translator.h 
+//! @file translator.h
 
 #ifndef TRANSLATOR_H
 #define TRANSLATOR_H
 
 //-----------------------------------------------------------------------------
 
+#include "binary_translator/include/x64_codes.h"
 #include "binary_translator/include/common.h"
 
 //-----------------------------------------------------------------------------
@@ -14,67 +15,137 @@ static const int max_len_dump = 15;
 
 //-----------------------------------------------------------------------------
 
-#define writeCmd_(curr_pos, i) \
-    writeCmd (curr_pos, (char*) &i, i##_SIZE)
+enum TRANSLATOR_INFO
+{
+    ABSENCE        = 0xBEDBAD,
+    DELETED        = 0xDEDAC,
+    MPROTECT_ERROR = -1,
+};
+
+typedef enum RAM_INFO
+{
+    RAM_INIT_SIZE = PAGESIZE,
+} RAM_INFO;
+
+typedef enum X64_CODE_INFO
+{
+    X64_CODE_INIT_SIZE    = PAGESIZE,
+    X64_CODE_SIZE_DIFF    = 16,
+    X64_CODE_INCREASE_PAR = 2,
+} X64_CODE_INFO;
+
+enum X64_INFO
+{
+    SIZE_OF_PTR = 4, // DOUBLE WORD
+    SIZE_OF_ABS_PTR = sizeof (void*),
+    SIZE_OF_NUM = sizeof (double),
+
+    X64_ADD_R13_R_X_OFFSET = 18,
+    X64_CONDITIONAL_JUMP_OFFSET = 20,
+    X64_JUMP_OFFSET = 1,
+    X64_CALL_OFFSET = 15,
+};
+
+enum MASK_INFO
+{
+    JMP_MASK_LEN = 8,
+    X64_MOV_R_X_STK_MASK_LEN = 18,
+};
 
 //-----------------------------------------------------------------------------
 
-X86_code *translateIrToX86 (IR *ir, int bin_size);
+typedef struct X64_code
+{
+    char *buffer;
+    int   size;
+    char *curr_pos;
+    int   capacity;
+} X64_code;
 
-void translateJmpTargetsX86 (IR *ir, char **jump_table);
+//-----------------------------------------------------------------------------
 
-void *aligned_calloc (int alignment, int size);
+typedef struct Ram
+{
+    char *buffer;
+    int   size;
+} Ram;
 
-void translateCmd (IR_node *curr_node, char **curr_pos);
+//-----------------------------------------------------------------------------
 
-void translateHlt (IR_node *curr_node, char **curr_pos);
+typedef struct Jmp_table
+{
+    char **buffer;
+    int    size;
+} Jmp_table;   
 
-void translatePush (IR_node *curr_node, char **curr_pos);
+//-----------------------------------------------------------------------------
 
-void translatePop (IR_node *curr_node, char **curr_pos);
+X64_code *translateIrToX64(IR *ir, int bin_size);
 
-void translateArithmOperations (IR_node *curr_node, char **curr_pos);
+X64_code *x64CodeCtor (int init_size, int alignment);
 
-void translateStdio (IR_node *curr_node, char **curr_pos);
+void x64CodeDtor (X64_code *x64_code);
 
-void translateDump (IR_node *curr_node, char **curr_pos);
+Ram *ramCtor (int size, int alignment);
 
-void translateConditionalJmps (IR_node *curr_node, char **curr_pos);
+void ramDtor (Ram *ram);
 
-void translateJmp (IR_node *curr_node, char **curr_pos);
+Jmp_table *jmpTableCtor (int size);
 
-void translateCall (IR_node *curr_node, char **curr_pos);
+void jmpTableDtor (Jmp_table *jmp_table);
 
-void translateRet (IR_node *curr_node, char **curr_pos);
+void translateJmpTargetsX64 (IR *ir, Jmp_table *jmp_table);
 
-void translateMathFunctions (IR_node *curr_node, char **curr_pos);
+void *alignedCalloc(int alignment, int size);
 
-void writeCmd (char **curr_pos, char *cmd, int size);
+void translateCmd(IR_node *curr_node, char **curr_pos);
 
-void writePtr (char **curr_pos, uint32_t addr);
+void translateHlt(IR_node *curr_node, char **curr_pos);
 
-void writeAbsPtr (char **curr_pos, uint64_t addr);
+void translatePush(IR_node *curr_node, char **curr_pos);
 
-void writeDouble (char **curr_pos, double num);
+void translatePop(IR_node *curr_node, char **curr_pos);
 
-void writePrologue (char **curr_pos);
+void translateArithmOperations(IR_node *curr_node, char **curr_pos);
 
-void writeEpilogue (char **curr_pos);
+void translateStdio(IR_node *curr_node, char **curr_pos);
 
-void saveDataAddress (char **curr_pos, char *memory);
+void translateDump(IR_node *curr_node, char **curr_pos);
 
-void double_scanf (double *value);
+void translateConditionalJmps(IR_node *curr_node, char **curr_pos);
 
-void double_printf (double *value);
+void translateJmp(IR_node *curr_node, char **curr_pos);
+
+void translateCall(IR_node *curr_node, char **curr_pos);
+
+void translateRet(IR_node *curr_node, char **curr_pos);
+
+void translateMathFunctions(IR_node *curr_node, char **curr_pos);
+
+void writeCmd (X64_code *x64_code, uint64_t op_code, int op_size);
+
+void writePtr(char **curr_pos, uint32_t addr);
+
+void writeAbsPtr(char **curr_pos, uint64_t addr);
+
+void writeDouble(char **curr_pos, double num);
+
+void writePrologue(char **curr_pos);
+
+void writeEpilogue(char **curr_pos);
+
+void saveDataAddress (X64_code *x64_code, char *ram);
+
+void double_scanf(double *value);
+
+void double_printf(double *value);
 
 void runCode (char *code, int size);
 
-void CodeX86Dump (char *code, int size);
+void CodeX64Dump (char *code, int size);
 
-void jumpTableDump (char **jump_table, int size);
-
-void X86RepresentDtor (X86_code *X86_code);
+void jmpTableDump (Jmp_table *jmp_table);
 
 //-----------------------------------------------------------------------------
 
-#endif //TRANSLATOR_H
+#endif // TRANSLATOR_H
