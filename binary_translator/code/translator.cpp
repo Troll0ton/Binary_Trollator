@@ -8,10 +8,10 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
 {
     printf ("-- write commands\n\n");
 
-    X64_code  *x64_code  = x64CodeCtor  (X64_CODE_INIT_SIZE, PAGESIZE);
+    X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGESIZE);
     CodeX64DumpHeader (x64_code);
 
-    Ram       *ram       = ramCtor      (RAM_INIT_SIZE,      PAGESIZE);
+    Ram       *ram       = ramCtor      (RAM_INIT_SIZE, PAGESIZE);
     Jmp_table *jmp_table = jmpTableCtor (ir->size);
 
     saveDataAddress (x64_code, ram->buffer);    // save absolute address to ram in R12 
@@ -24,7 +24,7 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
         translateCmd (x64_code, &CURR_IR_NODE);
     }
 
-    writeCode (x64_code, OP_RET, OP_RET_SIZE);
+    writeSimpleCode (OP_RET);
 
     jmpTableDump (jmp_table);
     handleJmpTargetsX64 (x64_code, ir, jmp_table);
@@ -119,28 +119,28 @@ void jmpTableDtor (Jmp_table *jmp_table)
 
 void writePrologue (X64_code *x64_code)
 {
-    writeCode (x64_code, OP_PUSH_REG | MASK_RBP << POS_MASK_REG, OP_PUSH_REG_SIZE);
-    writeCode (x64_code, OP_PUSHA, OP_PUSHA_SIZE);
-    writeCode (x64_code, OP_MOV_RBP_RSP, OP_MOV_RBP_RSP_SIZE);
+    writeMaskingCode (OP_PUSH_REG, MASK_RBP, POS_MASK_REG, 0);
+    writeSimpleCode  (OP_PUSHA);
+    writeSimpleCode  (OP_MOV_RBP_RSP);
 }
 
 //-----------------------------------------------------------------------------
 
 void writeEpilogue (X64_code *x64_code) 
 {
-    writeCode (x64_code, OP_MOV_RSP_RBP, OP_MOV_RSP_RBP_SIZE);
-    writeCode (x64_code, OP_POPA, OP_POPA_SIZE);
-    writeCode (x64_code, OP_POP_REG | MASK_RBP << POS_MASK_REG, OP_POP_REG_SIZE);
+    writeSimpleCode  (OP_MOV_RSP_RBP);
+    writeSimpleCode  (OP_POPA);
+    writeMaskingCode (OP_POP_REG, MASK_RBP, POS_MASK_REG, 0);
 }
 
 //-----------------------------------------------------------------------------
 
 void saveDataAddress (X64_code *x64_code, char *ram) // r12 <- ptr to 'ram' (troll-code representation)
 {
-    writeCode (x64_code, OP_MOV_REG_IMM | MASK_R12 << POS_MASK_REG | MASK_R, OP_MOV_REG_IMM_SIZE);
+    writeMaskingCode (OP_MOV_REG_IMM, MASK_R12, POS_MASK_REG, MASK_R);
 
     uint64_t ptr = (uint64_t)(ram); 
-    writeCode (x64_code, ptr, SIZE_OF_ABS_PTR);
+    writeAbsPtr (ptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -201,7 +201,7 @@ void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_tab
 
     CURR_POS += opcode_offset;
 
-    writeCode (x64_code, ptr, SIZE_OF_PTR);
+    writePtr (ptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -215,10 +215,10 @@ void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_tab
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-void writeCode (X64_code *x64_code, uint64_t value, int size)
+void writeCode (X64_code *x64_code, uint64_t value, char *name, int size)
 {
     memcpy (x64_code->curr_pos, &value, size);
-    dumpCode (x64_code, size);
+    dumpCode (x64_code, name, size);
 
     x64_code->curr_pos += size;
     x64_code->size     += size;  
@@ -229,24 +229,12 @@ void writeCode (X64_code *x64_code, uint64_t value, int size)
     }
 }
 
-void writeDouble (X64_code *x64_code, double num)
-{
-    memcpy (x64_code->curr_pos, &num, SIZE_OF_NUM);
-    dumpCode (x64_code, SIZE_OF_NUM);
-
-    x64_code->curr_pos += SIZE_OF_NUM;
-    x64_code->size     += SIZE_OF_NUM;  
-
-    if(x64_code->size + X64_CODE_SIZE_DIFF > x64_code->capacity)
-    {
-        x64CodeResize (x64_code);
-    }
-}
-
 //-----------------------------------------------------------------------------
 
-void dumpCode (X64_code *x64_code, int size)
+void dumpCode (X64_code *x64_code, char *name, int size)
 {
+    fprintf (x64_code->dump_file, "%-40s | ", name);
+
     for(int i = 0; i < size; i++)
     {
         uint32_t num = (uint32_t) (uint8_t) x64_code->curr_pos[i];
@@ -362,29 +350,31 @@ void translateReg (IR_node *curr_node)
 
 void translateHlt (X64_code *x64_code, IR_node *curr_node)
 {
-    writeCode (x64_code, OP_RET, OP_RET_SIZE);
+    writeSimpleCode (OP_RET);
 }
 
 //-----------------------------------------------------------------------------
 
 void translatePush (X64_code *x64_code, IR_node *curr_node)
 {
-    writeCode (x64_code, OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R, OP_MOV_REG_IMM_SIZE);
+    writeMaskingCode (OP_MOV_REG_IMM, MASK_R13, POS_MASK_REG, MASK_R);
 
     if(!curr_node->ram_flag)
     {
-        writeDouble (x64_code, (double) curr_node->imm_value);
+        double num = curr_node->imm_value;
+        writeNum (num);
     }
 
     else 
     {
-        writeCode (x64_code, (uint64_t) curr_node->imm_value, SIZE_OF_NUM);
+        uint64_t num = curr_node->imm_value;
+        writeNum (num);
     } 
 
     if(curr_node->reg_value)
     {
         translateReg (curr_node);
-        writeCode (x64_code, OP_ADD_R13_REG | curr_node->reg_value << POS_ADD_R13_REG, 
+        writeMaskingCode (OP_ADD_R13_REG, curr_node->reg_value, POS_ADD_R13_REG, 
                              OP_ADD_R13_REG_SIZE                                      ); // add r13, r_x
     }
 

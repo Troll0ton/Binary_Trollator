@@ -15,10 +15,12 @@ typedef enum REGS_MASKS
      MASK_RBX = 0b011,
      MASK_RCX = 0b001,
      MASK_RDX = 0b010,
+
      MASK_RSI = 0b110,
      MASK_RDI = 0b111,
      MASK_RSP = 0b100,
      MASK_RBP = 0b101,
+     
      MASK_R   = 1,
      MASK_R8  = 0b000, 
      MASK_R9  = 0b001,
@@ -88,7 +90,6 @@ typedef enum OP_CODES : uint64_t
      OP_MULSD_XMM1_XMM0 = 0xC8590FF2,     // mulsd  xmm1,  xmm0
      OP_DIVSD_XMM1_XMM0 = 0xC85E0FF2,     // divsd  xmm1,  xmm0
      OP_SQRTPD_XMM0     = 0xC0510F66,     // sqrtpd xmm0,  xmm0    
-
 } OP_CODES;
 
 //-----------------------------------------------------------------------------

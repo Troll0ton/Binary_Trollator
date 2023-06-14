@@ -20,6 +20,35 @@
 
 //-----------------------------------------------------------------------------
 
+#define MASKING(OP_MASK, REG_MASK, POS_MASK_REG, MASK_R) \
+    OP_MASK | REG_MASK << POS_MASK_REG | MASK_R, #OP_MASK " " #OP_MASK
+
+//-----------------------------------------------------------------------------
+//                                WRITING
+//-----------------------------------------------------------------------------
+
+#define writeSimpleCode(value)                       \
+    writeCode_(x64_code, value, #value, value##_SIZE)
+
+
+#define writePtr(value)                                   \
+    writeCode_(x64_code, value, "PTR 4 BYTE", SIZE_OF_PTR)
+
+
+#define writeAbsPtr(value)                                        \ 
+    writeCode_(x64_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR)
+
+
+#define writeNum(value)                                                   \
+    writeCode_(x64_code, *(uint64_t*) &(value), "NUM 8 BYTE", SIZE_OF_NUM)
+
+
+#define writeMaskingCode(OP_MASK, REG_MASK, POS_MASK_REG, MASK_R)     \                                                         
+    writeCode_(x64_code, OP_MASK | REG_MASK << POS_MASK_REG | MASK_R, \
+               #OP_MASK " " reg_name[REG_MASK], OP_MASK##_SIZE)
+
+//-----------------------------------------------------------------------------
+
 enum RAM_INFO
 {
     RAM_INIT_SIZE = PAGESIZE,
@@ -83,6 +112,18 @@ typedef struct Jmp_table
 
 //-----------------------------------------------------------------------------
 
+static char opname[100] = { 0 };
+
+static const char *reg_name[] =
+{
+    "RAX",
+    "RCX",
+    "RDX",
+    "RBX",
+};
+
+//-----------------------------------------------------------------------------
+
 X64_code *translateIrToX64(IR *ir, int bin_size);
 
 X64_code *x64CodeCtor (int init_size, int alignment);
@@ -129,11 +170,9 @@ void translateRet(X64_code *x64_code, IR_node *curr_node);
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
 
-void writeCode (X64_code *x64_code, uint64_t value, int size);
+void writeCode_(X64_code *x64_code, uint64_t value, char *name, int size);
 
-void dumpCode (X64_code *x64_code, int size);
-
-void writeDouble (X64_code *x64_code, double num);
+void dumpCode (X64_code *x64_code, char *name, int size);
 
 void writePrologue (X64_code *x64_code);
 

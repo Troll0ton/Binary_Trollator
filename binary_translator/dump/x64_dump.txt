@@ -4,169 +4,169 @@
 
 - x64 buffer capacity: 4096
 
-49 BC 
-00 B0 E8 A8 6A 55 00 00 
-49 BD 
-00 00 00 00 00 00 69 40 
-41 55 
-49 BD 
-00 00 00 00 00 00 59 40 
-41 55 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 00 59 40 
-41 55 
-49 BD 
-00 00 00 00 00 00 69 40 
-41 55 
-F2 0F 10 44 24 00 
-F2 0F 10 4C 24 08 
-F2 0F 58 C8 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-F2 0F 11 4C 24 00 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-36 B6 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 C4 9B 40 
-41 55 
-48 8B 00 24 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 00 00 00 
-49 01 C1 
-41 55 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-DE B5 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 D0 84 40 
-41 55 
-F2 0F 10 44 24 00 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-7B 00 00 00 00 00 00 00 
-49 C1 E5 
-08 
-49 01 D1 
-F2 41 0F 11 45 00 
-49 BD 
-00 00 00 00 00 40 59 40 
-41 55 
-48 8B 00 24 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 00 00 00 
-49 01 C1 
-41 55 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-52 B5 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-48 81 EC 
-08 00 00 00 00 00 00 00 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-4C B5 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-F6 B4 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 00 59 40 
-41 55 
-49 BD 
-00 00 00 00 00 00 49 40 
-41 55 
-F2 0F 10 44 24 00 
-F2 0F 10 4C 24 08 
-F2 0F 5C C8 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-F2 0F 11 4C 24 00 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-8F B4 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-49 BD 
-00 00 00 00 00 00 37 40 
-41 55 
-49 BD 
-00 00 00 00 00 00 10 40 
-41 55 
-F2 0F 10 44 24 00 
-F2 0F 10 4C 24 08 
-F2 0F 5E C8 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-F2 0F 11 4C 24 00 
-48 8D 3C 24 
-40 55 
-41 52 53 52 51 50 
-48 89 E5 
-48 83 E4 F0 
-E8 
-28 B4 59 FF 
-48 89 EC 
-58 59 5A 5B 41 5A 
-40 5D 
-48 81 C4 
-08 00 00 00 00 00 00 00 
-C3 
-C3 
+OP_MOV_REG_IMM | MASK_R12 << POS_MASK_REG | MASK_R | 49 BC 
+ptr                                      | 00 10 20 88 CB 55 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 69 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 59 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 59 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 69 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_XMM0_STK                          | F2 0F 10 44 24 00 
+OP_MOV_XMM1_STK                          | F2 0F 10 4C 24 08 
+op_code                                  | F2 0F 58 C8 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_STK_XMM1                          | F2 0F 11 4C 24 00 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | AA B6 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 C4 9B 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_REG_STK | curr_node->reg_value << POS_MOV_REG_STK | 48 8B 00 24 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 00 00 
+OP_ADD_R13_REG | curr_node->reg_value << POS_ADD_R13_REG | 49 01 C1 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | 52 B6 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 D0 84 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_XMM0_STK                          | F2 0F 10 44 24 00 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+(uint64_t) curr_node->imm_value          | 7B 00 00 00 00 00 00 00 
+OP_SHL_REG | MASK_R13 << POS_SHL_REG | MASK_R | 49 C1 E5 
+8                                        | 08 
+OP_ADD_R13_REG | MASK_R12 << POS_ADD_R13_REG | 49 01 D1 
+OP_MOV_MEM_XMM0                          | F2 41 0F 11 45 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 40 59 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_REG_STK | curr_node->reg_value << POS_MOV_REG_STK | 48 8B 00 24 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 00 00 
+OP_ADD_R13_REG | curr_node->reg_value << POS_ADD_R13_REG | 49 01 C1 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | C6 B5 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_SUB_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 EC 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | C0 B5 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | 6A B5 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 59 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 49 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_XMM0_STK                          | F2 0F 10 44 24 00 
+OP_MOV_XMM1_STK                          | F2 0F 10 4C 24 08 
+op_code                                  | F2 0F 5C C8 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_STK_XMM1                          | F2 0F 11 4C 24 00 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | 03 B5 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 37 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_REG_IMM | MASK_R13 << POS_MASK_REG | MASK_R | 49 BD 
+NUMERIC                                  | 00 00 00 00 00 00 10 40 
+OP_PUSH_REG | MASK_R13 << POS_MASK_REG | MASK_R | 41 55 
+OP_MOV_XMM0_STK                          | F2 0F 10 44 24 00 
+OP_MOV_XMM1_STK                          | F2 0F 10 4C 24 08 
+op_code                                  | F2 0F 5E C8 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_MOV_STK_XMM1                          | F2 0F 11 4C 24 00 
+OP_LEA_RDI_STK_ARG                       | 48 8D 3C 24 
+OP_PUSH_REG | MASK_RBP << POS_MASK_REG   | 40 55 
+OP_PUSHA                                 | 41 52 53 52 51 50 
+OP_MOV_RBP_RSP                           | 48 89 E5 
+OP_ALIGN_STK                             | 48 83 E4 F0 
+OP_CALL                                  | E8 
+(uint32_t) funct_ptr                     | 9C B4 57 FF 
+OP_MOV_RSP_RBP                           | 48 89 EC 
+OP_POPA                                  | 58 59 5A 5B 41 5A 
+OP_POP_REG | MASK_RBP << POS_MASK_REG    | 40 5D 
+OP_ADD_REG_IMM | MASK_RSP << POS_ADD_REG_IMM | 48 81 C4 
+8                                        | 08 00 00 00 00 00 00 00 
+OP_RET                                   | C3 
+OP_RET                                   | C3 
