@@ -37,6 +37,16 @@ typedef uint32_t cmd_code;
 
 //-----------------------------------------------------------------------------
 
+#define CONDITIONAL_JMP_CASE  \
+    case JBE:                 \
+    case JAE:                 \
+    case JA:                  \
+    case JB:                  \
+    case JE:                  \
+    case JNE:                 
+
+//-----------------------------------------------------------------------------
+
 #define IS_CONDITION_JUMP(i)                               \
     ((i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
      (i == JA) || (i == JAE))

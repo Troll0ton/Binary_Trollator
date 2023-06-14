@@ -52,7 +52,7 @@ Troll_code *readCodeFile (FILE *code_file)
 
 //-----------------------------------------------------------------------------
 
-#define CURR_CMD ir->buffer[num_cmd]
+#define CURR_IR_NODE ir->buffer[num_cmd]
 
 IR *translateBinToIr (Troll_code *bin_code)
 {
@@ -79,7 +79,7 @@ void handleBinCode (IR *ir, Troll_code *bin_code)
                         // skip signature and result sum
     for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
     {
-        CURR_CMD.troll_pos = curr_pos; // this is position in troll file
+        CURR_IR_NODE.troll_pos = curr_pos; // this is position in troll file
 
         curr_pos += handleTrollMask (&ir->buffer[num_cmd], bin_code, curr_pos);            
 
@@ -143,13 +143,13 @@ int translateJmpTargetsIR (IR *ir)
 
             for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
             {
-                if(CURR_CMD.troll_pos == TARGET)
+                if(CURR_IR_NODE.troll_pos == TARGET)
                 {
                     TARGET = num_cmd;
                     find_flag = 1;
                 }
 
-                if(!CURR_CMD.troll_pos)
+                if(!CURR_IR_NODE.troll_pos)
                 {
                     break;
                 }
@@ -199,7 +199,7 @@ void IrDump (IR *ir)
             break;                                  \
         }
 
-        switch(CURR_CMD.command)
+        switch(CURR_IR_NODE.command)
         {
             #include "processor/COMMON/include/codegen/codegen.h"
 
@@ -213,9 +213,9 @@ void IrDump (IR *ir)
                 "       - reg_value: %d\n"
                 "       - imm_value: %d\n"
                 "       - ram_flag:  %d\n",
-                CURR_CMD.reg_value,
-                CURR_CMD.imm_value,
-                CURR_CMD.ram_flag         );
+                CURR_IR_NODE.reg_value,
+                CURR_IR_NODE.imm_value,
+                CURR_IR_NODE.ram_flag         );
     }
 
     printf ("-- successful dumping\n\n");
@@ -223,7 +223,7 @@ void IrDump (IR *ir)
     fclose (dump_file);
 }
 
-#undef CURR_CMD
+#undef CURR_IR_NODE
 
 //-----------------------------------------------------------------------------
 

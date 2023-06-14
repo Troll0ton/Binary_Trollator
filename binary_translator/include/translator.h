@@ -94,7 +94,9 @@ Jmp_table *jmpTableCtor (int size);
 
 void jmpTableDtor (Jmp_table *jmp_table);
 
-void translateJmpTargetsX64 (IR *ir, Jmp_table *jmp_table);
+void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table);
+
+void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_table);
 
 void *alignedCalloc(int alignment, int size);
 
@@ -122,17 +124,13 @@ void translateRet(IR_node *curr_node, char **curr_pos);
 
 void translateMathFunctions(IR_node *curr_node, char **curr_pos);
 
-void writeCmd (X64_code *x64_code, uint64_t op_code, int op_size);
+void writeCode (X64_code *x64_code, uint64_t value, int size);
 
-void writePtr(char **curr_pos, uint32_t addr);
+void writeDouble (X64_code *x64_code, double num);
 
-void writeAbsPtr(char **curr_pos, uint64_t addr);
+void writePrologue (X64_code *x64_code);
 
-void writeDouble(char **curr_pos, double num);
-
-void writePrologue(char **curr_pos);
-
-void writeEpilogue(char **curr_pos);
+void writeEpilogue (X64_code *x64_code);
 
 void saveDataAddress (X64_code *x64_code, char *ram);
 
