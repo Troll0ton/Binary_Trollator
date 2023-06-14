@@ -88,7 +88,7 @@ void handleBinCode (IR *ir, Troll_code *bin_code)
 
     ir->size = num_cmd;
 
-    if(translateJmpTargetsIR (ir) == jump_fill_error)
+    if(translateJmpTargetsIR (ir) == JUMP_TARGET_EMPTY)
     {
         printf ("ERROR: jump targets translating!\n\n");
     }
@@ -103,7 +103,7 @@ int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos)
 
     if(curr_cmd & MASK_REG)
     {
-        ir_node->reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + ir_reg_mask; // rax = 1, ...
+        ir_node->reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + IR_REG; // rax = 1, ...
         offset += OFFSET_ARG;
     }
 
@@ -136,29 +136,35 @@ int translateJmpTargetsIR (IR *ir)
 {
     for(int i = 0; i < ir->size; i++)
     {
-        if(IS_JUMP (ir->buffer[i].command) || 
-           ir->buffer[i].command == CALL     )
+        switch(ir->buffer[i].command)
         {
-            char find_flag = 0;
-
-            for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
+            COMMON_JMP_CASE
             {
-                if(CURR_IR_NODE.troll_pos == TARGET)
-                {
-                    TARGET = num_cmd;
-                    find_flag = 1;
-                }
+                char find_flag = 0;
 
-                if(!CURR_IR_NODE.troll_pos)
+                for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
                 {
-                    break;
-                }
-            } 
+                    if(CURR_IR_NODE.troll_pos == TARGET)
+                    {
+                        TARGET = num_cmd;
+                        find_flag = 1;
+                    }
 
-            if(!find_flag)
-            {
-                return jump_fill_error;
+                    if(!CURR_IR_NODE.troll_pos)
+                    {
+                        break;
+                    }
+                } 
+
+                if(!find_flag)
+                {
+                    return JUMP_TARGET_EMPTY;
+                }
+                
+                break;
             }
+            default:
+                break;
         }
     }
 
@@ -230,7 +236,7 @@ void IrDump (IR *ir)
 void IrDtor (IR *ir)
 {
     free (ir->buffer);
-    ir->size = deleted;
+    ir->size = DELETED;
 }
 
 //-----------------------------------------------------------------------------
@@ -238,7 +244,7 @@ void IrDtor (IR *ir)
 void BinCodeDtor (Troll_code *bin_code)
 {
     free (bin_code->buffer);
-    bin_code->size = deleted;
+    bin_code->size = DELETED;
 }
 
 //-----------------------------------------------------------------------------

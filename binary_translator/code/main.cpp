@@ -6,10 +6,11 @@
 
 int main ()
 {
+    FILE *log_file = fopen ("binary_translator/dump/log_file.txt", "w+");
+
     printf ("-- traslate to IR\n\n");
 
     FILE *code_file = fopen ("processor/COMMON/files/code.bin", "rb");
-
     Troll_code *bin_code = readCodeFile (code_file);
     int bin_size = bin_code->size;
     
@@ -20,13 +21,15 @@ int main ()
     fclose (code_file);
     
     X64_code *x64_code = translateIrToX64 (ir, bin_size);
-    CodeX64Dump (x64_code->buffer, x64_code->size);
+    fclose (x64_code->dump_file);
     IrDtor (ir);
 
     runCode (x64_code->buffer, x64_code->size);
-    X64RepresentDtor (x64_code);
+    x64CodeDtor (x64_code);
 
     printf ("-- finishing\n\n");
+
+    fclose (log_file);
 
     return 0;
 }

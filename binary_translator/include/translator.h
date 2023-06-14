@@ -10,56 +10,58 @@
 
 //-----------------------------------------------------------------------------
 
-static const uint32_t tmp_size = 20;
-static const int max_len_dump = 15;
+#ifndef PAGESIZE
+#define PAGESIZE 4096
+#endif
 
 //-----------------------------------------------------------------------------
 
-enum TRANSLATOR_INFO
-{
-    ABSENCE        = 0xBEDBAD,
-    DELETED        = 0xDEDAC,
-    MPROTECT_ERROR = -1,
-};
+#define CURR_POS x64_code->curr_pos
 
-typedef enum RAM_INFO
+//-----------------------------------------------------------------------------
+
+enum RAM_INFO
 {
     RAM_INIT_SIZE = PAGESIZE,
-} RAM_INFO;
+};
 
-typedef enum X64_CODE_INFO
+//-----------------------------------------------------------------------------
+
+enum X64_CODE_INFO
 {
     X64_CODE_INIT_SIZE    = PAGESIZE,
     X64_CODE_SIZE_DIFF    = 16,
     X64_CODE_INCREASE_PAR = 2,
-} X64_CODE_INFO;
-
-enum X64_INFO
-{
-    SIZE_OF_PTR = 4, // DOUBLE WORD
-    SIZE_OF_ABS_PTR = sizeof (void*),
-    SIZE_OF_NUM = sizeof (double),
-
-    X64_ADD_R13_R_X_OFFSET = 18,
-    X64_CONDITIONAL_JUMP_OFFSET = 20,
-    X64_JUMP_OFFSET = 1,
-    X64_CALL_OFFSET = 15,
-};
-
-enum MASK_INFO
-{
-    JMP_MASK_LEN = 8,
-    X64_MOV_R_X_STK_MASK_LEN = 18,
 };
 
 //-----------------------------------------------------------------------------
 
+enum X64_ARCHITECTURE_INFO
+{
+    BYTE            = 1,
+    SIZE_OF_PTR     = 4 * BYTE,       // DOUBLE WORD
+    SIZE_OF_ABS_PTR = sizeof (void*),
+    SIZE_OF_NUM     = sizeof (double),
+};
+
+//-----------------------------------------------------------------------------
+
+enum COMMON_JMPS_OFFSETS
+{
+    X64_CONDITIONAL_JUMP_OFFSET = 20,
+    X64_JUMP_OFFSET             = 1,
+    X64_CALL_OFFSET             = 15,
+}; 
+
+//-----------------------------------------------------------------------------
+// Info wasn't used here because of smallness of amount of fields (only dump file)
 typedef struct X64_code
 {
     char *buffer;
     int   size;
     char *curr_pos;
     int   capacity;
+    FILE *dump_file;
 } X64_code;
 
 //-----------------------------------------------------------------------------
@@ -76,6 +78,7 @@ typedef struct Jmp_table
 {
     char **buffer;
     int    size;
+    FILE  *dump_file;
 } Jmp_table;   
 
 //-----------------------------------------------------------------------------
@@ -100,31 +103,35 @@ void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_tab
 
 void *alignedCalloc(int alignment, int size);
 
-void translateCmd(IR_node *curr_node, char **curr_pos);
+void translateCmd (X64_code *x64_code, IR_node *curr_node);
 
-void translateHlt(IR_node *curr_node, char **curr_pos);
+void translateReg (IR_node *curr_node);
 
-void translatePush(IR_node *curr_node, char **curr_pos);
+void translateHlt (X64_code *x64_code, IR_node *curr_node);
 
-void translatePop(IR_node *curr_node, char **curr_pos);
+void translatePush (X64_code *x64_code, IR_node *curr_node);
 
-void translateArithmOperations(IR_node *curr_node, char **curr_pos);
+void translatePop (X64_code *x64_code, IR_node *curr_node);
 
-void translateStdio(IR_node *curr_node, char **curr_pos);
+void translateArithmOperations (X64_code *x64_code, IR_node *curr_node);
 
-void translateDump(IR_node *curr_node, char **curr_pos);
+void translateStdio (X64_code *x64_code, IR_node *curr_node);
 
-void translateConditionalJmps(IR_node *curr_node, char **curr_pos);
+void translateDump (X64_code *x64_code, IR_node *curr_node);
 
-void translateJmp(IR_node *curr_node, char **curr_pos);
+void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node);
 
-void translateCall(IR_node *curr_node, char **curr_pos);
+void translateJmp (X64_code *x64_code, IR_node *curr_node);
 
-void translateRet(IR_node *curr_node, char **curr_pos);
+void translateCall(X64_code *x64_code, IR_node *curr_node);
 
-void translateMathFunctions(IR_node *curr_node, char **curr_pos);
+void translateRet(X64_code *x64_code, IR_node *curr_node);
+
+void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
 
 void writeCode (X64_code *x64_code, uint64_t value, int size);
+
+void dumpCode (X64_code *x64_code, int size);
 
 void writeDouble (X64_code *x64_code, double num);
 
@@ -134,13 +141,13 @@ void writeEpilogue (X64_code *x64_code);
 
 void saveDataAddress (X64_code *x64_code, char *ram);
 
-void double_scanf(double *value);
+void double_scanf (double *value);
 
-void double_printf(double *value);
+void double_printf (double *value);
 
 void runCode (char *code, int size);
 
-void CodeX64Dump (char *code, int size);
+void CodeX64DumpHeader (X64_code *x64_code);
 
 void jmpTableDump (Jmp_table *jmp_table);
 

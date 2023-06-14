@@ -15,19 +15,9 @@
 
 //-----------------------------------------------------------------------------
 
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif
-
-//-----------------------------------------------------------------------------
-
 #define N(suffix) NUM_OF_##suffix
 #define O(suffix) OFFSET_##suffix
 #define S(suffix) SIZE_OF_##suffix
-
-//-----------------------------------------------------------------------------
-
-static const uint32_t ir_reg_mask = 1;
 
 //-----------------------------------------------------------------------------
 
@@ -43,16 +33,14 @@ typedef uint32_t cmd_code;
     case JA:                  \
     case JB:                  \
     case JE:                  \
-    case JNE:                 
+    case JNE:  
 
-//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------  
 
-#define IS_CONDITION_JUMP(i)                               \
-    ((i == JE) || (i == JNE) || (i == JBE) || (i == JB) || \
-     (i == JA) || (i == JAE))
-
-#define IS_JUMP(i)                       \
-    (IS_CONDITION_JUMP(i) || (i == JMP))
+#define COMMON_JMP_CASE       \
+    CONDITIONAL_JMP_CASE      \
+    case JMP:                 \
+    case CALL:                 
 
 //-----------------------------------------------------------------------------
 
@@ -64,6 +52,25 @@ enum CMD_CODES
 #include "processor/COMMON/include/codegen/codegen.h"
 
 #undef CMD_DEF
+};
+
+//-----------------------------------------------------------------------------
+
+enum TRANSLATOR_INFO
+{
+    ABSENCE        = 0xBEDBAD,
+    DELETED        = 0xDEDAC,
+    MPROTECT_ERROR = -1,
+};
+
+//-----------------------------------------------------------------------------
+
+enum IR_REGS
+{
+    IR_RAX = 1,
+    IR_RBX = 2,
+    IR_RCX = 3,
+    IR_RDX = 4,
 };
 
 //-----------------------------------------------------------------------------
