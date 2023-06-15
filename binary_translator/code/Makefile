@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -c 
+CFLAGS=-c 
 IFLAGS=-I../../
 SOURCES=main.cpp IR-parser.cpp translator.cpp
 OBJECTS=$(SOURCES:.cpp=.o)

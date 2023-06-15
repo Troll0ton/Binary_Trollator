@@ -27,25 +27,44 @@
 //                                WRITING
 //-----------------------------------------------------------------------------
 
-#define writeSimpleCode(value)                       \
-    writeCode_(x64_code, value, #value, value##_SIZE)
+#define writeSimpleOp(name)                             \
+    writeCode_(x64_code, OP_##name, #name, name##_SIZE)
+
+
+#define writeByte(value)                     \
+    writeCode_(x64_code, value, "BYTE", BYTE)
 
 
 #define writePtr(value)                                   \
     writeCode_(x64_code, value, "PTR 4 BYTE", SIZE_OF_PTR)
 
 
-#define writeAbsPtr(value)                                        \ 
+#define writeAbsPtr(value)                                        \
     writeCode_(x64_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR)
 
 
-#define writeNum(value)                                                   \
-    writeCode_(x64_code, *(uint64_t*) &(value), "NUM 8 BYTE", SIZE_OF_NUM)
+#define writeDouble(value)                                                   \
+    writeCode_(x64_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", SIZE_OF_NUM)
 
 
-#define writeMaskingCode(OP_MASK, REG_MASK, POS_MASK_REG, MASK_R)     \                                                         
-    writeCode_(x64_code, OP_MASK | REG_MASK << POS_MASK_REG | MASK_R, \
-               #OP_MASK " " reg_name[REG_MASK], OP_MASK##_SIZE)
+#define writeInt(value)                                   \
+    writeCode_(x64_code, value, "INT 8 BYTE", SIZE_OF_NUM)
+
+
+#define writeMaskingOp(opname, REG)                                                                 \
+    strncat (dump_name, #opname " ", 90);                                                           \
+    strncat (dump_name, reg_info[REG].name, 10);                                                    \
+                                                                                                    \
+    writeCode_(x64_code, OP_##opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag, \
+               dump_name, opname##_SIZE);                                                           \
+                                                                                                    \
+    memset (dump_name, '\0', 100);
+
+
+#define writeMaskingJmp(JMP)                                                                        \
+                                                                                                    \
+    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_MASK_JMP,                                  \
+               #JMP, CONDITIONAL_JMP_SIZE);                                                                   
 
 //-----------------------------------------------------------------------------
 
@@ -111,15 +130,36 @@ typedef struct Jmp_table
 } Jmp_table;   
 
 //-----------------------------------------------------------------------------
+//                         REGS MASKING AND DUMPS UTILS
+//-----------------------------------------------------------------------------
 
-static char opname[100] = { 0 };
+static char dump_name[100] = { 0 };
 
-static const char *reg_name[] =
+typedef struct Reg_info
 {
-    "RAX",
-    "RCX",
-    "RDX",
-    "RBX",
+    const char *name;
+    char  reg_flag;
+    int   mask;
+} Reg_info;
+
+static const Reg_info reg_info[] =
+{
+    {"RAX", 0, MASK_RAX},
+    {"RCX", 0, MASK_RCX},
+    {"RDX", 0, MASK_RDX},
+    {"RBX", 0, MASK_RBX},
+    {"RSP", 0, MASK_RSP},
+    {"RBP", 0, MASK_RBP},
+    {"RSI", 0, MASK_RSI},
+    {"RDI", 0, MASK_RDI},
+    {"R8",  1, MASK_R8  - 0b1000},
+    {"R9",  1, MASK_R9  - 0b1000},
+    {"R10", 1, MASK_R10 - 0b1000},
+    {"R11", 1, MASK_R11 - 0b1000},
+    {"R12", 1, MASK_R12 - 0b1000},
+    {"R13", 1, MASK_R13 - 0b1000},
+    {"R14", 1, MASK_R14 - 0b1000},
+    {"R15", 1, MASK_R15 - 0b1000},
 };
 
 //-----------------------------------------------------------------------------
@@ -170,9 +210,9 @@ void translateRet(X64_code *x64_code, IR_node *curr_node);
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
 
-void writeCode_(X64_code *x64_code, uint64_t value, char *name, int size);
+void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size);
 
-void dumpCode (X64_code *x64_code, char *name, int size);
+void dumpCode (X64_code *x64_code, const char *name, int size);
 
 void writePrologue (X64_code *x64_code);
 

@@ -9,6 +9,7 @@ add
 out
 
 push 1777
+out
 pop rax
 
 push rax

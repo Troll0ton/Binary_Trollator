@@ -15,21 +15,19 @@ typedef enum REGS_MASKS
      MASK_RBX = 0b011,
      MASK_RCX = 0b001,
      MASK_RDX = 0b010,
-
      MASK_RSI = 0b110,
      MASK_RDI = 0b111,
      MASK_RSP = 0b100,
      MASK_RBP = 0b101,
      
-     MASK_R   = 1,
-     MASK_R8  = 0b000, 
-     MASK_R9  = 0b001,
-     MASK_R10 = 0b010,
-     MASK_R11 = 0b011,
-     MASK_R12 = 0b100,
-     MASK_R13 = 0b101,
-     MASK_R14 = 0b110,
-     MASK_R15 = 0b111,
+     MASK_R8  = 0b1000, 
+     MASK_R9  = 0b1001,
+     MASK_R10 = 0b1010,
+     MASK_R11 = 0b1011,
+     MASK_R12 = 0b1100,
+     MASK_R13 = 0b1101,
+     MASK_R14 = 0b1110,
+     MASK_R15 = 0b1111,
 } REGS_MASKS; 
 
 //-----------------------------------------------------------------------------
@@ -37,8 +35,14 @@ typedef enum REGS_MASKS
 typedef enum MASKS_POS
 {
      POS_MASK_REG    = 8,
+
+     POS_PUSH_REG    = 8,
+     POS_POP_REG     = 8,
+     POS_MOV_REG_IMM = 8,
+
      POS_MASK_JMP    = 8,
      POS_ADD_R13_REG = 18,
+     POS_SUB_REG_IMM = 18,
      POS_SHL_REG     = 16,
      POS_MOV_REG_STK = 18,
      POS_ADD_REG_IMM = 16,
@@ -96,32 +100,40 @@ typedef enum OP_CODES : uint64_t
 
 enum OP_SIZES
 {   
-     OP_PUSH_REG_SIZE         = 2, 
-     OP_POP_REG_SIZE          = 2, 
-     OP_PUSHA_SIZE            = 6,
-     OP_POPA_SIZE             = 6,
-     OP_MOV_RBP_RSP_SIZE      = 3,   
-     OP_MOV_RSP_RBP_SIZE      = 3,
-     OP_RET_SIZE              = 1,
-     OP_MOV_REG_IMM_SIZE      = 2,
-     OP_ADD_R13_REG_SIZE      = 3, 
-     OP_SHL_REG_SIZE          = 3,
-     OP_MOV_R13_RAM_SIZE      = 4,
-     OP_MOV_REG_STK_SIZE      = 4,
-     OP_ADD_REG_IMM_SIZE      = 3,
-     OP_SUB_REG_IMM_SIZE      = 3,
-     OP_MOV_MEM_XMM0_SIZE     = 6,
-     OP_MOV_XMM0_STK_SIZE     = 6,
-     OP_MOV_XMM1_STK_SIZE     = 6,
-     OP_MOV_STK_XMM1_SIZE     = 6,
-     OP_ARITHM_SIZE           = 4,
-     OP_LEA_RDI_STK_ARG_SIZE  = 4,
-     OP_ALIGN_STK_SIZE        = 4,
-     OP_CALL_SIZE             = 1,
-     OP_CMP_XMM0_XMM1_SIZE    = 4,
-     OP_CONDITIONAL_JMP_SIZE  = 2,
-     OP_JMP_SIZE              = 1,
-     OP_MOV_STK_XMM0_SIZE     = 6,
+     PUSH_REG_SIZE         = 2, 
+     POP_REG_SIZE          = 2, 
+     PUSHA_SIZE            = 6,
+     POPA_SIZE             = 6,
+
+     MOV_RBP_RSP_SIZE      = 3,   
+     MOV_RSP_RBP_SIZE      = 3,
+     RET_SIZE              = 1,
+     MOV_REG_IMM_SIZE      = 2,
+     ADD_R13_REG_SIZE      = 3, 
+     SHL_REG_SIZE          = 3,
+     MOV_R13_RAM_SIZE      = 4,
+     MOV_REG_STK_SIZE      = 4,
+     ADD_REG_IMM_SIZE      = 3,
+     SUB_REG_IMM_SIZE      = 3,
+
+     MOV_MEM_XMM0_SIZE     = 6,
+     MOV_XMM0_STK_SIZE     = 6,
+     MOV_XMM1_STK_SIZE     = 6,
+     MOV_STK_XMM1_SIZE     = 6,
+
+     ADDSD_XMM1_XMM0_SIZE  = 4,
+     SUBSD_XMM1_XMM0_SIZE  = 4,
+     MULSD_XMM1_XMM0_SIZE  = 4,
+     DIVSD_XMM1_XMM0_SIZE  = 4,
+     SQRTPD_XMM0_SIZE      = 4,
+
+     LEA_RDI_STK_ARG_SIZE  = 4,
+     ALIGN_STK_SIZE        = 4,
+     CALL_SIZE             = 1,
+     CMP_XMM0_XMM1_SIZE    = 4,
+     CONDITIONAL_JMP_SIZE  = 2,
+     JMP_SIZE              = 1,
+     MOV_STK_XMM0_SIZE     = 6,
 };
 
 //-----------------------------------------------------------------------------
