@@ -1,75 +1,14 @@
 push 1
-push -2
-push 1
-
-call 1:
-
-hlt
-
-
-
-:1
+push 0
+push -4
 
 pop rcx
 pop rbx
 pop rax
 
-push 0
-push rax
-
-jne 2:
-
-call 3:
-jmp 33:
-
-:2
-
 call 13:
 
-:33
-
-ret
-
-
-
-:3
-
-push rbx
-push 0
-
-jne 4:
-
-push rcx
-push 0
-
-jne 9:
-
-out 
-jmp 90:
-
-:9
-
-push 12340
-out 
-
-:90
-
-jmp 34:
-
-:4
-
-push rcx
-push -1
-mul
-push rbx
-div
-out
-
-
-:34
-ret
-
-
+hlt
 
 :13
 

@@ -1,14 +1,9 @@
-push 90
-pop rax
-
-
-push rax
+in
+in
+in
+out
+out
 out
 
-push [rax + 10]
-pop
 
-push rax
-out
-
-hlt
+ret

@@ -17,17 +17,14 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
 
     saveDataAddress (x64_code, ram->buffer);    // save absolute address of RAM in R12 
 
-    //writePrologue (x64_code);
-
+    // now translate IR to opcodes and in parallel fill jmp table
     for(int i = 0; i < ir->size; i++)
     {
         jmp_table->buffer[i] = CURR_POS;        // fill jump table
         CURR_IR_NODE.x64_pos = CURR_POS;
 
-        translateCmd (x64_code, &CURR_IR_NODE);
+        translateCmd (x64_code, &CURR_IR_NODE); // translate command
     }
-
-    //writeEpilogue (x64_code);
 
     writeSimpleOp (OP_RET); // ret from programm
 
@@ -134,18 +131,25 @@ void jmpTableDtor (Jmp_table *jmp_table)
 void writePrologue (X64_code *x64_code)
 {
     // create lite version of stack's frame
-    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
     writeSimpleOp  (OP_PUSHA);
+    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
     writeSimpleOp  (OP_MOV_RBP_RSP);
+
+    writeSimpleOp  (OP_ALIGN_STK); 
+    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
+    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
 }
 
 //-----------------------------------------------------------------------------
 
 void writeEpilogue (X64_code *x64_code) 
 {
-    writeSimpleOp  (OP_MOV_RSP_RBP);
-    writeSimpleOp  (OP_POPA);
     writeMaskingOp (OP_POP_REG, MASK_RBP);
+    writeMaskingOp (OP_POP_REG, MASK_RBP);
+    
+    writeSimpleOp  (OP_MOV_RSP_RBP);
+    writeMaskingOp (OP_POP_REG, MASK_RBP);
+    writeSimpleOp  (OP_POPA);
 }
 
 //-----------------------------------------------------------------------------
@@ -168,6 +172,10 @@ void *alignedCalloc (int alignment, int size)
     return buffer;
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//                               TRANSLATE TARGETS
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
 #define TARGET CURR_IR_NODE.imm_value
@@ -196,25 +204,25 @@ void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table)
 
 void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_table)
 {
-    uint64_t opcode_offset = 0;
+    uint64_t ptr_pos = 0;
 
     switch(ir_node.command)
     {
         CONDITIONAL_JMP_CASE
-            opcode_offset = X64_CONDITIONAL_JUMP_OFFSET;
+            ptr_pos = POS_CONDITIONAL_JUMP;
             break;
         case JMP:
-            opcode_offset = X64_JUMP_OFFSET;
+            ptr_pos = POS_JUMP;
             break;
         case CALL:
-            opcode_offset = X64_CALL_OFFSET;
+            ptr_pos = POS_CALL;
             break;
     }
 
     uint32_t ptr = (uint64_t) jmp_table->buffer[ir_node.imm_value] - 
-                   (uint64_t)(CURR_POS + opcode_offset + SIZE_OF_PTR); 
+                   (uint64_t)(CURR_POS + ptr_pos + SIZE_OF_PTR); 
 
-    CURR_POS += opcode_offset;
+    CURR_POS += ptr_pos;
 
     writePtr (ptr);
 }
@@ -524,6 +532,8 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node)
 
 void translateArithmOperations (X64_code *x64_code, IR_node *curr_node)
 {
+    // pull out numbers from stack and do arithm operation
+    // arithm xmm1, xmm0
     writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
     writeSimpleOp (OP_MOV_XMM1_STK); // pop xmm1
 
@@ -546,6 +556,7 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node)
             break;
     }
 
+    // save only one value (second is not useful anymore)
     writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
     writeInt32 (8);
 
@@ -556,17 +567,18 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node)
 
 void translateStdio (X64_code *x64_code, IR_node *curr_node)
 {
+    // reserve 8 bytes for input number
     if(curr_node->command == IN)
     {
         writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
         writeInt32 (8);
     }
 
+    // save ptr in rdi (as first argument of function)
     writeSimpleOp (OP_LEA_RDI_STK_ARG);
 
     writePrologue (x64_code);
 
-    writeSimpleOp (OP_ALIGN_STK); 
     writeSimpleOp (OP_CALL);
 
     uint64_t funct_ptr = 0;
@@ -584,6 +596,7 @@ void translateStdio (X64_code *x64_code, IR_node *curr_node)
             break;    
     }
 
+    // calculate relative address to stdio function
     funct_ptr -= (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writePtr (funct_ptr);
 
@@ -591,6 +604,7 @@ void translateStdio (X64_code *x64_code, IR_node *curr_node)
 
     if(curr_node->command == OUT)
     {
+        // pull out outputed number
         writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
         writeInt32 (8);
     }
@@ -614,23 +628,29 @@ void translateDump (X64_code *x64_code, IR_node *curr_node)
 
 void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node)
 {
+    // pull out numbers from stack
     writeSimpleOp (OP_MOV_XMM0_STK); 
     writeSimpleOp (OP_MOV_XMM1_STK); 
+
+    // compare them
     writeSimpleOp (OP_CMP_XMM0_XMM1); 
 
+    // select right conditional mask
     switch(curr_node->command)
     {
+        // this cringe because of form of my J__ instruction:
+        // JA -> jb ... 
         case JAE:
-            writeMaskingJmp (MASK_JAE);
-            break;
-        case JBE:
             writeMaskingJmp (MASK_JBE);
             break;
+        case JBE:
+            writeMaskingJmp (MASK_JAE);
+            break;
         case JA:
-            writeMaskingJmp (MASK_JA);    
+            writeMaskingJmp (MASK_JB);    
             break;
         case JB:
-            writeMaskingJmp (MASK_JB);
+            writeMaskingJmp (MASK_JA);
             break;
         case JE:
             writeMaskingJmp (MASK_JE);
@@ -643,6 +663,7 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node)
             break;
     }
     
+    // save bytes for unfilled target
     x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
 }
 
@@ -651,6 +672,8 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node)
 void translateJmp (X64_code *x64_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_JMP); 
+
+    // save bytes for unfilled target
     x64_code->curr_pos += SIZE_OF_PTR; // skip ptr
 }
 
@@ -658,10 +681,15 @@ void translateJmp (X64_code *x64_code, IR_node *curr_node)
 
 void translateCall (X64_code *x64_code, IR_node *curr_node)
 {
-    writePrologue (x64_code);
-    writeSimpleOp (OP_ALIGN_STK);
+    writeSimpleOp (OP_MOV_RBP_RSP);
+    writeSimpleOp (OP_ALIGN_STK); 
+    writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
+    writeInt32 (8);
+    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
+    
     writeSimpleOp (OP_CALL);
 
+    // save bytes for unfilled target
     x64_code->curr_pos += SIZE_OF_PTR; // skip ptr
 }
 
@@ -670,13 +698,16 @@ void translateCall (X64_code *x64_code, IR_node *curr_node)
 void translateRet (X64_code *x64_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_RET);
-    writeEpilogue (x64_code);
+
+    writeMaskingOp (OP_POP_REG, MASK_RBP);
+    writeSimpleOp  (OP_MOV_RSP_RBP);
 }
 
 //-----------------------------------------------------------------------------
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node)
 {
+    // there is only one supported math function: SQRT
     writeSimpleOp (OP_MOV_XMM0_STK);  // pop  xmm0
     writeSimpleOp (OP_SQRTPD_XMM0);   // sqrt xmm0
     writeSimpleOp (OP_MOV_STK_XMM0);  // push xmm0 

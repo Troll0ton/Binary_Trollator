@@ -98,11 +98,20 @@ enum X64_ARCHITECTURE_INFO
 
 //-----------------------------------------------------------------------------
 
-enum COMMON_JMPS_OFFSETS
+enum JUMP_TARGETS_POS
 {
-    X64_CONDITIONAL_JUMP_OFFSET = 20,
-    X64_JUMP_OFFSET             = 1,
-    X64_CALL_OFFSET             = 15,
+    POS_CONDITIONAL_JUMP        = OP_MOV_XMM0_STK_SIZE + 
+                                  OP_MOV_XMM1_STK_SIZE + 
+                                  OP_CMP_XMM0_XMM1_SIZE +
+                                  OP_CONDITIONAL_JMP_SIZE,
+
+    POS_JUMP                    = OP_JMP_SIZE,
+
+    POS_CALL                    = OP_MOV_RBP_RSP_SIZE +
+                                  OP_ALIGN_STK_SIZE + 
+                                  OP_PUSH_REG_SIZE +
+                                  OP_PUSH_REG_SIZE +
+                                  OP_CALL_SIZE,
 }; 
 
 //-----------------------------------------------------------------------------
