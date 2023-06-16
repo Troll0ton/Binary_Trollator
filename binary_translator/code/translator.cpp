@@ -136,7 +136,8 @@ void writePrologue (X64_code *x64_code)
     writeSimpleOp  (OP_MOV_RBP_RSP);
 
     writeSimpleOp  (OP_ALIGN_STK); 
-    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
+    writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
+    writeInt32 (8);
     writeMaskingOp (OP_PUSH_REG, MASK_RBP);
 }
 
@@ -144,7 +145,6 @@ void writePrologue (X64_code *x64_code)
 
 void writeEpilogue (X64_code *x64_code) 
 {
-    writeMaskingOp (OP_POP_REG, MASK_RBP);
     writeMaskingOp (OP_POP_REG, MASK_RBP);
     
     writeSimpleOp  (OP_MOV_RSP_RBP);
@@ -681,11 +681,13 @@ void translateJmp (X64_code *x64_code, IR_node *curr_node)
 
 void translateCall (X64_code *x64_code, IR_node *curr_node)
 {
-    writeSimpleOp (OP_MOV_RBP_RSP);
-    writeSimpleOp (OP_ALIGN_STK); 
-    writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
-    writeInt32 (8);
-    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
+    //writeMaskingOp (OP_PUSH_REG, MASK_RBP);
+    //writeSimpleOp  (OP_MOV_RBP_RSP);
+
+    //writeSimpleOp  (OP_ALIGN_STK); 
+    //writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
+    //writeInt32 (8);
+    //writeMaskingOp (OP_PUSH_REG, MASK_RBP);
     
     writeSimpleOp (OP_CALL);
 
@@ -699,8 +701,10 @@ void translateRet (X64_code *x64_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_RET);
 
-    writeMaskingOp (OP_POP_REG, MASK_RBP);
-    writeSimpleOp  (OP_MOV_RSP_RBP);
+    //writeMaskingOp (OP_POP_REG, MASK_RBP);
+    
+    //writeSimpleOp  (OP_MOV_RSP_RBP);
+    //writeMaskingOp (OP_POP_REG, MASK_RBP);
 }
 
 //-----------------------------------------------------------------------------

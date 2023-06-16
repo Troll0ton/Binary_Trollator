@@ -62,11 +62,11 @@ typedef enum OP_CODES : uint64_t
      // pop reg (MASKING with register)
      OP_POP_REG         = 0x5840,
 
-     // sub reg imm32 (MASKING with register)
-     OP_SUB_REG_IMM     = 0xEC8148, 
+     // add reg imm32 (MASKING with register)
+     OP_ADD_REG_IMM     = 0xC08148, 
 
-     // sub add imm32 (MASKING with register)
-     OP_ADD_REG_IMM     = 0xC08148,
+     // sub reg imm32 (MASKING with register)
+     OP_SUB_REG_IMM     = 0xE88148, 
 
      // mov rbp, rsp
      OP_MOV_RBP_RSP     = 0xE58948,    
@@ -192,10 +192,10 @@ enum MASKS_POS
      POS_OP_MOV_REG_IMM   = 8,
      POS_OP_MASK_JMP      = 8,
      POS_OP_ADD_R13_REG   = 19,
-     POS_OP_SUB_REG_IMM   = 18,
      POS_OP_SHL_REG       = 16,
      POS_OP_MOV_REG_STK   = 19,
      POS_OP_ADD_REG_IMM   = 16,
+     POS_OP_SUB_REG_IMM   = 16,
      POS_OP_CVTTSD2SI_REG = 35,
 };
 
@@ -209,10 +209,10 @@ enum MASK_R_POS
      MASK_R_OP_MOV_REG_IMM   = 0,
      MASK_R_OP_MASK_JMP      = 0,
      MASK_R_OP_ADD_R13_REG   = 2,
+     MASK_R_OP_ADD_REG_IMM   = 0,
      MASK_R_OP_SUB_REG_IMM   = 0,
      MASK_R_OP_SHL_REG       = 0,
      MASK_R_OP_MOV_REG_STK   = 0,
-     MASK_R_OP_ADD_REG_IMM   = 0,
      MASK_R_OP_CVTTSD2SI_REG = 0,
 };
 

@@ -52,7 +52,7 @@
 
 
 #define writeInt32(value)                        \
-    writeCode_(x64_code, value, "INT 8 BYTE", 4)
+    writeCode_(x64_code, value, "INT 4 BYTE", 4)
 
 
 #define writeMaskingOp(opname, REG)                                                                                \
@@ -107,11 +107,13 @@ enum JUMP_TARGETS_POS
 
     POS_JUMP                    = OP_JMP_SIZE,
 
-    POS_CALL                    = OP_MOV_RBP_RSP_SIZE +
-                                  OP_ALIGN_STK_SIZE + 
-                                  OP_PUSH_REG_SIZE +
-                                  OP_PUSH_REG_SIZE +
-                                  OP_CALL_SIZE,
+    POS_CALL                    = OP_CALL_SIZE,
+                                  //OP_PUSH_REG_SIZE +
+                                  //OP_MOV_RBP_RSP_SIZE + 
+                                  //OP_ALIGN_STK_SIZE +
+                                  //OP_SUB_REG_IMM_SIZE +
+                                  //4 +
+                                  //OP_PUSH_REG_SIZE +
 }; 
 
 //-----------------------------------------------------------------------------
