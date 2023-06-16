@@ -55,13 +55,13 @@
     writeCode_(x64_code, value, "INT 8 BYTE", 4)
 
 
-#define writeMaskingOp(opname, REG)                                                                 \
-    strncat (dump_name, #opname " ", 90);                                                           \
-    strncat (dump_name, reg_info[REG].name, 10);                                                    \
-                                                                                                    \
-    writeCode_(x64_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag, \
-               dump_name, opname##_SIZE);                                                           \
-                                                                                                    \
+#define writeMaskingOp(opname, REG)                                                                                \
+    strncat (dump_name, #opname " ", 90);                                                                          \
+    strncat (dump_name, reg_info[REG].name, 10);                                                                   \
+                                                                                                                   \
+    writeCode_(x64_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag << MASK_R_##opname,  \
+               dump_name, opname##_SIZE);                                                                          \
+                                                                                                                   \
     memset (dump_name, '\0', 100);
 
 
@@ -156,7 +156,7 @@ static const Reg_info reg_info[] =
     {"RBP", 0, MASK_RBP},
     {"RSI", 0, MASK_RSI},
     {"RDI", 0, MASK_RDI},
-    
+
     {"R8",  1, MASK_R8  - 0b1000},
     {"R9",  1, MASK_R9  - 0b1000},
     {"R10", 1, MASK_R10 - 0b1000},
@@ -195,6 +195,8 @@ void translateReg (IR_node *curr_node);
 
 void translateHlt (X64_code *x64_code, IR_node *curr_node);
 
+void calculateRamAddrPushPop (X64_code *x64_code, IR_node *curr_node);
+
 void translatePush (X64_code *x64_code, IR_node *curr_node);
 
 void translatePushRam (X64_code *x64_code, IR_node *curr_node);
@@ -202,6 +204,10 @@ void translatePushRam (X64_code *x64_code, IR_node *curr_node);
 void translatePushRegImm (X64_code *x64_code, IR_node *curr_node);
 
 void translatePop (X64_code *x64_code, IR_node *curr_node);
+
+void translatePopRam (X64_code *x64_code, IR_node *curr_node);
+
+void translatePopReg (X64_code *x64_code, IR_node *curr_node);
 
 void translateArithmOperations (X64_code *x64_code, IR_node *curr_node);
 

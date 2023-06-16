@@ -101,7 +101,7 @@ typedef enum OP_CODES : uint64_t
      // shl reg, imm8 (MASKING with register) + imm8
      OP_SHL_REG         = 0xE0C148, 
 
-     // mov r13, [r12]
+     // mov r13, [r13]
      OP_MOV_R13_RAM     = 0x006D8B4D,     
 
      // mov reg, [rsp] (MASKING with register)
@@ -197,7 +197,24 @@ enum MASKS_POS
      POS_OP_MOV_REG_STK   = 19,
      POS_OP_ADD_REG_IMM   = 16,
      POS_OP_CVTTSD2SI_REG = 35,
-} MASKS_POS;
+};
+
+//-----------------------------------------------------------------------------
+
+// this is position of mask R_MUM in opcode
+enum MASK_R_POS
+{
+     MASK_R_OP_PUSH_REG      = 0,
+     MASK_R_OP_POP_REG       = 0,
+     MASK_R_OP_MOV_REG_IMM   = 0,
+     MASK_R_OP_MASK_JMP      = 0,
+     MASK_R_OP_ADD_R13_REG   = 2,
+     MASK_R_OP_SUB_REG_IMM   = 0,
+     MASK_R_OP_SHL_REG       = 0,
+     MASK_R_OP_MOV_REG_STK   = 0,
+     MASK_R_OP_ADD_REG_IMM   = 0,
+     MASK_R_OP_CVTTSD2SI_REG = 0,
+};
 
 //-----------------------------------------------------------------------------
 

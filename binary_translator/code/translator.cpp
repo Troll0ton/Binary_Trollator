@@ -372,6 +372,57 @@ void translateHlt (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
+void calculateRamAddrPushPop (X64_code *x64_code, IR_node *curr_node)
+{
+    // put imm64 value into R13 (R13 is tmp register)
+    writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
+
+    // put int if it will used in ram access 
+    uint64_t num = (uint64_t) curr_node->imm_value;
+    writeInt64 (num);
+    
+    // I store all numbers in double representation 
+    // So firstly I need to translate register value to int
+    if(curr_node->reg_value)
+    {   
+        // support PUSH/POP [reg + imm]
+        translateReg (curr_node);
+
+        // save double value of register
+        writeMaskingOp (OP_PUSH_REG, curr_node->reg_value); 
+
+        writeMaskingOp (OP_PUSH_REG, curr_node->reg_value);  // push reg
+        writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
+        writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+        writeInt32 (8);
+
+        // cvttsd2si reg, xmm0 <- translate double to int
+        writeMaskingOp (OP_CVTTSD2SI_REG, curr_node->reg_value);
+
+        writeMaskingOp (OP_ADD_R13_REG, curr_node->reg_value); // add r13, r_x
+
+        // load double value of register
+        writeMaskingOp (OP_POP_REG, curr_node->reg_value);
+    }
+
+    // shl is used here because of imm's size: push/pop [a] <=> push/pop [8*a]
+    // I had relative addressing in my assembler and processor
+    writeMaskingOp (OP_SHL_REG, MASK_R13); 
+    writeByte (3); // shl reg, 3 <=> mul reg, 8
+
+    //                                 data address
+    //                                     |
+    //                                     V
+    // in result I operate with ram cell  r12[r13]
+    writeMaskingOp (OP_ADD_R13_REG, MASK_R12); // add r13, data address
+
+    //--------------------------------
+    // So I store final address in R13
+    //--------------------------------
+}
+
+//-----------------------------------------------------------------------------
+
 void translatePush (X64_code *x64_code, IR_node *curr_node)
 {  
     // I have 2 different types of push that have different purposes:
@@ -392,42 +443,8 @@ void translatePush (X64_code *x64_code, IR_node *curr_node)
 
 void translatePushRam (X64_code *x64_code, IR_node *curr_node)
 {
-    // put imm64 value into R13 (R13 is tmp register)
-    writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
+    calculateRamAddrPushPop (x64_code, curr_node);
 
-    // put int if it will used in ram access 
-    uint64_t num = curr_node->imm_value;
-    writeInt64 (num);
-    
-    // I store all numbers in double representation 
-    // So firstly I need to translate register value to int
-    if(curr_node->reg_value)
-    {   
-        // support PUSH [reg + imm]
-        translateReg (curr_node);
-
-        writeMaskingOp (OP_PUSH_REG, curr_node->reg_value);  // push reg
-
-        writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
-        writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
-        writeInt32 (8);
-
-        // cvttsd2si reg, xmm0 <- translate double to int
-        writeMaskingOp (OP_CVTTSD2SI_REG, curr_node->reg_value);
-
-        writeMaskingOp (OP_ADD_R13_REG, curr_node->reg_value); // add r13, r_x
-    }
-
-    // shl is used here because of imm's size: push [a] <=> push [8*a]
-    // I had relative addressing in my assembler and processor
-    writeMaskingOp (OP_SHL_REG, MASK_R13); 
-    writeByte (3); // shl reg, 3 <=> mul reg, 8
-
-    //                                 data address
-    //                                     |
-    //                                     V
-    // in result I operate with ram cell  r12[r13]
-    writeMaskingOp (OP_ADD_R13_REG, MASK_R12); // add r13, data address
     writeSimpleOp (OP_MOV_R13_RAM); // mov r13, [r13]
 
     // and pushing it into stack
@@ -458,59 +475,49 @@ void translatePushRegImm (X64_code *x64_code, IR_node *curr_node)
 
 void translatePop (X64_code *x64_code, IR_node *curr_node)
 {
-    // pop reg
-    if(!curr_node->ram_flag)
+    // separate into two occasions (similar to push)
+    if(curr_node->ram_flag)
     {
-        if(curr_node->reg_value)
-        {
-            translateReg (curr_node);
-
-            // pull out num from stack and store in register
-            writeMaskingOp (OP_MOV_REG_STK, curr_node->reg_value);
-        }
-
-        // pop 
-        writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
-        writeInt32 (8);
+        translatePopRam (x64_code, curr_node);
     }
 
     // pop [reg + val]
     else
     {
-        writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
-
-        // pop
-        writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
-        writeInt32 (8);
-
-        // put val into r13
-        writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
-
-        if(!curr_node->ram_flag)
-        {
-            double num = curr_node->imm_value;
-            writeDouble (num);
-        }
-
-        else 
-        {
-            uint64_t num = curr_node->imm_value;
-            writeInt64 (num);
-        } 
-
-        if(curr_node->reg_value)
-        {
-            translateReg (curr_node);
-            writeMaskingOp (OP_ADD_R13_REG, curr_node->reg_value); // add r13, r_x
-        }
-
-        writeMaskingOp (OP_SHL_REG, MASK_R13);   // mul r13, 8
-        writeByte (3);
-        
-        // in result I put XMM0 value into r12[r13]
-        writeMaskingOp (OP_ADD_R13_REG, MASK_R12); // add r13, data address
-        writeSimpleOp (OP_MOV_MEM_XMM0);
+        translatePopReg (x64_code, curr_node);
     }
+}
+
+//-----------------------------------------------------------------------------
+
+void translatePopRam (X64_code *x64_code, IR_node *curr_node)
+{
+    calculateRamAddrPushPop (x64_code, curr_node);
+        
+    // pull out from stack num value
+    writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
+    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    writeInt32 (8);
+
+    // mov it to ram
+    writeSimpleOp (OP_MOV_MEM_XMM0);
+}
+
+//-----------------------------------------------------------------------------
+
+void translatePopReg (X64_code *x64_code, IR_node *curr_node)
+{
+    if(curr_node->reg_value)
+    {
+        translateReg (curr_node);
+
+        // pull out num from stack and store in register
+        writeMaskingOp (OP_MOV_REG_STK, curr_node->reg_value);
+    }
+
+    // pop 
+    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    writeInt32 (8);
 }
 
 //-----------------------------------------------------------------------------

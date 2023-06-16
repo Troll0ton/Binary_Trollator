@@ -1,10 +1,14 @@
 push 90
 pop rax
 
-push 777
-pop [100]
+
+push rax
+out
 
 push [rax + 10]
+pop
+
+push rax
 out
 
 hlt
