@@ -9,6 +9,8 @@
 
 //-----------------------------------------------------------------------------
 
+// this enum contains masks of registers
+// they later used in masking with complex ops
 typedef enum REGS_MASKS
 {
      MASK_RAX = 0b000,
@@ -32,24 +34,8 @@ typedef enum REGS_MASKS
 
 //-----------------------------------------------------------------------------
 
-typedef enum MASKS_POS
-{
-     POS_MASK_REG    = 8,
-
-     POS_PUSH_REG    = 8,
-     POS_POP_REG     = 8,
-     POS_MOV_REG_IMM = 8,
-
-     POS_MASK_JMP    = 8,
-     POS_ADD_R13_REG = 18,
-     POS_SUB_REG_IMM = 18,
-     POS_SHL_REG     = 16,
-     POS_MOV_REG_STK = 18,
-     POS_ADD_REG_IMM = 16,
-} MASKS_POS;
-
-//-----------------------------------------------------------------------------
-
+// this enum contains masks of different types of conditional jumps
+// it will used in masking with OP_CONDITIONAL_JMP
 typedef enum JUMP_MASKS
 {             
      MASK_JNE = 0b0101,
@@ -64,77 +50,154 @@ typedef enum JUMP_MASKS
 
 typedef enum OP_CODES : uint64_t
 {
-     OP_CONDITIONAL_JMP = 0x800F,        // j__ addr32
+     // j__ (masking with ja, jae, jb, jbe, je, jne) addr32
+     OP_CONDITIONAL_JMP = 0x800F,        
+
+     // jmp addr32
      OP_JMP             = 0xE9,
+
+     // push reg (MASKING with register)
      OP_PUSH_REG        = 0x5040,
+
+     // pop reg (MASKING with register)
      OP_POP_REG         = 0x5840,
+
+     // sub reg imm32 (MASKING with register)
      OP_SUB_REG_IMM     = 0xEC8148, 
+
+     // sub add imm32 (MASKING with register)
      OP_ADD_REG_IMM     = 0xC08148,
-     OP_MOV_RBP_RSP     = 0xE58948,        
+
+     // mov rbp, rsp
+     OP_MOV_RBP_RSP     = 0xE58948,    
+
+     // mov rsp, rbp    
      OP_MOV_RSP_RBP     = 0xEC8948, 
+
+     // and rsp, ~0xF
      OP_ALIGN_STK       = 0xF0E48348,
+
+     // call addr64
      OP_CALL            = 0xE8,
+
+     // ret
      OP_RET             = 0xC3,
+
+     // lea rdi, [rsp]
      OP_LEA_RDI_STK_ARG = 0x243C8D48,
-     OP_PUSHA           = 0x505152535241,
-     OP_POPA            = 0x5A415B5A5958,
+
+     // push rax, rbx, rcx, rdx, r12, r13
+     OP_PUSHA           = 0x5541544152515350,
+
+     // pop r13, r12, rdx, rcx, rbx, rax
+     OP_POPA            = 0x585B595A5C415D41,
+
+     // mov reg, imm64 (MASKING with register)
      OP_MOV_REG_IMM     = 0xB848,
-     OP_ADD_R13_REG     = 0xC10149,
+
+     // add r13, reg (MASKING with register)
+     OP_ADD_R13_REG     = 0xC50149,
+
+     // shl reg, imm8 (MASKING with register) + imm8
      OP_SHL_REG         = 0xE0C148, 
+
+     // mov r13, [r12]
      OP_MOV_R13_RAM     = 0x006D8B4D,     
-     OP_MOV_REG_STK     = 0x24008B48,
-     OP_CMP_XMM0_XMM1   = 0xC12E0F66,     // cmp    xmm0,  xmm1
-     OP_MOV_XMM0_STK    = 0x002444100FF2, // movsd  xmm0,  [rsp]
-     OP_MOV_XMM1_STK    = 0x08244C100FF2, // movsd  xmm1,  [rsp+8]
-     OP_MOV_STK_XMM0    = 0x002444110FF2, // movsd  [rsp], xmm0
-     OP_MOV_STK_XMM1    = 0x00244C110FF2, // movsd  [rsp], xmm1
-     OP_MOV_MEM_XMM0    = 0x0045110F41F2, // movsd  [r13], xmm0
-     OP_ADDSD_XMM1_XMM0 = 0xC8580FF2,     // addsd  xmm1,  xmm0
-     OP_SUBSD_XMM1_XMM0 = 0xC85C0FF2,     // subsd  xmm1,  xmm0
-     OP_MULSD_XMM1_XMM0 = 0xC8590FF2,     // mulsd  xmm1,  xmm0
-     OP_DIVSD_XMM1_XMM0 = 0xC85E0FF2,     // divsd  xmm1,  xmm0
-     OP_SQRTPD_XMM0     = 0xC0510F66,     // sqrtpd xmm0,  xmm0    
+
+     // mov reg, [rsp] (MASKING with register)
+     OP_MOV_REG_STK     = 0x24048B48,
+
+     // cmp xmm0, xmm1
+     OP_CMP_XMM0_XMM1   = 0xC12E0F66,     
+
+     // movsd xmm0, [rsp]
+     OP_MOV_XMM0_STK    = 0x002444100FF2, 
+
+     // movsd xmm1, [rsp+8]
+     OP_MOV_XMM1_STK    = 0x08244C100FF2,
+
+     // movsd [rsp], xmm0
+     OP_MOV_STK_XMM0    = 0x002444110FF2, 
+
+     // movsd [rsp], xmm1
+     OP_MOV_STK_XMM1    = 0x00244C110FF2, 
+
+     // movsd [r13], xmm0
+     OP_MOV_MEM_XMM0    = 0x0045110F41F2, 
+
+     // addsd xmm1, xmm0
+     OP_ADDSD_XMM1_XMM0 = 0xC8580FF2,     
+
+     // subsd xmm1, xmm0
+     OP_SUBSD_XMM1_XMM0 = 0xC85C0FF2,
+
+     // mulsd xmm1, xmm0
+     OP_MULSD_XMM1_XMM0 = 0xC8590FF2,     
+
+     // divsd xmm1, xmm0
+     OP_DIVSD_XMM1_XMM0 = 0xC85E0FF2, 
+
+     // sqrtpd xmm0, xmm0 
+     OP_SQRTPD_XMM0     = 0xC0510F66, 
+
+     // cvttsd2si reg, xmm0
+     OP_CVTTSD2SI_REG   = 0xC02C0F48F2,     
 } OP_CODES;
 
 //-----------------------------------------------------------------------------
 
+// this enum contains sizes of different opcodes 
 enum OP_SIZES
 {   
-     PUSH_REG_SIZE         = 2, 
-     POP_REG_SIZE          = 2, 
-     PUSHA_SIZE            = 6,
-     POPA_SIZE             = 6,
-
-     MOV_RBP_RSP_SIZE      = 3,   
-     MOV_RSP_RBP_SIZE      = 3,
-     RET_SIZE              = 1,
-     MOV_REG_IMM_SIZE      = 2,
-     ADD_R13_REG_SIZE      = 3, 
-     SHL_REG_SIZE          = 3,
-     MOV_R13_RAM_SIZE      = 4,
-     MOV_REG_STK_SIZE      = 4,
-     ADD_REG_IMM_SIZE      = 3,
-     SUB_REG_IMM_SIZE      = 3,
-
-     MOV_MEM_XMM0_SIZE     = 6,
-     MOV_XMM0_STK_SIZE     = 6,
-     MOV_XMM1_STK_SIZE     = 6,
-     MOV_STK_XMM1_SIZE     = 6,
-
-     ADDSD_XMM1_XMM0_SIZE  = 4,
-     SUBSD_XMM1_XMM0_SIZE  = 4,
-     MULSD_XMM1_XMM0_SIZE  = 4,
-     DIVSD_XMM1_XMM0_SIZE  = 4,
-     SQRTPD_XMM0_SIZE      = 4,
-
-     LEA_RDI_STK_ARG_SIZE  = 4,
-     ALIGN_STK_SIZE        = 4,
-     CALL_SIZE             = 1,
-     CMP_XMM0_XMM1_SIZE    = 4,
-     CONDITIONAL_JMP_SIZE  = 2,
-     JMP_SIZE              = 1,
-     MOV_STK_XMM0_SIZE     = 6,
+     OP_PUSH_REG_SIZE         = 2, 
+     OP_POP_REG_SIZE          = 2, 
+     OP_PUSHA_SIZE            = 8,
+     OP_POPA_SIZE             = 8,
+     OP_MOV_RBP_RSP_SIZE      = 3,   
+     OP_MOV_RSP_RBP_SIZE      = 3,
+     OP_RET_SIZE              = 1,
+     OP_MOV_REG_IMM_SIZE      = 2,
+     OP_ADD_R13_REG_SIZE      = 3, 
+     OP_SHL_REG_SIZE          = 3,
+     OP_MOV_R13_RAM_SIZE      = 4,
+     OP_MOV_REG_STK_SIZE      = 4,
+     OP_ADD_REG_IMM_SIZE      = 3,
+     OP_SUB_REG_IMM_SIZE      = 3,
+     OP_MOV_MEM_XMM0_SIZE     = 6,
+     OP_MOV_XMM0_STK_SIZE     = 6,
+     OP_MOV_XMM1_STK_SIZE     = 6,
+     OP_MOV_STK_XMM1_SIZE     = 6,
+     OP_ADDSD_XMM1_XMM0_SIZE  = 4,
+     OP_SUBSD_XMM1_XMM0_SIZE  = 4,
+     OP_MULSD_XMM1_XMM0_SIZE  = 4,
+     OP_DIVSD_XMM1_XMM0_SIZE  = 4,
+     OP_SQRTPD_XMM0_SIZE      = 4,
+     OP_LEA_RDI_STK_ARG_SIZE  = 4,
+     OP_ALIGN_STK_SIZE        = 4,
+     OP_CALL_SIZE             = 1,
+     OP_CMP_XMM0_XMM1_SIZE    = 4,
+     OP_CONDITIONAL_JMP_SIZE  = 2,
+     OP_JMP_SIZE              = 1,
+     OP_MOV_STK_XMM0_SIZE     = 6,
+     OP_CVTTSD2SI_REG_SIZE    = 5,
 };
+
+//-----------------------------------------------------------------------------
+
+// this enum contains position of masks in common opcodes
+enum MASKS_POS
+{
+     POS_OP_PUSH_REG      = 8,
+     POS_OP_POP_REG       = 8,
+     POS_OP_MOV_REG_IMM   = 8,
+     POS_OP_MASK_JMP      = 8,
+     POS_OP_ADD_R13_REG   = 19,
+     POS_OP_SUB_REG_IMM   = 18,
+     POS_OP_SHL_REG       = 16,
+     POS_OP_MOV_REG_STK   = 19,
+     POS_OP_ADD_REG_IMM   = 16,
+     POS_OP_CVTTSD2SI_REG = 35,
+} MASKS_POS;
 
 //-----------------------------------------------------------------------------
 

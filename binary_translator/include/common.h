@@ -65,7 +65,7 @@ enum TRANSLATOR_INFO
 
 //-----------------------------------------------------------------------------
 
-enum IR_REGS
+enum IR_REGS_MASKS
 {
     IR_RAX = 1,
     IR_RBX = 2,
@@ -78,18 +78,17 @@ enum IR_REGS
 typedef struct IR_node
 {
     cmd_code command;
-    int imm_value;
-    int reg_value;
-    char ram_flag;
-
-    int troll_pos;
-    char *x64_pos;
+    int      imm_value;
+    int      reg_value;
+    char     ram_flag;
+    int      troll_pos;
+    char    *x64_pos;
 } IR_node;
 
 typedef struct IR
 {
     IR_node *buffer;
-    int size;
+    int      size;
 } IR;
 
 //-----------------------------------------------------------------------------

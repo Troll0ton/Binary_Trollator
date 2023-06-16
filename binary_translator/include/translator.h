@@ -27,8 +27,8 @@
 //                                WRITING
 //-----------------------------------------------------------------------------
 
-#define writeSimpleOp(name)                             \
-    writeCode_(x64_code, OP_##name, #name, name##_SIZE)
+#define writeSimpleOp(name)                       \
+    writeCode_(x64_code, name, #name, name##_SIZE)
 
 
 #define writeByte(value)                     \
@@ -43,19 +43,23 @@
     writeCode_(x64_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR)
 
 
-#define writeDouble(value)                                                   \
-    writeCode_(x64_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", SIZE_OF_NUM)
+#define writeDouble(value)                                          \
+    writeCode_(x64_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", 8)
 
 
-#define writeInt(value)                                   \
-    writeCode_(x64_code, value, "INT 8 BYTE", SIZE_OF_NUM)
+#define writeInt64(value)                        \
+    writeCode_(x64_code, value, "INT 8 BYTE", 8)
+
+
+#define writeInt32(value)                        \
+    writeCode_(x64_code, value, "INT 8 BYTE", 4)
 
 
 #define writeMaskingOp(opname, REG)                                                                 \
     strncat (dump_name, #opname " ", 90);                                                           \
     strncat (dump_name, reg_info[REG].name, 10);                                                    \
                                                                                                     \
-    writeCode_(x64_code, OP_##opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag, \
+    writeCode_(x64_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag, \
                dump_name, opname##_SIZE);                                                           \
                                                                                                     \
     memset (dump_name, '\0', 100);
@@ -63,8 +67,8 @@
 
 #define writeMaskingJmp(JMP)                                                                        \
                                                                                                     \
-    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_MASK_JMP,                                  \
-               #JMP, CONDITIONAL_JMP_SIZE);                                                                   
+    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP,                               \
+               #JMP, OP_CONDITIONAL_JMP_SIZE);                                                                   
 
 //-----------------------------------------------------------------------------
 
@@ -79,7 +83,7 @@ enum X64_CODE_INFO
 {
     X64_CODE_INIT_SIZE    = PAGESIZE,
     X64_CODE_SIZE_DIFF    = 16,
-    X64_CODE_INCREASE_PAR = 2,
+    X64_CODE_INCREASE_PAR = PAGESIZE,
 };
 
 //-----------------------------------------------------------------------------
@@ -138,8 +142,8 @@ static char dump_name[100] = { 0 };
 typedef struct Reg_info
 {
     const char *name;
-    char  reg_flag;
-    int   mask;
+    char        reg_flag;
+    uint64_t    mask;
 } Reg_info;
 
 static const Reg_info reg_info[] =
@@ -152,6 +156,7 @@ static const Reg_info reg_info[] =
     {"RBP", 0, MASK_RBP},
     {"RSI", 0, MASK_RSI},
     {"RDI", 0, MASK_RDI},
+    
     {"R8",  1, MASK_R8  - 0b1000},
     {"R9",  1, MASK_R9  - 0b1000},
     {"R10", 1, MASK_R10 - 0b1000},
@@ -182,7 +187,7 @@ void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table);
 
 void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_table);
 
-void *alignedCalloc(int alignment, int size);
+void *alignedCalloc (int alignment, int size);
 
 void translateCmd (X64_code *x64_code, IR_node *curr_node);
 
@@ -191,6 +196,10 @@ void translateReg (IR_node *curr_node);
 void translateHlt (X64_code *x64_code, IR_node *curr_node);
 
 void translatePush (X64_code *x64_code, IR_node *curr_node);
+
+void translatePushRam (X64_code *x64_code, IR_node *curr_node);
+
+void translatePushRegImm (X64_code *x64_code, IR_node *curr_node);
 
 void translatePop (X64_code *x64_code, IR_node *curr_node);
 
