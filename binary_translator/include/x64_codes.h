@@ -21,7 +21,6 @@ typedef enum REGS_MASKS
      MASK_RDI = 0b111,
      MASK_RSP = 0b100,
      MASK_RBP = 0b101,
-     
      MASK_R8  = 0b1000, 
      MASK_R9  = 0b1001,
      MASK_R10 = 0b1010,
@@ -201,7 +200,7 @@ enum MASKS_POS
 
 //-----------------------------------------------------------------------------
 
-// this is position of mask R_MUM in opcode
+// this is position of mask R_NUM in opcode
 enum MASK_R_POS
 {
      MASK_R_OP_PUSH_REG      = 0,

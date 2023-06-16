@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------------
 
 #include "binary_translator/include/x64_codes.h"
+#include "binary_translator/include/IR-parser.h"
 #include "binary_translator/include/common.h"
 
 //-----------------------------------------------------------------------------
@@ -17,11 +18,6 @@
 //-----------------------------------------------------------------------------
 
 #define CURR_POS x64_code->curr_pos
-
-//-----------------------------------------------------------------------------
-
-#define MASKING(OP_MASK, REG_MASK, POS_MASK_REG, MASK_R) \
-    OP_MASK | REG_MASK << POS_MASK_REG | MASK_R, #OP_MASK " " #OP_MASK
 
 //-----------------------------------------------------------------------------
 //                                WRITING
@@ -65,9 +61,8 @@
     memset (dump_name, '\0', 100);
 
 
-#define writeMaskingJmp(JMP)                                                                        \
-                                                                                                    \
-    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP,                               \
+#define writeMaskingJmp(JMP)                                          \
+    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
                #JMP, OP_CONDITIONAL_JMP_SIZE);                                                                   
 
 //-----------------------------------------------------------------------------
@@ -81,8 +76,8 @@ enum RAM_INFO
 
 enum X64_CODE_INFO
 {
-    X64_CODE_INIT_SIZE    = PAGESIZE,
     X64_CODE_SIZE_DIFF    = 16,
+    X64_CODE_INIT_SIZE    = PAGESIZE,
     X64_CODE_INCREASE_PAR = PAGESIZE,
 };
 
@@ -108,16 +103,10 @@ enum JUMP_TARGETS_POS
     POS_JUMP                    = OP_JMP_SIZE,
 
     POS_CALL                    = OP_CALL_SIZE,
-                                  //OP_PUSH_REG_SIZE +
-                                  //OP_MOV_RBP_RSP_SIZE + 
-                                  //OP_ALIGN_STK_SIZE +
-                                  //OP_SUB_REG_IMM_SIZE +
-                                  //4 +
-                                  //OP_PUSH_REG_SIZE +
 }; 
 
 //-----------------------------------------------------------------------------
-// Info wasn't used here because of smallness of amount of fields (only dump file)
+
 typedef struct X64_code
 {
     char *buffer;
@@ -167,7 +156,6 @@ static const Reg_info reg_info[] =
     {"RBP", 0, MASK_RBP},
     {"RSI", 0, MASK_RSI},
     {"RDI", 0, MASK_RDI},
-
     {"R8",  1, MASK_R8  - 0b1000},
     {"R9",  1, MASK_R9  - 0b1000},
     {"R10", 1, MASK_R10 - 0b1000},

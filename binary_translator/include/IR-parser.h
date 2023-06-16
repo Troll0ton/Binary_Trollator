@@ -9,15 +9,7 @@
 
 //-----------------------------------------------------------------------------
 
-enum IR_INFO
-{
-    JUMP_TARGET_EMPTY = 0xEAEAEA,
-    IR_REG = 1,
-};
-
-//-----------------------------------------------------------------------------
-
-enum OFFSETS
+enum BYTE_CODE_OFFSETS
 {
     OFFSET_CMD = 1,
     OFFSET_ARG = sizeof (elem_t),
@@ -25,23 +17,16 @@ enum OFFSETS
 
 //-----------------------------------------------------------------------------
 
-enum SIGNATURES
+enum BYTE_CODE_SIGNATURE_INFO
 {
-    SIGNATURE = 0xBACAFE,
-};
-
-//-----------------------------------------------------------------------------
-
-enum CODE_INFO
-{
-    SIZE_DIFFERENCE       = 40,
-    CODE_SIZE             = 2 * OFFSET_ARG,
     OFFSET_CODE_SIGNATURE = 2 * OFFSET_ARG,
+    SIGNATURE             = 0xBACAFE,
+    DESTROYED             = 0xBADBAD,
 };
 
 //-----------------------------------------------------------------------------
 
-enum BIT_MASKS
+enum BYTE_CODE_BIT_MASKS
 {
     MASK_IMM = 0x20,
     MASK_REG = 0x40,
@@ -51,11 +36,49 @@ enum BIT_MASKS
 
 //-----------------------------------------------------------------------------
 
+// This is actually (in my format) byte code
 typedef struct Troll_code
 {
     char *buffer;
-    int size;
+    int   size;
 } Troll_code;
+
+//-----------------------------------------------------------------------------
+
+enum IR_INFO
+{
+    // This value indicates that there is a mistake in target address
+    JUMP_TARGET_EMPTY = 0xEAEAEA,
+
+    // IR register is taken from bincode + 1
+    IR_REG = 1,
+
+    // MASKS IN IR
+    IR_RAX = 1,
+    IR_RBX = 2,
+    IR_RCX = 3,
+    IR_RDX = 4,
+};
+
+//-----------------------------------------------------------------------------
+
+typedef struct IR_node
+{
+    cmd_code command;
+    int      imm_value;
+    int      reg_value;
+    char     ram_flag;
+    int      troll_pos;
+    char    *x64_pos;
+} IR_node;
+
+//-----------------------------------------------------------------------------
+
+typedef struct IR
+{
+    IR_node *buffer;
+    int      size;
+} IR;
 
 //-----------------------------------------------------------------------------
 

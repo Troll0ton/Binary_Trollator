@@ -46,12 +46,12 @@ typedef uint32_t cmd_code;
 
 enum CMD_CODES
 {
-#define CMD_DEF(cmd, ...) \
-    cmd,
+    #define CMD_DEF(cmd, ...) \
+        cmd,
 
-#include "processor/COMMON/include/codegen/codegen.h"
+    #include "processor/COMMON/include/codegen/codegen.h"
 
-#undef CMD_DEF
+    #undef CMD_DEF
 };
 
 //-----------------------------------------------------------------------------
@@ -62,34 +62,6 @@ enum TRANSLATOR_INFO
     DELETED        = 0xDEDAC,
     MPROTECT_ERROR = -1,
 };
-
-//-----------------------------------------------------------------------------
-
-enum IR_REGS_MASKS
-{
-    IR_RAX = 1,
-    IR_RBX = 2,
-    IR_RCX = 3,
-    IR_RDX = 4,
-};
-
-//-----------------------------------------------------------------------------
-
-typedef struct IR_node
-{
-    cmd_code command;
-    int      imm_value;
-    int      reg_value;
-    char     ram_flag;
-    int      troll_pos;
-    char    *x64_pos;
-} IR_node;
-
-typedef struct IR
-{
-    IR_node *buffer;
-    int      size;
-} IR;
 
 //-----------------------------------------------------------------------------
 

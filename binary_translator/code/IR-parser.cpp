@@ -44,6 +44,11 @@ Troll_code *readCodeFile (FILE *code_file)
     }
 
     printf ("__________|WRONG SIGNATURE!|__________\n\n");
+
+    if(code_signature == DESTROYED)
+    {
+        printf ("This file was destroyed by someone.\n");
+    }
     
     free (bin_code);
 

@@ -681,14 +681,6 @@ void translateJmp (X64_code *x64_code, IR_node *curr_node)
 
 void translateCall (X64_code *x64_code, IR_node *curr_node)
 {
-    //writeMaskingOp (OP_PUSH_REG, MASK_RBP);
-    //writeSimpleOp  (OP_MOV_RBP_RSP);
-
-    //writeSimpleOp  (OP_ALIGN_STK); 
-    //writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
-    //writeInt32 (8);
-    //writeMaskingOp (OP_PUSH_REG, MASK_RBP);
-    
     writeSimpleOp (OP_CALL);
 
     // save bytes for unfilled target
@@ -700,11 +692,6 @@ void translateCall (X64_code *x64_code, IR_node *curr_node)
 void translateRet (X64_code *x64_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_RET);
-
-    //writeMaskingOp (OP_POP_REG, MASK_RBP);
-    
-    //writeSimpleOp  (OP_MOV_RSP_RBP);
-    //writeMaskingOp (OP_POP_REG, MASK_RBP);
 }
 
 //-----------------------------------------------------------------------------

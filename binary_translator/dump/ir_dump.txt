@@ -2,210 +2,160 @@
                        Intermediate Representation Dump                      
 -----------------------------------------------------------------------------
 
-- Intermediate Representation size: 41
+- Intermediate Representation size: 31
 
 - IR node 0
-       - command:   in
+       - command:   push
        - reg_value: 0
-       - imm_value: 0
+       - imm_value: 100
        - ram_flag:  0
 - IR node 1
-       - command:   in
-       - reg_value: 0
+       - command:   pop
+       - reg_value: 2
        - imm_value: 0
        - ram_flag:  0
 - IR node 2
-       - command:   in
-       - reg_value: 0
+       - command:   push
+       - reg_value: 2
        - imm_value: 0
        - ram_flag:  0
 - IR node 3
-       - command:   pop
-       - reg_value: 3
-       - imm_value: 0
+       - command:   push
+       - reg_value: 0
+       - imm_value: 1
        - ram_flag:  0
 - IR node 4
-       - command:   pop
-       - reg_value: 2
+       - command:   sub
+       - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 5
        - command:   pop
-       - reg_value: 1
+       - reg_value: 2
        - imm_value: 0
        - ram_flag:  0
 - IR node 6
-       - command:   call
-       - reg_value: 0
-       - imm_value: 8
+       - command:   push
+       - reg_value: 2
+       - imm_value: 0
        - ram_flag:  0
 - IR node 7
-       - command:   hlt
+       - command:   push
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 8
-       - command:   push
-       - reg_value: 2
-       - imm_value: 0
+       - command:   jb
+       - reg_value: 0
+       - imm_value: 26
        - ram_flag:  0
 - IR node 9
-       - command:   push
-       - reg_value: 2
+       - command:   pop
+       - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 10
-       - command:   mul
+       - command:   pop
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 11
        - command:   push
        - reg_value: 0
-       - imm_value: 4
+       - imm_value: 40000
        - ram_flag:  0
 - IR node 12
-       - command:   push
+       - command:   pop
        - reg_value: 1
        - imm_value: 0
        - ram_flag:  0
 - IR node 13
        - command:   push
-       - reg_value: 3
+       - reg_value: 1
        - imm_value: 0
        - ram_flag:  0
 - IR node 14
-       - command:   mul
+       - command:   push
        - reg_value: 0
-       - imm_value: 0
+       - imm_value: 1
        - ram_flag:  0
 - IR node 15
-       - command:   mul
+       - command:   sub
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 16
-       - command:   sub
-       - reg_value: 0
+       - command:   pop
+       - reg_value: 1
        - imm_value: 0
        - ram_flag:  0
 - IR node 17
-       - command:   pop
-       - reg_value: 4
+       - command:   push
+       - reg_value: 1
        - imm_value: 0
        - ram_flag:  0
 - IR node 18
        - command:   push
-       - reg_value: 2
+       - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 19
-       - command:   push
+       - command:   jb
        - reg_value: 0
-       - imm_value: -1
+       - imm_value: 23
        - ram_flag:  0
 - IR node 20
-       - command:   mul
+       - command:   pop
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 21
-       - command:   push
-       - reg_value: 4
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 22
-       - command:   sqrt
+       - command:   pop
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
+- IR node 22
+       - command:   jmp
+       - reg_value: 0
+       - imm_value: 13
+       - ram_flag:  0
 - IR node 23
-       - command:   sub
+       - command:   pop
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 24
-       - command:   push
+       - command:   pop
+       - reg_value: 0
+       - imm_value: 0
+       - ram_flag:  0
+- IR node 25
+       - command:   jmp
        - reg_value: 0
        - imm_value: 2
        - ram_flag:  0
-- IR node 25
-       - command:   push
-       - reg_value: 1
-       - imm_value: 0
-       - ram_flag:  0
 - IR node 26
-       - command:   mul
+       - command:   pop
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 27
-       - command:   div
+       - command:   pop
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
 - IR node 28
-       - command:   out
-       - reg_value: 0
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 29
        - command:   push
        - reg_value: 2
        - imm_value: 0
        - ram_flag:  0
-- IR node 30
-       - command:   push
-       - reg_value: 0
-       - imm_value: -1
-       - ram_flag:  0
-- IR node 31
-       - command:   mul
-       - reg_value: 0
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 32
-       - command:   push
-       - reg_value: 4
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 33
-       - command:   sqrt
-       - reg_value: 0
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 34
-       - command:   add
-       - reg_value: 0
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 35
-       - command:   push
-       - reg_value: 0
-       - imm_value: 2
-       - ram_flag:  0
-- IR node 36
-       - command:   push
-       - reg_value: 1
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 37
-       - command:   mul
-       - reg_value: 0
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 38
-       - command:   div
-       - reg_value: 0
-       - imm_value: 0
-       - ram_flag:  0
-- IR node 39
+- IR node 29
        - command:   out
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
-- IR node 40
-       - command:   ret
+- IR node 30
+       - command:   hlt
        - reg_value: 0
        - imm_value: 0
        - ram_flag:  0
