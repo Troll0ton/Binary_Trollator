@@ -79,6 +79,7 @@ enum X64_CODE_INFO
     X64_CODE_SIZE_DIFF    = 16,
     X64_CODE_INIT_SIZE    = PAGESIZE,
     X64_CODE_INCREASE_PAR = PAGESIZE,
+    X64_CODE_REG_MASK     = 0b1000,
 };
 
 //-----------------------------------------------------------------------------
@@ -93,6 +94,8 @@ enum X64_ARCHITECTURE_INFO
 
 //-----------------------------------------------------------------------------
 
+// This enum contains target's position (relative address from beginning of 
+// given IR node)
 enum JUMP_TARGETS_POS
 {
     POS_CONDITIONAL_JUMP        = OP_MOV_XMM0_STK_SIZE + 
@@ -146,8 +149,20 @@ typedef struct Reg_info
     uint64_t    mask;
 } Reg_info;
 
+// This array allow us to use more codegeneration in writeCode function
+// Register's masks are similar in different opcodes but there is a nuance here
+// For example: Difference between push rax, r8:
+//  push rax | 40 50
+//  push r8  | 41 50
+// To select correct opcode I need to set register's bit
+// In common occassion opcodes of some instructions which includes rax, rbx ...
+// are shorter than r8, r9 ...
+// But in way to follow standart I desided to use similar sizes of these opcodes.
 static const Reg_info reg_info[] =
 {
+    //  register's bit
+    //      |
+    //      V
     {"RAX", 0, MASK_RAX},
     {"RCX", 0, MASK_RCX},
     {"RDX", 0, MASK_RDX},
@@ -156,19 +171,19 @@ static const Reg_info reg_info[] =
     {"RBP", 0, MASK_RBP},
     {"RSI", 0, MASK_RSI},
     {"RDI", 0, MASK_RDI},
-    {"R8",  1, MASK_R8  - 0b1000},
-    {"R9",  1, MASK_R9  - 0b1000},
-    {"R10", 1, MASK_R10 - 0b1000},
-    {"R11", 1, MASK_R11 - 0b1000},
-    {"R12", 1, MASK_R12 - 0b1000},
-    {"R13", 1, MASK_R13 - 0b1000},
-    {"R14", 1, MASK_R14 - 0b1000},
-    {"R15", 1, MASK_R15 - 0b1000},
+    {"R8",  1, MASK_R8  - X64_CODE_REG_MASK},
+    {"R9",  1, MASK_R9  - X64_CODE_REG_MASK},
+    {"R10", 1, MASK_R10 - X64_CODE_REG_MASK},
+    {"R11", 1, MASK_R11 - X64_CODE_REG_MASK},
+    {"R12", 1, MASK_R12 - X64_CODE_REG_MASK},
+    {"R13", 1, MASK_R13 - X64_CODE_REG_MASK},
+    {"R14", 1, MASK_R14 - X64_CODE_REG_MASK},
+    {"R15", 1, MASK_R15 - X64_CODE_REG_MASK},
 };
 
 //-----------------------------------------------------------------------------
 
-X64_code *translateIrToX64(IR *ir, int bin_size);
+X64_code *translateIrToX64 (IR *ir, int bin_size);
 
 X64_code *x64CodeCtor (int init_size, int alignment);
 
@@ -218,9 +233,9 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node);
 
 void translateJmp (X64_code *x64_code, IR_node *curr_node);
 
-void translateCall(X64_code *x64_code, IR_node *curr_node);
+void translateCall (X64_code *x64_code, IR_node *curr_node);
 
-void translateRet(X64_code *x64_code, IR_node *curr_node);
+void translateRet (X64_code *x64_code, IR_node *curr_node);
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
 

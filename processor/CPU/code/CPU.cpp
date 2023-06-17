@@ -176,7 +176,7 @@ void execute_cmd (int curr_cmd,  double    *curr_arg, double arg_value,
 
     #undef CMD_DEF
 
-    stack_dumps (&cpu->Stk, cpu->info.file_out);
+    //stack_dumps (&cpu->Stk, cpu->info.file_out);
 
     *curr_ptr = curr_pos;
 }

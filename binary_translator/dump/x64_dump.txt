@@ -5,9 +5,9 @@
 - x64 buffer capacity: 4096
 
 OP_MOV_REG_IMM R12        | 49 BC 
-ABS PTR 8 BYTE            | 00 60 A0 84 A8 55 00 00 
+ABS PTR 8 BYTE            | 00 F0 A5 8C D7 55 00 00 
 OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 59 40 
+DOUBLE 8 BYTE             | 00 00 00 00 00 40 8F 40 
 OP_PUSH_REG R13           | 41 55 
 OP_MOV_REG_STK RBX        | 48 8B 1C 24 
 OP_ADD_REG_IMM RSP        | 48 81 C4 
@@ -103,7 +103,7 @@ OP_SUB_REG_IMM RSP        | 48 81 EC
 INT 4 BYTE                | 08 00 00 00 
 OP_PUSH_REG RBP           | 40 55 
 OP_CALL                   | E8 
-PTR 4 BYTE                | 2E 39 95 FF 
+PTR 4 BYTE                | 7C BA DA FE 
 OP_POP_REG RBP            | 40 5D 
 OP_MOV_RSP_RBP            | 48 89 EC 
 OP_POP_REG RBP            | 40 5D 

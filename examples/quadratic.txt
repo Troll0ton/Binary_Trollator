@@ -1,42 +1,50 @@
-funct a (){
-scan(a)
-scan(b)
-scan(c)
+in
+in
+in
 
-D=b()
+pop rcx
+pop rbx
+pop rax
 
-if((D)>(0)) c()
-else if((D)~(0)) d()
-else if((D)<(0)) e()
-else print(123456)
-}
+call 13:
 
+hlt
 
-funct b (){
-b*b-4*a*c
-}
+:13
 
+push rbx
+push rbx
+mul
+push 4
+push rax
+push rcx
+mul
+mul
+sub
+pop rdx
 
+push rbx
+push -1
+mul
+push rdx 
+sqrt
+sub
+push 2
+push rax
+mul
+div
+out
 
+push rbx
+push -1
+mul
+push rdx 
+sqrt
+add
+push 2
+push rax
+mul
+div
+out
 
-funct c (){
-x=(0-b+sqrt(D))/(2*a)
-y=(0-b-sqrt(D))/(2*a)
-
-print(x)
-print(y)
-}
-
-
-
-funct d (){
-x=(0-b)/(2*a)
-
-print(x)
-}
-
-
-
-funct e (){
-print(123456)
-}
+ret

@@ -7,7 +7,7 @@
 - IR node 0
        - command:   push
        - reg_value: 0
-       - imm_value: 100
+       - imm_value: 1000
        - ram_flag:  0
 - IR node 1
        - command:   pop

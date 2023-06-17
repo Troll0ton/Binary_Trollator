@@ -20,7 +20,7 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
     // now translate IR to opcodes and in parallel fill jmp table
     for(int i = 0; i < ir->size; i++)
     {
-        jmp_table->buffer[i] = CURR_POS;        // fill jump table
+        jmp_table->buffer[i] = CURR_POS; // fill jump table
         CURR_IR_NODE.x64_pos = CURR_POS;
 
         translateCmd (x64_code, &CURR_IR_NODE); // translate command
@@ -61,7 +61,7 @@ void x64CodeResize (X64_code *x64_code)
                                               x64_code->capacity + X64_CODE_INCREASE_PAR); 
 
     memcpy (new_buffer, x64_code->buffer, x64_code->capacity);
-    free (x64_code->buffer);
+    free   (x64_code->buffer);
 
     x64_code->buffer = new_buffer;
 
@@ -97,10 +97,11 @@ Ram *ramCtor (int size, int alignment)
 void ramDtor (Ram *ram)
 {
     ram->size = DELETED;
+
     free (ram->buffer);
     free (ram);
 }
-
+ 
 //-----------------------------------------------------------------------------
 
 Jmp_table *jmpTableCtor (int size)
@@ -121,8 +122,9 @@ Jmp_table *jmpTableCtor (int size)
 void jmpTableDtor (Jmp_table *jmp_table)
 {
     jmp_table->size = DELETED;
-    free (jmp_table->buffer);
-    free (jmp_table);
+
+    free   (jmp_table->buffer);
+    free   (jmp_table);
     fclose (jmp_table->dump_file);
 }
 
@@ -137,7 +139,7 @@ void writePrologue (X64_code *x64_code)
 
     writeSimpleOp  (OP_ALIGN_STK); 
     writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
-    writeInt32 (8);
+    writeInt32     (8);
     writeMaskingOp (OP_PUSH_REG, MASK_RBP);
 }
 

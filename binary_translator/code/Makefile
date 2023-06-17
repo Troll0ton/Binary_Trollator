@@ -1,8 +1,11 @@
 CC=g++
-CFLAGS=-c 
+
+CFLAGS=-O3 -c 
 IFLAGS=-I../../
+
 SOURCES=main.cpp IR-parser.cpp translator.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
+
 EXECUTABLE=../../trollator
 
 all: $(SOURCES) $(EXECUTABLE)
