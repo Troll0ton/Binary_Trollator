@@ -11,8 +11,8 @@
 
 //-----------------------------------------------------------------------------
 
-#ifndef PAGESIZE
-#define PAGESIZE 4096
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
 #endif
 
 //-----------------------------------------------------------------------------
@@ -67,9 +67,25 @@
 
 //-----------------------------------------------------------------------------
 
+enum ELF_INFO
+{
+    CODE_SIZE   = 2 * PAGE_SIZE,
+    DATA_SIZE   = 2 * PAGE_SIZE,
+    LOAD_ADDR   = 0x400000,
+    TEXT_ADDR   = 0x401000,
+    RAM_ADDR    = 0x403000,
+    STK_ADDR    = 0x404000,
+    LIB_ADDR    = 0x405000,
+    STR_ADDR    = 0x405000,  
+    PRINTF_ADDR = 0x405804,  
+    ELF_SIZE    = 0x5001,
+};
+
+//-----------------------------------------------------------------------------
+
 enum RAM_INFO
 {
-    RAM_INIT_SIZE = PAGESIZE,
+    RAM_INIT_SIZE = PAGE_SIZE,
 };
 
 //-----------------------------------------------------------------------------
@@ -77,8 +93,8 @@ enum RAM_INFO
 enum X64_CODE_INFO
 {
     X64_CODE_SIZE_DIFF    = 16,
-    X64_CODE_INIT_SIZE    = PAGESIZE,
-    X64_CODE_INCREASE_PAR = PAGESIZE,
+    X64_CODE_INIT_SIZE    = PAGE_SIZE,
+    X64_CODE_INCREASE_PAR = PAGE_SIZE,
     X64_CODE_REG_MASK     = 0b1000,
 };
 

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+#include <elf.h>
 #include <limits.h>
 #include <sys/mman.h>
 

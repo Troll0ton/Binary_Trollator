@@ -733,6 +733,79 @@ void runCode (char *code, int size)
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+//                                ELFING
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Elf64_Phdr HeaderInit( Elf64_Word p_flags, Elf64_Addr addr )
+{
+    Elf64_Phdr self = 
+    {
+        .p_type   = 1               , /* [PT_LOAD] */
+        .p_flags  = p_flags         , /* PF_R */
+        .p_offset = addr - LOAD_ADDR, /* (bytes into file) */
+        .p_vaddr  = addr            , /* (virtual addr at runtime) */
+        .p_paddr  = addr            , /* (physical addr at runtime) */
+        .p_filesz = CODE_SIZE       , /* (bytes in file) */
+        .p_memsz  = DATA_SIZE       , /* (bytes in mem at runtime) */
+        .p_align  = PAGE_SIZE       ,/* (min mem alignment in bytes) */
+    };
+
+    return self;
+}
+//-----------------------------------------------------------------------------
+
+void createELF (X64_code *x64_code)
+{
+    FILE *executable = fopen ("executable.elf", "w+");
+
+    Elf64_Ehdr elf_header = 
+    {
+        .e_ident = 
+        { 
+            ELFMAG0       , /* [0] EI_MAG     */ /* 0x7F */
+            ELFMAG1       , /* [1] EI_MAG     */ /* 'E'  */
+            ELFMAG2       , /* [2] EI_MAG     */ /* 'L'  */
+            ELFMAG3       , /* [3] EI_MAG     */ /* 'F'  */
+            ELFCLASS64    , /* [4] EI_CLASS   */ /*  2   */
+            ELFDATA2LSB   , /* [5] EI_DATA    */ /*  1   */
+            EV_CURRENT    , /* [6] EI_VERSION */ /*  1   */
+            ELFOSABI_NONE , /* [7] EI_OSABI   */ /*  0   */
+        },
+        .e_type      = ET_EXEC    , /* 2  */
+        .e_machine   = EM_X86_64  , /* 62 */
+        .e_version   = EV_CURRENT , /* 1  */
+        .e_entry     = TEXT_ADDR  , /* (start address at runtime) */
+        .e_phoff     = 64         , /* (program header table offset) */
+        .e_ehsize    = 64         , /* (file header size in bytes) */
+        .e_phentsize = 56         , /* (Size of one program header) */
+        .e_phnum     = 5          , /* (program headers) */
+    };
+
+    Elf64_Phdr first_pg_header  = HeaderInit( PF_R,        LOAD_ADDR );
+    Elf64_Phdr second_pg_header = HeaderInit( PF_R | PF_X, TEXT_ADDR );
+    Elf64_Phdr ram_header       = HeaderInit( PF_R | PF_W, RAM_ADDR  );
+    Elf64_Phdr stack_header     = HeaderInit( PF_R | PF_W, STK_ADDR  );
+    Elf64_Phdr library_header   = HeaderInit( PF_R | PF_X, LIB_ADDR  );
+
+    fwrite( &elf_header,       sizeof( elf_header       ), 1, executable );
+    fwrite( &first_pg_header,  sizeof( first_pg_header  ), 1, executable );
+    fwrite( &second_pg_header, sizeof( second_pg_header ), 1, executable );
+    fwrite( &ram_header,       sizeof( ram_header       ), 1, executable );
+    fwrite( &stack_header,     sizeof( stack_header     ), 1, executable );
+    fwrite( &library_header,   sizeof( library_header   ), 1, executable );
+
+    fseek ( executable, TEXT_ADDR - LOAD_ADDR, SEEK_SET );
+    fwrite( x64_code->buffer, 1, x64_code->size, executable );
+
+    fseek  ( executable, LIB_ADDR - LOAD_ADDR, SEEK_SET );
+    LoadLib( lib_file_name, exec ); 
+
+    fclose (executable);
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //                                DUMPING
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
