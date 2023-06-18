@@ -8,14 +8,16 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
 {
     printf ("-- write commands\n\n");
 
-    X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGESIZE);
+    X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE);
     CodeX64DumpHeader (x64_code);
 
     // so we can store only RAM_INIT_SIZE / 8 nums in ram
-    Ram       *ram       = ramCtor      (RAM_INIT_SIZE, PAGESIZE);
+    Ram       *ram       = ramCtor      (RAM_INIT_SIZE, PAGE_SIZE);
     Jmp_table *jmp_table = jmpTableCtor (ir->size);
 
     saveDataAddress (x64_code, ram->buffer);    // save absolute address of RAM in R12 
+
+    writeMaskingOp (OP_POP_REG, MASK_R10); // save return address
 
     // now translate IR to opcodes and in parallel fill jmp table
     for(int i = 0; i < ir->size; i++)
@@ -26,7 +28,8 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
         translateCmd (x64_code, &CURR_IR_NODE); // translate command
     }
 
-    writeSimpleOp (OP_RET); // ret from programm
+    writeMaskingOp (OP_PUSH_REG, MASK_R10);
+    writeSimpleOp  (OP_RET); // ret from programm (for safety)
 
     jmpTableDump (jmp_table);
     handleJmpTargetsX64 (x64_code, ir, jmp_table); // fill jmp targets in x64_code (from jmp table) 
@@ -42,7 +45,7 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
 X64_code *x64CodeCtor (int init_size, int alignment)
 {
     X64_code *x64_code  = (X64_code*) calloc        (1,        sizeof (X64_code));
-    x64_code->buffer    = (char*)     alignedCalloc (PAGESIZE, init_size); 
+    x64_code->buffer    = (char*)     alignedCalloc (PAGE_SIZE, init_size); 
     x64_code->curr_pos  = x64_code->buffer;
 
     // Because of unknowing of the final size, the buffer is self-expanding 
@@ -57,7 +60,7 @@ X64_code *x64CodeCtor (int init_size, int alignment)
 void x64CodeResize (X64_code *x64_code)
 {
     // There is no analogue of realloc for aligned buffers, so I simply copy old buffer into the new
-    char *new_buffer = (char*) alignedCalloc (PAGESIZE, 
+    char *new_buffer = (char*) alignedCalloc (PAGE_SIZE, 
                                               x64_code->capacity + X64_CODE_INCREASE_PAR); 
 
     memcpy (new_buffer, x64_code->buffer, x64_code->capacity);
@@ -86,7 +89,7 @@ void x64CodeDtor (X64_code *x64_code)
 Ram *ramCtor (int size, int alignment)
 {
     Ram *ram    = (Ram*)  calloc        (1,        sizeof (Ram));
-    ram->buffer = (char*) alignedCalloc (PAGESIZE, size);
+    ram->buffer = (char*) alignedCalloc (PAGE_SIZE, size);
     ram->size   = size;
 
     return ram;
@@ -377,7 +380,8 @@ void translateReg (IR_node *curr_node)
 
 void translateHlt (X64_code *x64_code, IR_node *curr_node)
 {
-    writeSimpleOp (OP_RET);
+    writeMaskingOp (OP_PUSH_REG, MASK_R10);
+    writeSimpleOp  (OP_RET);
 }
 
 //-----------------------------------------------------------------------------
@@ -736,19 +740,19 @@ void runCode (char *code, int size)
 //                                ELFING
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-
+/*
 Elf64_Phdr HeaderInit( Elf64_Word p_flags, Elf64_Addr addr )
 {
     Elf64_Phdr self = 
     {
-        .p_type   = 1               , /* [PT_LOAD] */
-        .p_flags  = p_flags         , /* PF_R */
-        .p_offset = addr - LOAD_ADDR, /* (bytes into file) */
-        .p_vaddr  = addr            , /* (virtual addr at runtime) */
-        .p_paddr  = addr            , /* (physical addr at runtime) */
-        .p_filesz = CODE_SIZE       , /* (bytes in file) */
-        .p_memsz  = DATA_SIZE       , /* (bytes in mem at runtime) */
-        .p_align  = PAGE_SIZE       ,/* (min mem alignment in bytes) */
+        .p_type   = 1               , // [PT_LOAD] 
+        .p_flags  = p_flags         , // PF_R 
+        .p_offset = addr - LOAD_ADDR, // (bytes into file) 
+        .p_vaddr  = addr            , // (virtual addr at runtime) 
+        .p_paddr  = addr            , // (physical addr at runtime) 
+        .p_filesz = CODE_SIZE       , // (bytes in file) 
+        .p_memsz  = DATA_SIZE       , // (bytes in mem at runtime) 
+        .p_align  = PAGE_SIZE       , // (min mem alignment in bytes) 
     };
 
     return self;
@@ -763,23 +767,23 @@ void createELF (X64_code *x64_code)
     {
         .e_ident = 
         { 
-            ELFMAG0       , /* [0] EI_MAG     */ /* 0x7F */
-            ELFMAG1       , /* [1] EI_MAG     */ /* 'E'  */
-            ELFMAG2       , /* [2] EI_MAG     */ /* 'L'  */
-            ELFMAG3       , /* [3] EI_MAG     */ /* 'F'  */
-            ELFCLASS64    , /* [4] EI_CLASS   */ /*  2   */
-            ELFDATA2LSB   , /* [5] EI_DATA    */ /*  1   */
-            EV_CURRENT    , /* [6] EI_VERSION */ /*  1   */
-            ELFOSABI_NONE , /* [7] EI_OSABI   */ /*  0   */
+            ELFMAG0       , // [0] EI_MAG       0x7F 
+            ELFMAG1       , // [1] EI_MAG       'E'  
+            ELFMAG2       , // [2] EI_MAG       'L'  
+            ELFMAG3       , // [3] EI_MAG       'F'  
+            ELFCLASS64    , // [4] EI_CLASS      2   
+            ELFDATA2LSB   , // [5] EI_DATA       1   
+            EV_CURRENT    , // [6] EI_VERSION    1   
+            ELFOSABI_NONE , // [7] EI_OSABI      0   
         },
-        .e_type      = ET_EXEC    , /* 2  */
-        .e_machine   = EM_X86_64  , /* 62 */
-        .e_version   = EV_CURRENT , /* 1  */
-        .e_entry     = TEXT_ADDR  , /* (start address at runtime) */
-        .e_phoff     = 64         , /* (program header table offset) */
-        .e_ehsize    = 64         , /* (file header size in bytes) */
-        .e_phentsize = 56         , /* (Size of one program header) */
-        .e_phnum     = 5          , /* (program headers) */
+        .e_type      = ET_EXEC    , // 2  
+        .e_machine   = EM_X86_64  , // 62 
+        .e_version   = EV_CURRENT , // 1  
+        .e_entry     = TEXT_ADDR  , // (start address at runtime) 
+        .e_phoff     = 64         , // (program header table offset) 
+        .e_ehsize    = 64         , // (file header size in bytes) 
+        .e_phentsize = 56         , // (Size of one program header) 
+        .e_phnum     = 5          , // (program headers) 
     };
 
     Elf64_Phdr first_pg_header  = HeaderInit( PF_R,        LOAD_ADDR );
@@ -799,11 +803,11 @@ void createELF (X64_code *x64_code)
     fwrite( x64_code->buffer, 1, x64_code->size, executable );
 
     fseek  ( executable, LIB_ADDR - LOAD_ADDR, SEEK_SET );
-    LoadLib( lib_file_name, exec ); 
+    //LoadLib( lib_file_name, exec ); 
 
     fclose (executable);
 }
-
+*/
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //                                DUMPING

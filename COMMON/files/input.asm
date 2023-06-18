@@ -1,46 +1,42 @@
-push 1000
-pop rbx
-
-:3
-push rbx
-push 1
-sub
-pop rbx
-
-push rbx
-push 0
-jb 4:
-pop
-pop
-
-push 40000
+in
 pop rax
 
-:1
-push rax
 push 1
-sub
-pop rax
+pop rbx
 
-push rax
-push 0
-jb 2:
-
-pop
-pop
-jmp 1:
-
-:2
-pop
-pop
-
-jmp 3:
-
-:4
-pop
-pop
+call 13:
 
 push rbx
 out
 
 hlt
+
+:13
+
+push rax
+push rbx
+mul
+pop rbx
+
+push rax
+push 1
+sub
+pop rax
+
+push 1
+push rax
+jae 5: 
+
+pop
+pop
+call 13:
+
+jmp 7:
+
+:5
+
+pop
+pop
+
+:7
+ret

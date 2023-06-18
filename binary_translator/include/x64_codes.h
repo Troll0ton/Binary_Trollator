@@ -85,11 +85,11 @@ typedef enum OP_CODES : uint64_t
      // lea rdi, [rsp]
      OP_LEA_RDI_STK_ARG = 0x243C8D48,
 
-     // push rax, rbx, rcx, rdx, r12, r13
-     OP_PUSHA           = 0x5541544152515350,
+     // push rax, rbx, rcx, rdx, r12, r10
+     OP_PUSHA           = 0x5241544152515350,
 
-     // pop r13, r12, rdx, rcx, rbx, rax
-     OP_POPA            = 0x585B595A5C415D41,
+     // pop r10, r12, rdx, rcx, rbx, rax
+     OP_POPA            = 0x585B595A5C415A41,
 
      // mov reg, imm64 (MASKING with register)
      OP_MOV_REG_IMM     = 0xB848,
