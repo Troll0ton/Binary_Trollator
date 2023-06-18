@@ -24,6 +24,8 @@ int main ()
     fclose (x64_code->dump_file);
     IrDtor (ir);
 
+    //createELF (x64_code);
+
     runCode (x64_code->buffer, x64_code->size);
     x64CodeDtor (x64_code);
 

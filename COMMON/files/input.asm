@@ -1,3 +1,13 @@
+push 60
+pop rdx
+
+push 100
+pop [rdx + 4]
+
+
+push [64]
+out
+
 in
 pop rax
 

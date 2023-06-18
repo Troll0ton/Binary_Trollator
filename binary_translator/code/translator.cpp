@@ -12,10 +12,11 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
     CodeX64DumpHeader (x64_code);
 
     // so we can store only RAM_INIT_SIZE / 8 nums in ram
-    Ram       *ram       = ramCtor      (RAM_INIT_SIZE, PAGE_SIZE);
+    Ram *ram = ramCtor (RAM_INIT_SIZE, PAGE_SIZE);
+
     Jmp_table *jmp_table = jmpTableCtor (ir->size);
 
-    saveDataAddress (x64_code, ram->buffer);    // save absolute address of RAM in R12 
+    saveDataAddress (x64_code, ram->buffer); // save absolute address of RAM in R12 
 
     writeMaskingOp (OP_POP_REG, MASK_R10); // save return address
 
@@ -31,8 +32,13 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
     writeMaskingOp (OP_PUSH_REG, MASK_R10);
     writeSimpleOp  (OP_RET); // ret from programm (for safety)
 
+    // load stdio procedures (in bin code)
+    char *in_addr  = writeInBinCode (x64_code, "binary_translator/code/scanf.bin");
+    char *out_addr = writeInBinCode (x64_code, "binary_translator/code/printf.bin");
+
     jmpTableDump (jmp_table);
-    handleJmpTargetsX64 (x64_code, ir, jmp_table); // fill jmp targets in x64_code (from jmp table) 
+    // fill jmp targets in x64_code (from jmp table) 
+    handleJmpTargetsX64 (x64_code, ir, jmp_table, in_addr, out_addr); 
 
     jmpTableDtor (jmp_table);
     ramDtor (ram);
@@ -163,7 +169,12 @@ void saveDataAddress (X64_code *x64_code, char *ram) // r12 <- ptr to 'ram' (tro
 {
     writeMaskingOp (OP_MOV_REG_IMM, MASK_R12);
 
+    #ifdef ELF_MODE
+    uint64_t abs_ptr = (uint64_t)(x64_code->buffer + X64_CODE_INIT_SIZE); // make correct addressing 
+    #else
     uint64_t abs_ptr = (uint64_t)(ram); 
+    #endif
+
     writeAbsPtr (abs_ptr);
 }
 
@@ -185,7 +196,8 @@ void *alignedCalloc (int alignment, int size)
 
 #define TARGET CURR_IR_NODE.imm_value
 
-void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table)
+void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table, 
+                          char *in_addr, char *out_addr                    )
 {
     for(int i = 0; i < ir->size; i++) // ir->size == jmp_table
     {
@@ -193,6 +205,10 @@ void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table)
 
         switch(CURR_IR_NODE.command)
         {
+            case IN:
+            case OUT:
+                handleIOAddress (x64_code, ir->buffer[i], in_addr, out_addr);
+                break;
             CONDITIONAL_JMP_CASE
             case JMP:
             case CALL:
@@ -203,6 +219,28 @@ void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table)
             // else skip this command -> not jump type (nothing to translate here)
         }   
     }
+}
+
+//-----------------------------------------------------------------------------
+
+void handleIOAddress (X64_code *x64_code, IR_node ir_node, 
+                      char *in_addr, char *out_addr       )
+{
+    uint64_t ptr_pos = 0;
+
+    if(ir_node.command == IN)
+    {
+        ptr_pos = (uint64_t) in_addr - (uint64_t) POS_IN;
+    }
+    else // OUT
+    {
+        ptr_pos = (uint64_t) out_addr - (uint64_t) POS_OUT;
+    }
+
+    uint32_t ptr = (uint64_t) ptr_pos - (uint64_t)(CURR_POS + SIZE_OF_PTR); 
+    CURR_POS += ptr_pos;
+
+    writePtr (ptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -226,7 +264,6 @@ void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_tab
 
     uint32_t ptr = (uint64_t) jmp_table->buffer[ir_node.imm_value] - 
                    (uint64_t)(CURR_POS + ptr_pos + SIZE_OF_PTR); 
-
     CURR_POS += ptr_pos;
 
     writePtr (ptr);
@@ -241,6 +278,27 @@ void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_tab
 //-----------------------------------------------------------------------------
 //                                WRITING
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+char *writeInBinCode (X64_code *x64_code, char *file_name)
+{
+    FILE *bin_file = fopen (file_name, "rb");
+    int file_size = get_file_size (bin_file);
+
+    fread (x64_code->curr_pos, sizeof (char), file_size, bin_file);
+    fclose (bin_file);
+
+    x64_code->curr_pos += file_size;
+    x64_code->size     += file_size; 
+
+    if(x64_code->size + X64_CODE_SIZE_DIFF > x64_code->capacity)
+    {
+        x64CodeResize (x64_code);
+    }
+
+    return x64_code->curr_pos - file_size;
+}
+
 //-----------------------------------------------------------------------------
 
 void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size)
@@ -582,30 +640,12 @@ void translateStdio (X64_code *x64_code, IR_node *curr_node)
 
     // save ptr in rdi (as first argument of function)
     writeSimpleOp (OP_LEA_RDI_STK_ARG);
-
     writePrologue (x64_code);
 
     writeSimpleOp (OP_CALL);
 
-    uint64_t funct_ptr = 0;
-
-    switch(curr_node->command)
-    {
-        case IN:
-            funct_ptr = (uint64_t) double_scanf;
-            break;
-        case OUT:
-            funct_ptr = (uint64_t) double_printf;
-            break;
-        default:
-            printf ("UNKNOWN STDIO FUNCTION\n\n");
-            break;    
-    }
-
-    // calculate relative address to stdio function
-    funct_ptr -= (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
-    writePtr (funct_ptr);
-
+    // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
     writeEpilogue (x64_code);
 
     if(curr_node->command == OUT)
@@ -722,7 +762,7 @@ void runCode (char *code, int size)
 
     if(mprotect_status == MPROTECT_ERROR)
     {
-        perror("mprotect error:"); // added not cringe error handling
+        perror("mprotect error:"); 
     }
 
     printf ("-- executing...       \n\n"
@@ -740,28 +780,35 @@ void runCode (char *code, int size)
 //                                ELFING
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-/*
-Elf64_Phdr HeaderInit( Elf64_Word p_flags, Elf64_Addr addr )
+
+Elf64_Phdr sectionInit (Elf64_Word p_flags, Elf64_Addr addr)
 {
-    Elf64_Phdr self = 
+    Elf64_Phdr header = 
     {
-        .p_type   = 1               , // [PT_LOAD] 
-        .p_flags  = p_flags         , // PF_R 
+        .p_type   = PT_LOAD,
+        .p_flags  = p_flags, // PF_R 
         .p_offset = addr - LOAD_ADDR, // (bytes into file) 
-        .p_vaddr  = addr            , // (virtual addr at runtime) 
-        .p_paddr  = addr            , // (physical addr at runtime) 
-        .p_filesz = CODE_SIZE       , // (bytes in file) 
-        .p_memsz  = DATA_SIZE       , // (bytes in mem at runtime) 
-        .p_align  = PAGE_SIZE       , // (min mem alignment in bytes) 
+        .p_vaddr  = addr, // (virtual addr at runtime) 
+        .p_paddr  = addr, // (physical addr at runtime) 
+        .p_filesz = PAGE_SIZE, // (bytes in file) 
+        .p_memsz  = PAGE_SIZE, // (bytes in mem at runtime) 
+        .p_align  = PAGE_SIZE, // (min mem alignment in bytes) 
     };
 
-    return self;
+    return header;
 }
 //-----------------------------------------------------------------------------
 
 void createELF (X64_code *x64_code)
 {
-    FILE *executable = fopen ("executable.elf", "w+");
+    FILE *executable = fopen ("executable", "w+");
+
+    char null_val = 0;
+
+    int file_size = get_file_size (executable);
+
+    fwrite (&null_val, ELF_SIZE, 1, executable);
+    fseek  (executable, 0, SEEK_SET);
 
     Elf64_Ehdr elf_header = 
     {
@@ -776,9 +823,10 @@ void createELF (X64_code *x64_code)
             EV_CURRENT    , // [6] EI_VERSION    1   
             ELFOSABI_NONE , // [7] EI_OSABI      0   
         },
-        .e_type      = ET_EXEC    , // 2  
-        .e_machine   = EM_X86_64  , // 62 
-        .e_version   = EV_CURRENT , // 1  
+        .e_type      = ET_EXEC    ,  
+        .e_machine   = EM_X86_64  , 
+        .e_version   = EV_CURRENT , 
+         
         .e_entry     = TEXT_ADDR  , // (start address at runtime) 
         .e_phoff     = 64         , // (program header table offset) 
         .e_ehsize    = 64         , // (file header size in bytes) 
@@ -786,28 +834,20 @@ void createELF (X64_code *x64_code)
         .e_phnum     = 5          , // (program headers) 
     };
 
-    Elf64_Phdr first_pg_header  = HeaderInit( PF_R,        LOAD_ADDR );
-    Elf64_Phdr second_pg_header = HeaderInit( PF_R | PF_X, TEXT_ADDR );
-    Elf64_Phdr ram_header       = HeaderInit( PF_R | PF_W, RAM_ADDR  );
-    Elf64_Phdr stack_header     = HeaderInit( PF_R | PF_W, STK_ADDR  );
-    Elf64_Phdr library_header   = HeaderInit( PF_R | PF_X, LIB_ADDR  );
+    Elf64_Phdr first_pg_header  = sectionInit ( PF_R,        LOAD_ADDR );
+    Elf64_Phdr second_pg_header = sectionInit ( PF_R | PF_X | PF_W, TEXT_ADDR );
 
-    fwrite( &elf_header,       sizeof( elf_header       ), 1, executable );
-    fwrite( &first_pg_header,  sizeof( first_pg_header  ), 1, executable );
-    fwrite( &second_pg_header, sizeof( second_pg_header ), 1, executable );
-    fwrite( &ram_header,       sizeof( ram_header       ), 1, executable );
-    fwrite( &stack_header,     sizeof( stack_header     ), 1, executable );
-    fwrite( &library_header,   sizeof( library_header   ), 1, executable );
 
-    fseek ( executable, TEXT_ADDR - LOAD_ADDR, SEEK_SET );
-    fwrite( x64_code->buffer, 1, x64_code->size, executable );
+    fwrite (&elf_header,       sizeof (elf_header), 1, executable );
+    fwrite (&first_pg_header,  sizeof (first_pg_header), 1, executable );
 
-    fseek  ( executable, LIB_ADDR - LOAD_ADDR, SEEK_SET );
-    //LoadLib( lib_file_name, exec ); 
+    fseek  (executable, TEXT_ADDR - LOAD_ADDR, SEEK_SET );
+
+    fwrite (x64_code->buffer, sizeof (char), x64_code->size, executable );
 
     fclose (executable);
 }
-*/
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //                                DUMPING

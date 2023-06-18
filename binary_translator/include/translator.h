@@ -8,6 +8,11 @@
 #include "binary_translator/include/x64_codes.h"
 #include "binary_translator/include/IR-parser.h"
 #include "binary_translator/include/common.h"
+#include "binary_translator/include/input_output.h" 
+
+//-----------------------------------------------------------------------------
+
+//#define ELF_MODE 1
 
 //-----------------------------------------------------------------------------
 
@@ -69,16 +74,13 @@
 
 enum ELF_INFO
 {
-    CODE_SIZE   = 2 * PAGE_SIZE,
-    DATA_SIZE   = 2 * PAGE_SIZE,
+    CODE_SIZE   = PAGE_SIZE,
+    DATA_SIZE   = PAGE_SIZE,
+
     LOAD_ADDR   = 0x400000,
-    TEXT_ADDR   = 0x401000,
-    RAM_ADDR    = 0x403000,
-    STK_ADDR    = 0x404000,
-    LIB_ADDR    = 0x405000,
-    STR_ADDR    = 0x405000,  
-    PRINTF_ADDR = 0x405804,  
-    ELF_SIZE    = 0x5001,
+    TEXT_ADDR   = 0x401000, 
+    RAM_ADDR    = 0x402000, 
+    ELF_SIZE    = 0x3001,
 };
 
 //-----------------------------------------------------------------------------
@@ -92,10 +94,10 @@ enum RAM_INFO
 
 enum X64_CODE_INFO
 {
-    X64_CODE_SIZE_DIFF    = 16,
-    X64_CODE_INIT_SIZE    = PAGE_SIZE,
-    X64_CODE_INCREASE_PAR = PAGE_SIZE,
-    X64_CODE_REG_MASK     = 0b1000,
+    X64_CODE_SIZE_DIFF            = 16,
+    X64_CODE_INIT_SIZE            = PAGE_SIZE,
+    X64_CODE_INCREASE_PAR         = PAGE_SIZE,
+    X64_CODE_REG_MASK             = 0b1000,
 };
 
 //-----------------------------------------------------------------------------
@@ -122,6 +124,28 @@ enum JUMP_TARGETS_POS
     POS_JUMP                    = OP_JMP_SIZE,
 
     POS_CALL                    = OP_CALL_SIZE,
+
+    POS_IN                      = OP_SUB_REG_IMM + 
+                                  4 +
+                                  OP_LEA_RDI_STK_ARG + 
+                                  OP_PUSHA +
+                                  OP_PUSH_REG + 
+                                  OP_MOV_RBP_RSP +
+                                  OP_ALIGN_STK + 
+                                  OP_SUB_REG_IMM +
+                                  4 +
+                                  OP_PUSH_REG +
+                                  OP_CALL,
+
+    POS_OUT                     = OP_LEA_RDI_STK_ARG + 
+                                  OP_PUSHA +
+                                  OP_PUSH_REG + 
+                                  OP_MOV_RBP_RSP +
+                                  OP_ALIGN_STK + 
+                                  OP_SUB_REG_IMM +
+                                  4 +
+                                  OP_PUSH_REG +
+                                  OP_CALL,
 }; 
 
 //-----------------------------------------------------------------------------
@@ -213,7 +237,11 @@ Jmp_table *jmpTableCtor (int size);
 
 void jmpTableDtor (Jmp_table *jmp_table);
 
-void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table);
+void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table, 
+                          char *in_addr, char *out_addr                    );
+
+void handleIOAddress (X64_code *x64_code, IR_node ir_node, 
+                      char *in_addr, char *out_addr       );
 
 void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_table);
 
@@ -255,6 +283,8 @@ void translateRet (X64_code *x64_code, IR_node *curr_node);
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
 
+char *writeInBinCode (X64_code *x64_code, char *file_name);
+
 void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size);
 
 void dumpCode (X64_code *x64_code, const char *name, int size);
@@ -274,6 +304,12 @@ void runCode (char *code, int size);
 void CodeX64DumpHeader (X64_code *x64_code);
 
 void jmpTableDump (Jmp_table *jmp_table);
+
+Elf64_Phdr sectionInit (Elf64_Word p_flags, Elf64_Addr addr);
+
+void createELF (X64_code *x64_code);
+
+void loadLib (FILE *executable, char *file_name);
 
 //-----------------------------------------------------------------------------
 

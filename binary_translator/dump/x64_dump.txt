@@ -5,159 +5,41 @@
 - x64 buffer capacity: 4096
 
 OP_MOV_REG_IMM R12        | 49 BC 
-ABS PTR 8 BYTE            | 00 90 C3 52 FB 55 00 00 
+ABS PTR 8 BYTE            | 00 40 C6 54 C6 55 00 00 
 OP_POP_REG R10            | 41 5A 
-OP_SUB_REG_IMM RSP        | 48 81 EC 
-INT 4 BYTE                | 08 00 00 00 
-OP_LEA_RDI_STK_ARG        | 48 8D 3C 24 
-OP_PUSHA                  | 50 53 51 52 41 54 41 52 
-OP_PUSH_REG RBP           | 40 55 
-OP_MOV_RBP_RSP            | 48 89 E5 
-OP_ALIGN_STK              | 48 83 E4 F0 
-OP_SUB_REG_IMM RSP        | 48 81 EC 
-INT 4 BYTE                | 08 00 00 00 
-OP_PUSH_REG RBP           | 40 55 
-OP_CALL                   | E8 
-PTR 4 BYTE                | 0A 9C D8 FF 
-OP_POP_REG RBP            | 40 5D 
-OP_MOV_RSP_RBP            | 48 89 EC 
-OP_POP_REG RBP            | 40 5D 
-OP_POPA                   | 41 5A 41 5C 5A 59 5B 58 
-OP_SUB_REG_IMM RSP        | 48 81 EC 
-INT 4 BYTE                | 08 00 00 00 
-OP_LEA_RDI_STK_ARG        | 48 8D 3C 24 
-OP_PUSHA                  | 50 53 51 52 41 54 41 52 
-OP_PUSH_REG RBP           | 40 55 
-OP_MOV_RBP_RSP            | 48 89 E5 
-OP_ALIGN_STK              | 48 83 E4 F0 
-OP_SUB_REG_IMM RSP        | 48 81 EC 
-INT 4 BYTE                | 08 00 00 00 
-OP_PUSH_REG RBP           | 40 55 
-OP_CALL                   | E8 
-PTR 4 BYTE                | D1 9B D8 FF 
-OP_POP_REG RBP            | 40 5D 
-OP_MOV_RSP_RBP            | 48 89 EC 
-OP_POP_REG RBP            | 40 5D 
-OP_POPA                   | 41 5A 41 5C 5A 59 5B 58 
-OP_SUB_REG_IMM RSP        | 48 81 EC 
-INT 4 BYTE                | 08 00 00 00 
-OP_LEA_RDI_STK_ARG        | 48 8D 3C 24 
-OP_PUSHA                  | 50 53 51 52 41 54 41 52 
-OP_PUSH_REG RBP           | 40 55 
-OP_MOV_RBP_RSP            | 48 89 E5 
-OP_ALIGN_STK              | 48 83 E4 F0 
-OP_SUB_REG_IMM RSP        | 48 81 EC 
-INT 4 BYTE                | 08 00 00 00 
-OP_PUSH_REG RBP           | 40 55 
-OP_CALL                   | E8 
-PTR 4 BYTE                | 98 9B D8 FF 
-OP_POP_REG RBP            | 40 5D 
-OP_MOV_RSP_RBP            | 48 89 EC 
-OP_POP_REG RBP            | 40 5D 
-OP_POPA                   | 41 5A 41 5C 5A 59 5B 58 
-OP_MOV_REG_STK RCX        | 48 8B 0C 24 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_REG_STK RBX        | 48 8B 1C 24 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_REG_STK RAX        | 48 8B 04 24 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_CALL                   | E8 
-OP_PUSH_REG R10           | 41 52 
-OP_RET                    | C3 
 OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RBX        | 49 01 DD 
+DOUBLE 8 BYTE             | 00 00 00 00 00 00 4E 40 
 OP_PUSH_REG R13           | 41 55 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RBX        | 49 01 DD 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 10 40 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RAX        | 49 01 C5 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RCX        | 49 01 CD 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_SUBSD_XMM1_XMM0        | F2 0F 5C C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
 OP_MOV_REG_STK RDX        | 48 8B 14 24 
 OP_ADD_REG_IMM RSP        | 48 81 C4 
 INT 4 BYTE                | 08 00 00 00 
 OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RBX        | 49 01 DD 
+DOUBLE 8 BYTE             | 00 00 00 00 00 00 59 40 
 OP_PUSH_REG R13           | 41 55 
 OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 F0 BF 
-OP_PUSH_REG R13           | 41 55 
+INT 8 BYTE                | 04 00 00 00 00 00 00 00 
+OP_PUSH_REG RDX           | 40 52 
+OP_PUSH_REG RDX           | 40 52 
 OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
 OP_ADD_REG_IMM RSP        | 48 81 C4 
 INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
+OP_CVTTSD2SI_REG RDX      | F2 48 0F 2C D0 
 OP_ADD_R13_REG RDX        | 49 01 D5 
-OP_PUSH_REG R13           | 41 55 
+OP_POP_REG RDX            | 40 5A 
+OP_SHL_REG R13            | 49 C1 E5 
+BYTE                      | 03 
+OP_ADD_R13_REG R12        | 4D 01 E5 
 OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_SQRTPD_XMM0            | 66 0F 51 C0 
-OP_MOV_STK_XMM0           | F2 0F 11 44 24 00 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_SUBSD_XMM1_XMM0        | F2 0F 5C C8 
 OP_ADD_REG_IMM RSP        | 48 81 C4 
 INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
+OP_MOV_MEM_XMM0           | F2 41 0F 11 45 00 
 OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 40 
+INT 8 BYTE                | 40 00 00 00 00 00 00 00 
+OP_SHL_REG R13            | 49 C1 E5 
+BYTE                      | 03 
+OP_ADD_R13_REG R12        | 4D 01 E5 
+OP_MOV_R13_RAM            | 4D 8B 6D 00 
 OP_PUSH_REG R13           | 41 55 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RAX        | 49 01 C5 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_DIVSD_XMM1_XMM0        | F2 0F 5E C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
 OP_LEA_RDI_STK_ARG        | 48 8D 3C 24 
 OP_PUSHA                  | 50 53 51 52 41 54 41 52 
 OP_PUSH_REG RBP           | 40 55 
@@ -167,58 +49,14 @@ OP_SUB_REG_IMM RSP        | 48 81 EC
 INT 4 BYTE                | 08 00 00 00 
 OP_PUSH_REG RBP           | 40 55 
 OP_CALL                   | E8 
-PTR 4 BYTE                | 7D 99 D8 FF 
 OP_POP_REG RBP            | 40 5D 
 OP_MOV_RSP_RBP            | 48 89 EC 
 OP_POP_REG RBP            | 40 5D 
 OP_POPA                   | 41 5A 41 5C 5A 59 5B 58 
 OP_ADD_REG_IMM RSP        | 48 81 C4 
 INT 4 BYTE                | 08 00 00 00 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RBX        | 49 01 DD 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 F0 BF 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
+OP_SUB_REG_IMM RSP        | 48 81 EC 
 INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RDX        | 49 01 D5 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_SQRTPD_XMM0            | 66 0F 51 C0 
-OP_MOV_STK_XMM0           | F2 0F 11 44 24 00 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_ADDSD_XMM1_XMM0        | F2 0F 58 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 40 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_REG_IMM R13        | 49 BD 
-DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
-OP_ADD_R13_REG RAX        | 49 01 C5 
-OP_PUSH_REG R13           | 41 55 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_MULSD_XMM1_XMM0        | F2 0F 59 C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
-OP_MOV_XMM0_STK           | F2 0F 10 44 24 00 
-OP_MOV_XMM1_STK           | F2 0F 10 4C 24 08 
-OP_DIVSD_XMM1_XMM0        | F2 0F 5E C8 
-OP_ADD_REG_IMM RSP        | 48 81 C4 
-INT 4 BYTE                | 08 00 00 00 
-OP_MOV_STK_XMM1           | F2 0F 11 4C 24 00 
 OP_LEA_RDI_STK_ARG        | 48 8D 3C 24 
 OP_PUSHA                  | 50 53 51 52 41 54 41 52 
 OP_PUSH_REG RBP           | 40 55 
@@ -228,14 +66,38 @@ OP_SUB_REG_IMM RSP        | 48 81 EC
 INT 4 BYTE                | 08 00 00 00 
 OP_PUSH_REG RBP           | 40 55 
 OP_CALL                   | E8 
-PTR 4 BYTE                | 7B 98 D8 FF 
+OP_POP_REG RBP            | 40 5D 
+OP_MOV_RSP_RBP            | 48 89 EC 
+OP_POP_REG RBP            | 40 5D 
+OP_POPA                   | 41 5A 41 5C 5A 59 5B 58 
+OP_MOV_REG_STK RAX        | 48 8B 04 24 
+OP_ADD_REG_IMM RSP        | 48 81 C4 
+INT 4 BYTE                | 08 00 00 00 
+OP_MOV_REG_IMM R13        | 49 BD 
+DOUBLE 8 BYTE             | 00 00 00 00 00 00 F0 3F 
+OP_PUSH_REG R13           | 41 55 
+OP_MOV_REG_STK RBX        | 48 8B 1C 24 
+OP_ADD_REG_IMM RSP        | 48 81 C4 
+INT 4 BYTE                | 08 00 00 00 
+OP_CALL                   | E8 
+OP_MOV_REG_IMM R13        | 49 BD 
+DOUBLE 8 BYTE             | 00 00 00 00 00 00 00 00 
+OP_ADD_R13_REG RBX        | 49 01 DD 
+OP_PUSH_REG R13           | 41 55 
+OP_LEA_RDI_STK_ARG        | 48 8D 3C 24 
+OP_PUSHA                  | 50 53 51 52 41 54 41 52 
+OP_PUSH_REG RBP           | 40 55 
+OP_MOV_RBP_RSP            | 48 89 E5 
+OP_ALIGN_STK              | 48 83 E4 F0 
+OP_SUB_REG_IMM RSP        | 48 81 EC 
+INT 4 BYTE                | 08 00 00 00 
+OP_PUSH_REG RBP           | 40 55 
+OP_CALL                   | E8 
 OP_POP_REG RBP            | 40 5D 
 OP_MOV_RSP_RBP            | 48 89 EC 
 OP_POP_REG RBP            | 40 5D 
 OP_POPA                   | 41 5A 41 5C 5A 59 5B 58 
 OP_ADD_REG_IMM RSP        | 48 81 C4 
 INT 4 BYTE                | 08 00 00 00 
-OP_RET                    | C3 
 OP_PUSH_REG R10           | 41 52 
-OP_RET                    | C3 
-PTR 4 BYTE                | 03 00 00 00 
+OP_RET          
