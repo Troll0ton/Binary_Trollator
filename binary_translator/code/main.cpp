@@ -1,5 +1,6 @@
 #include "binary_translator/include/IR-parser.h"
 #include "binary_translator/include/translator.h"
+#include "binary_translator/include/executable_utils.h"
 #include "binary_translator/include/common.h"
 
 //----------------------------------------------------------------------------
@@ -21,12 +22,15 @@ int main ()
     fclose (code_file);
     
     X64_code *x64_code = translateIrToX64 (ir, bin_size);
-    fclose (x64_code->dump_file);
     IrDtor (ir);
 
-    //createELF (x64_code);
-
+    #ifdef ELF_MODE
+    createELF (x64_code);
+    #else
     runCode (x64_code->buffer, x64_code->size);
+    #endif
+    
+    fclose (x64_code->dump_file);
     x64CodeDtor (x64_code);
 
     printf ("-- finishing\n\n");

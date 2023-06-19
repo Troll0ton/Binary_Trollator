@@ -16,9 +16,42 @@
 
 //-----------------------------------------------------------------------------
 
+#define ELF_MODE 1
+
+//-----------------------------------------------------------------------------
+
 #define N(suffix) NUM_OF_##suffix
 #define O(suffix) OFFSET_##suffix
 #define S(suffix) SIZE_OF_##suffix
+
+//-----------------------------------------------------------------------------
+
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
+//-----------------------------------------------------------------------------
+//                                  ELF
+//-----------------------------------------------------------------------------
+// ELF header
+// Program headers:
+//      text        - size: PAGESIZE
+//      ram         - size: PAGESIZE
+//      lib (print) - size: PAGESIZE
+// Code
+//-----------------------------------------------------------------------------
+
+enum ELF_INFO
+{
+    NUM_OF_SEGMENTS = 3,
+    LOAD_ADDR   = 0x400000,
+    TEXT_ADDR   = LOAD_ADDR + sizeof (Elf64_Ehdr) + 
+                  NUM_OF_SEGMENTS * sizeof (Elf64_Phdr),  
+    RAM_ADDR    = TEXT_ADDR + PAGE_SIZE, 
+    FUNCT_ADDR  = RAM_ADDR  + PAGE_SIZE, 
+    TOTAL_SIZE  = sizeof (Elf64_Ehdr) + 
+                  NUM_OF_SEGMENTS * (sizeof (Elf64_Phdr) + PAGE_SIZE),
+};
 
 //-----------------------------------------------------------------------------
 

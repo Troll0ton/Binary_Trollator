@@ -140,7 +140,10 @@ typedef enum OP_CODES : uint64_t
      OP_SQRTPD_XMM0     = 0xC0510F66, 
 
      // cvttsd2si reg, xmm0
-     OP_CVTTSD2SI_REG   = 0xC02C0F48F2,     
+     OP_CVTTSD2SI_REG   = 0xC02C0F48F2,  
+
+     // syscall
+     OP_SYSCALL         = 0x050F,   
 } OP_CODES;
 
 //-----------------------------------------------------------------------------
@@ -179,6 +182,7 @@ enum OP_SIZES
      OP_JMP_SIZE              = 1,
      OP_MOV_STK_XMM0_SIZE     = 6,
      OP_CVTTSD2SI_REG_SIZE    = 5,
+     OP_SYSCALL_SIZE          = 2,
 };
 
 //-----------------------------------------------------------------------------

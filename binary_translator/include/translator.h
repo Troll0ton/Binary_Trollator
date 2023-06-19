@@ -12,16 +12,6 @@
 
 //-----------------------------------------------------------------------------
 
-//#define ELF_MODE 1
-
-//-----------------------------------------------------------------------------
-
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-//-----------------------------------------------------------------------------
-
 #define CURR_POS x64_code->curr_pos
 
 //-----------------------------------------------------------------------------
@@ -68,20 +58,11 @@
 
 #define writeMaskingJmp(JMP)                                          \
     writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
-               #JMP, OP_CONDITIONAL_JMP_SIZE);                                                                   
+               #JMP, OP_CONDITIONAL_JMP_SIZE);   
 
-//-----------------------------------------------------------------------------
 
-enum ELF_INFO
-{
-    CODE_SIZE   = PAGE_SIZE,
-    DATA_SIZE   = PAGE_SIZE,
-
-    LOAD_ADDR   = 0x400000,
-    TEXT_ADDR   = 0x401000, 
-    RAM_ADDR    = 0x402000, 
-    ELF_SIZE    = 0x3001,
-};
+#define writeFormatStr(name)                       \
+    writeCode_(x64_code, name, #name, name##_SIZE)                                                                
 
 //-----------------------------------------------------------------------------
 
@@ -125,27 +106,40 @@ enum JUMP_TARGETS_POS
 
     POS_CALL                    = OP_CALL_SIZE,
 
-    POS_IN                      = OP_SUB_REG_IMM + 
+    POS_IN                      = OP_SUB_REG_IMM_SIZE + 
                                   4 +
-                                  OP_LEA_RDI_STK_ARG + 
-                                  OP_PUSHA +
-                                  OP_PUSH_REG + 
-                                  OP_MOV_RBP_RSP +
-                                  OP_ALIGN_STK + 
-                                  OP_SUB_REG_IMM +
+                                  OP_LEA_RDI_STK_ARG_SIZE + 
+                                  OP_PUSHA_SIZE +
+                                  OP_PUSH_REG_SIZE + 
+                                  OP_MOV_RBP_RSP_SIZE +
+                                  OP_ALIGN_STK_SIZE + 
+                                  OP_SUB_REG_IMM_SIZE +
                                   4 +
-                                  OP_PUSH_REG +
-                                  OP_CALL,
-
-    POS_OUT                     = OP_LEA_RDI_STK_ARG + 
-                                  OP_PUSHA +
-                                  OP_PUSH_REG + 
-                                  OP_MOV_RBP_RSP +
-                                  OP_ALIGN_STK + 
-                                  OP_SUB_REG_IMM +
+                                  OP_PUSH_REG_SIZE +
+                                  OP_CALL_SIZE,
+    #ifdef ELF_MODE
+    POS_OUT                     = OP_MOV_XMM0_STK_SIZE + 
+                                  OP_PUSH_REG_SIZE + 
+                                  OP_CVTTSD2SI_REG_SIZE +
+                                  OP_PUSHA_SIZE +
+                                  OP_PUSH_REG_SIZE + 
+                                  OP_MOV_RBP_RSP_SIZE +
+                                  OP_ALIGN_STK_SIZE + 
+                                  OP_SUB_REG_IMM_SIZE +
                                   4 +
-                                  OP_PUSH_REG +
-                                  OP_CALL,
+                                  OP_PUSH_REG_SIZE +
+                                  OP_CALL_SIZE,
+    #else
+    POS_OUT                     = OP_LEA_RDI_STK_ARG_SIZE + 
+                                  OP_PUSHA_SIZE +
+                                  OP_PUSH_REG_SIZE + 
+                                  OP_MOV_RBP_RSP_SIZE +
+                                  OP_ALIGN_STK_SIZE + 
+                                  OP_SUB_REG_IMM_SIZE +
+                                  4 +
+                                  OP_PUSH_REG_SIZE +
+                                  OP_CALL_SIZE,
+    #endif
 }; 
 
 //-----------------------------------------------------------------------------
@@ -269,7 +263,9 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node);
 
 void translateArithmOperations (X64_code *x64_code, IR_node *curr_node);
 
-void translateStdio (X64_code *x64_code, IR_node *curr_node);
+void translateOut (X64_code *x64_code, IR_node *curr_node);
+
+void translateIn (X64_code *x64_code, IR_node *curr_node);
 
 void translateDump (X64_code *x64_code, IR_node *curr_node);
 
@@ -282,8 +278,6 @@ void translateCall (X64_code *x64_code, IR_node *curr_node);
 void translateRet (X64_code *x64_code, IR_node *curr_node);
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
-
-char *writeInBinCode (X64_code *x64_code, char *file_name);
 
 void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size);
 
@@ -304,12 +298,6 @@ void runCode (char *code, int size);
 void CodeX64DumpHeader (X64_code *x64_code);
 
 void jmpTableDump (Jmp_table *jmp_table);
-
-Elf64_Phdr sectionInit (Elf64_Word p_flags, Elf64_Addr addr);
-
-void createELF (X64_code *x64_code);
-
-void loadLib (FILE *executable, char *file_name);
 
 //-----------------------------------------------------------------------------
 

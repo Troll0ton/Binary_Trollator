@@ -1,52 +1,50 @@
-push 60
-pop rdx
+push 1
+push -2
+push 1
 
-push 100
-pop [rdx + 4]
-
-
-push [64]
-out
-
-in
+pop rcx
+pop rbx
 pop rax
 
-push 1
-pop rbx
-
 call 13:
-
-push rbx
-out
 
 hlt
 
 :13
 
-push rax
+push rbx
 push rbx
 mul
-pop rbx
-
+push 4
 push rax
-push 1
+push rcx
+mul
+mul
 sub
-pop rax
+pop rdx
 
-push 1
+push rbx
+push -1
+mul
+push rdx 
+sqrt
+sub
+push 2
 push rax
-jae 5: 
+mul
+div
+out
 
-pop
-pop
-call 13:
+push rbx
+push -1
+mul
+push rdx 
+sqrt
+add
+push 2
+push rax
+mul
+div
+out
 
-jmp 7:
-
-:5
-
-pop
-pop
-
-:7
 ret
