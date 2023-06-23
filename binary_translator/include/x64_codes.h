@@ -47,6 +47,8 @@ typedef enum JUMP_MASKS
 
 //-----------------------------------------------------------------------------
 
+// ADD_OP_CODE()
+
 typedef enum OP_CODES : uint64_t
 {
      // j__ (masking with ja, jae, jb, jbe, je, jne) addr32

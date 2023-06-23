@@ -57,6 +57,7 @@ X64_code *x64CodeCtor (int init_size, int alignment)
     // Because of unknowing of the final size, the buffer is self-expanding 
     x64_code->capacity  = init_size; 
     x64_code->dump_file = fopen ("binary_translator/dump/x64_dump.txt", "w+");
+    // ??
 
     return x64_code;
 }
@@ -236,7 +237,7 @@ void handleIOAddress (X64_code *x64_code, IR_node ir_node,
 
         writePtr (ptr);
 
-        // IN IS NOT SUPPORTED IN ELF
+        // IN IS NOT SUPPORTED IN ELF MODE
     }
     else // OUT
     {

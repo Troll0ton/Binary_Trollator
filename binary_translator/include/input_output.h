@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+// ??
 #include <cctype>
 
 //-----------------------------------------------------------------------------
@@ -61,6 +62,7 @@ typedef struct Arg_handler_res
     FILE *file_in;
     FILE *file_out;
 
+    // cmp
     int (*comp_par)(void *first_p, void *second_p);
 } Arg_handler_res;
 

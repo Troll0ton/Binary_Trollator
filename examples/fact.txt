@@ -1,4 +1,4 @@
-in
+push 6
 pop rax
 
 push 1

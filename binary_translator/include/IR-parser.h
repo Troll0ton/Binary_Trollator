@@ -43,6 +43,9 @@ typedef struct Troll_code
     int   size;
 } Troll_code;
 
+
+// Guest
+
 //-----------------------------------------------------------------------------
 
 enum IR_INFO

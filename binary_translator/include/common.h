@@ -20,6 +20,8 @@
 
 //-----------------------------------------------------------------------------
 
+// ??
+
 #define N(suffix) NUM_OF_##suffix
 #define O(suffix) OFFSET_##suffix
 #define S(suffix) SIZE_OF_##suffix
@@ -46,7 +48,8 @@ enum ELF_INFO
     NUM_OF_SEGMENTS = 3,
     LOAD_ADDR   = 0x400000,
     TEXT_ADDR   = LOAD_ADDR + sizeof (Elf64_Ehdr) + 
-                  NUM_OF_SEGMENTS * sizeof (Elf64_Phdr),  
+                  NUM_OF_SEGMENTS * sizeof (Elf64_Phdr),
+    // ??                
     RAM_ADDR    = TEXT_ADDR + PAGE_SIZE, 
     FUNCT_ADDR  = RAM_ADDR  + PAGE_SIZE, 
     TOTAL_SIZE  = sizeof (Elf64_Ehdr) + 
@@ -78,6 +81,7 @@ typedef uint32_t cmd_code;
 
 //-----------------------------------------------------------------------------
 
+// ??
 enum CMD_CODES
 {
     #define CMD_DEF(cmd, ...) \

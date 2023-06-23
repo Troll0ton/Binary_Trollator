@@ -66,6 +66,7 @@
 
 //-----------------------------------------------------------------------------
 
+// EsecutableInfo
 enum RAM_INFO
 {
     RAM_INIT_SIZE = PAGE_SIZE,
@@ -155,6 +156,7 @@ typedef struct X64_code
 
 //-----------------------------------------------------------------------------
 
+// ??
 typedef struct Ram
 {
     char *buffer;
@@ -173,8 +175,10 @@ typedef struct Jmp_table
 //-----------------------------------------------------------------------------
 //                         REGS MASKING AND DUMPS UTILS
 //-----------------------------------------------------------------------------
-
+// ??
 static char dump_name[100] = { 0 };
+
+// another header file
 
 typedef struct Reg_info
 {
@@ -182,6 +186,8 @@ typedef struct Reg_info
     char        reg_flag;
     uint64_t    mask;
 } Reg_info;
+
+// make functons 
 
 // This array allow us to use more codegeneration in writeCode function
 // Register's masks are similar in different opcodes but there is a nuance here

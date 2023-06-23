@@ -11,6 +11,7 @@ Troll_code *readCodeFile (FILE *code_file)
     elem_t code_signature = 0;
     elem_t res_sum        = 0;
 
+    // ???
     fread (&res_sum,        sizeof(char), OFFSET_ARG, code_file);
     fread (&code_signature, sizeof(char), OFFSET_ARG, code_file);
 

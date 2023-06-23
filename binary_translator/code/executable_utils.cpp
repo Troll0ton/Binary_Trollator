@@ -62,11 +62,10 @@ void createELF (X64_code *x64_code)
     {
         .e_ident = 
         { 
-            ELFMAG0, // 0x7F 
-            ELFMAG1, // 'E'  
-            ELFMAG2, // 'L'  
-            ELFMAG3, // 'F'  
-
+            ELFMAG0, 
+            ELFMAG1,  
+            ELFMAG2,  
+            ELFMAG3,   
             ELFCLASS64,  
             ELFDATA2LSB, 
             EV_CURRENT,    
@@ -76,13 +75,13 @@ void createELF (X64_code *x64_code)
         .e_type      = ET_EXEC,  
         .e_machine   = EM_X86_64, 
         .e_version   = EV_CURRENT, 
-
-        .e_entry     = TEXT_ADDR, // (start address at runtime) 
-        .e_phoff     = sizeof (Elf64_Ehdr), // (program header table offset) 
-        .e_ehsize    = sizeof (Elf64_Ehdr), // (file header size in bytes) 
-        .e_phentsize = sizeof (Elf64_Phdr), // (Size of one program header) 
-        .e_phnum     = NUM_OF_SEGMENTS, // (program headers) 
+        .e_entry     = TEXT_ADDR, 
+        .e_phoff     = sizeof (Elf64_Ehdr), 
+        .e_ehsize    = sizeof (Elf64_Ehdr), 
+        .e_phentsize = sizeof (Elf64_Phdr),  
+        .e_phnum     = NUM_OF_SEGMENTS, 
     };
+
     char *curr_pos = elf_buffer;
     memcpy (elf_buffer, (char*) &elf_header, sizeof (Elf64_Ehdr));
     curr_pos += sizeof (Elf64_Ehdr);
