@@ -12,7 +12,7 @@ int processor_ctor (Processor *cpu)
     cpu->Stk_call = { 0 };
     stack_ctor (&cpu->Stk_call, SIZE_OF_STK);
 
-    cpu->regs = (double*) calloc (N(REGS), sizeof (double));
+    cpu->regs = (double*) calloc (NUM_OF_REGS, sizeof (double));
     cpu->ram  = (double*) calloc (SIZE_OF_RAM, sizeof (double));
 
     if(cpu->regs == NULL || cpu->ram == NULL)
@@ -20,7 +20,7 @@ int processor_ctor (Processor *cpu)
         return ERROR_CTOR;
     }
 
-    return (cpu_info_ctor (&cpu->info));
+    return cpu_info_ctor (&cpu->info);
 }
 
 //-----------------------------------------------------------------------------
@@ -30,8 +30,8 @@ int cpu_info_ctor (Cpu_info *info)
     info->code_file = fopen ("processor/COMMON/files/code.bin", "rb");
     info->file_out  = fopen ("processor/CPU/dump/log.txt",      "w+");
 
-    if(info->code_file == NULL ||
-       info->file_out  == NULL   )
+    if(!info->code_file ||
+       !info->file_out    )
     {
         return ERROR_CTOR;
     }
@@ -65,27 +65,23 @@ void cpu_info_dtor (Cpu_info *info)
 
 void read_code_file (Processor *cpu)
 {
-    double code_signature = 0;
-    double res_sum        = 0;
+    int code_signature = 0;
 
-    fread (&res_sum,        sizeof(char), O(ARG), cpu->info.code_file);
-    fread (&code_signature, sizeof(char), O(ARG), cpu->info.code_file);
+    fread (&code_signature, OFFSET_CODE_SIGNATURE, 1, cpu->info.code_file);
+    fseek (cpu->info.code_file, 0, SEEK_SET);
 
-    cpu->code_size = res_sum;
+    cpu->code_size = get_file_size (cpu->info.code_file);
 
     if(code_signature == SIGNATURE)
     {
         cpu->code = (char*) calloc (cpu->code_size, sizeof (char));
 
-        *(elem_t*)(cpu->code) = res_sum;
-        *(elem_t*)(cpu->code + O(ARG)) = code_signature;
-
-        if(cpu->code == NULL)
+        if(!cpu->code)
         {
             printf ("__________|ERROR - NULL pointer code|__________\n");
         }
 
-        fread (cpu->code + O(CODE_SIGNATURE), sizeof(char), cpu->code_size - O(CODE_SIGNATURE), cpu->info.code_file);
+        fread (cpu->code, sizeof(char), cpu->code_size, cpu->info.code_file);
     }
 
     else
@@ -96,9 +92,25 @@ void read_code_file (Processor *cpu)
 
 //-----------------------------------------------------------------------------
 
+int get_file_size (FILE *file)
+{
+    int file_size = 0;
+
+    while (fgetc (file) != EOF)
+    {
+        file_size++;
+    }
+
+    fseek (file, 0, SEEK_SET);
+
+    return file_size;
+}
+
+//-----------------------------------------------------------------------------
+
 void handle_cmds (Processor *cpu)
 {
-    for(int curr_pos = 2 * O(ARG); curr_pos < cpu->code_size; curr_pos++)
+    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < cpu->code_size; curr_pos++)
     {
         int     curr_cmd   = cpu->code[curr_pos];
         int     offset     = 0;
@@ -108,18 +120,18 @@ void handle_cmds (Processor *cpu)
 
         if(curr_cmd & MASK_REG)
         {
-            curr_arg = cpu->regs + (int) *(elem_t*)(cpu->code + curr_pos + O(CMD));
+            curr_arg = cpu->regs + (int) *(elem_t*)(cpu->code + curr_pos + OFFSET_CMD);
             arg_value += *curr_arg;
 
-            offset += O(ARG);
+            offset += OFFSET_ARG;
         }
 
         if(curr_cmd & MASK_IMM)
         {
-            curr_arg = (elem_t*)(cpu->code + curr_pos + offset + O(CMD));
+            curr_arg = (elem_t*)(cpu->code + curr_pos + offset + OFFSET_CMD);
             arg_value += *curr_arg;
 
-            offset += O(ARG);
+            offset += OFFSET_ARG;
         }
 
         if(curr_cmd & MASK_RAM)
@@ -187,29 +199,46 @@ void cpu_dump (Processor *cpu)
 {
     FILE *code_dmp_file = fopen ("processor/CPU/dump/code_cpu_dump.txt", "w+");
 
-    fprintf (code_dmp_file, "%d - size, %x - signature\n", (int) *(elem_t*)(cpu->code + 0),
-                                                           (int) *(elem_t*)(cpu->code + O(ARG)));
-    int i = 1;
+    int num_of_cmd = 1;
 
-    for(int curr_pos = O(CODE_SIGNATURE); curr_pos < cpu->code_size; curr_pos++)
+    fprintf (code_dmp_file, "%d - size, %X - signature\n",
+                            cpu->code_size,
+                            (unsigned int) *(int*)(cpu->code));
+
+    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < cpu->code_size; curr_pos++)
     {
-        char curr_cmd = cpu->code[curr_pos];
+        char curr_cmd = *(cpu->code + curr_pos);
         int  offset   = 0;
 
-        fprintf (code_dmp_file, "%06d || %d\n", i++, (int) cpu->code[curr_pos]);
+        fprintf (code_dmp_file, "%06d - logic pos, %06d - phys pos || %d\n",
+                                num_of_cmd, 
+                                curr_pos, 
+                                (int) cpu->code[curr_pos]                   );
+
+        num_of_cmd++;
 
         if(curr_cmd & MASK_REG)
         {
-            fprintf (code_dmp_file, "%06d || %lg\n", i++, *(elem_t*)(cpu->code + curr_pos + O(CMD)));
+            fprintf (code_dmp_file, "%06d - logic pos, %06d - phys pos || %lg\n",
+                                    num_of_cmd, 
+                                    curr_pos + OFFSET_CMD,
+                                    *(elem_t*)(cpu->code + curr_pos + OFFSET_CMD));
 
-            offset += O(ARG);
+            num_of_cmd++;
+
+            offset += OFFSET_ARG;
         }
 
         if(curr_cmd & MASK_IMM)
         {
-            fprintf (code_dmp_file, "%06d || %lg\n", i++, *(elem_t*)(cpu->code + curr_pos + O(CMD) + offset));
+            fprintf (code_dmp_file, "%06d - logic pos, %06d - phys pos || %lg\n",
+                                    num_of_cmd, 
+                                    curr_pos + OFFSET_CMD + offset,
+                                    *(elem_t*)(cpu->code + curr_pos + OFFSET_CMD + offset));
 
-            offset += O(ARG);
+            num_of_cmd++;
+
+            offset += OFFSET_ARG;
         }
 
         curr_pos += offset;

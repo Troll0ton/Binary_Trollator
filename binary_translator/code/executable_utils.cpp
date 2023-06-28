@@ -50,7 +50,7 @@ void programHeaderInit (char **curr_pos, int pos, Elf64_Word p_flags)
 }
 //-----------------------------------------------------------------------------
 
-void createELF (X64_code *x64_code)
+void createELF (Host_code *Host_code)
 {
     printf ("Start creating ELF\n\n");
 
@@ -94,8 +94,8 @@ void createELF (X64_code *x64_code)
 
     printf ("Created program headers\n\n");
 
-    memcpy (elf_buffer + TEXT_ADDR - LOAD_ADDR, x64_code->buffer, x64_code->size);
-    writeInBinCode (elf_buffer + FUNCT_ADDR - LOAD_ADDR, "binary_translator/code/trolloprint.bin", x64_code);
+    memcpy (elf_buffer + TEXT_ADDR - LOAD_ADDR, Host_code->buffer, Host_code->size);
+    writeInBinCode (elf_buffer + FUNCT_ADDR - LOAD_ADDR, "binary_translator/code/trolloprint.bin", Host_code);
 
     printf ("Pasted code\n\n");
     printf ("Total elf size: %d\n\n", TOTAL_SIZE);
@@ -105,22 +105,22 @@ void createELF (X64_code *x64_code)
 
 //-----------------------------------------------------------------------------
 
-void writeInBinCode (char *pos, char *file_name, X64_code *x64_code)
+void writeInBinCode (char *pos, char *file_name, Host_code *Host_code)
 {
     FILE *bin_file = fopen (file_name, "rb");
     int file_size = get_file_size (bin_file);
 
     fread (pos, sizeof (char), file_size, bin_file);
 
-    fprintf (x64_code->dump_file, "%-25s | ", "FUNCT");
+    fprintf (Host_code->dump_file, "%-25s | ", "FUNCT");
 
     for(int i = 0; i < file_size; i++)
     {
         uint32_t num = (uint32_t) (uint8_t) pos[i];
-        fprintf (x64_code->dump_file, "%02X ", num);
+        fprintf (Host_code->dump_file, "%02X ", num);
     }
 
-    fprintf (x64_code->dump_file, "\n");
+    fprintf (Host_code->dump_file, "\n");
 
     fclose (bin_file);
 }

@@ -4,19 +4,19 @@
 
 #define CURR_IR_NODE ir->buffer[i]
 
-X64_code *translateIrToX64 (IR *ir, int bin_size)
+Host_code *translateIrToHost (IR *ir, int bin_size)
 {
     printf ("-- write commands\n\n");
 
-    X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE);
-    CodeX64DumpHeader (x64_code);
+    Host_code *host_code = hostCodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE);
+    hostDumpHeader (host_code);
 
     // so we can store only RAM_INIT_SIZE / 8 nums in ram
     Ram *ram = ramCtor (RAM_INIT_SIZE, PAGE_SIZE);
 
     Jmp_table *jmp_table = jmpTableCtor (ir->size);
 
-    saveDataAddress (x64_code, ram->buffer); // save absolute address of RAM in R12 
+    saveDataAddress (host_code, ram->buffer); // save absolute address of RAM in R12 
 
     #ifndef ELF_MODE
     writeMaskingOp (OP_POP_REG, MASK_R10); // save return address
@@ -28,67 +28,67 @@ X64_code *translateIrToX64 (IR *ir, int bin_size)
         jmp_table->buffer[i] = CURR_POS; // fill jump table
         CURR_IR_NODE.x64_pos = CURR_POS;
 
-        translateCmd (x64_code, &CURR_IR_NODE); // translate command
+        translateCmd (host_code, &CURR_IR_NODE); // translate command
     }
     
     jmpTableDump (jmp_table);
 
-    // fill jmp targets in x64_code (from jmp table) 
+    // fill jmp targets in host_code (from jmp table) 
     char *in_addr  = (char*) NULL;
     char *out_addr = (char*) FUNCT_ADDR;
-    handleJmpTargetsX64 (x64_code, ir, jmp_table, in_addr, out_addr); 
+    handleHostJmpTargets (host_code, ir, jmp_table, in_addr, out_addr); 
 
     jmpTableDtor (jmp_table);
     ramDtor (ram);
 
     printf ("Bin translation complete!\n\n");
 
-    return x64_code;
+    return host_code;
 }
 
 //-----------------------------------------------------------------------------
 
-X64_code *x64CodeCtor (int init_size, int alignment)
+Host_code *hostCodeCtor (int init_size, int alignment)
 {
-    X64_code *x64_code  = (X64_code*) calloc        (1,        sizeof (X64_code));
-    x64_code->buffer    = (char*)     alignedCalloc (PAGE_SIZE, init_size); 
-    x64_code->curr_pos  = x64_code->buffer;
+    Host_code *host_code  = (Host_code*) calloc        (1,        sizeof (Host_code));
+    host_code->buffer    = (char*)     alignedCalloc (PAGE_SIZE, init_size); 
+    host_code->curr_pos  = host_code->buffer;
 
     // Because of unknowing of the final size, the buffer is self-expanding 
-    x64_code->capacity  = init_size; 
-    x64_code->dump_file = fopen ("binary_translator/dump/x64_dump.txt", "w+");
+    host_code->capacity  = init_size; 
+    host_code->dump_file = fopen ("binary_translator/dump/x64_dump.txt", "w+");
     // ??
 
-    return x64_code;
+    return host_code;
 }
 
 //-----------------------------------------------------------------------------
 
-void x64CodeResize (X64_code *x64_code)
+void hostCodeResize (Host_code *host_code)
 {
     // There is no analogue of realloc for aligned buffers, so I simply copy old buffer into the new
     char *new_buffer = (char*) alignedCalloc (PAGE_SIZE, 
-                                              x64_code->capacity + X64_CODE_INCREASE_PAR); 
+                                              host_code->capacity + X64_CODE_INCREASE_PAR); 
 
-    memcpy (new_buffer, x64_code->buffer, x64_code->capacity);
-    free   (x64_code->buffer);
+    memcpy (new_buffer, host_code->buffer, host_code->capacity);
+    free   (host_code->buffer);
 
-    x64_code->buffer = new_buffer;
+    host_code->buffer = new_buffer;
 
     // new_size = old_size + X64_CODE_INCREASE_PAR
-    x64_code->capacity += X64_CODE_INCREASE_PAR;
+    host_code->capacity += X64_CODE_INCREASE_PAR;
 }
 
 //-----------------------------------------------------------------------------
 
-void x64CodeDtor (X64_code *x64_code)
+void hostCodeDtor (Host_code *host_code)
 {
-    x64_code->capacity = DELETED;
-    x64_code->size     = DELETED;
-    x64_code->curr_pos = NULL;
+    host_code->capacity = DELETED;
+    host_code->size     = DELETED;
+    host_code->curr_pos = NULL;
 
-    free (x64_code->buffer);
-    free (x64_code);
+    free (host_code->buffer);
+    free (host_code);
 }
 
 //-----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ void jmpTableDtor (Jmp_table *jmp_table)
 
 //-----------------------------------------------------------------------------
 
-void writePrologue (X64_code *x64_code)
+void writePrologue (Host_code *host_code)
 {
     // create lite version of stack's frame
     writeSimpleOp  (OP_PUSHA);
@@ -155,7 +155,7 @@ void writePrologue (X64_code *x64_code)
 
 //-----------------------------------------------------------------------------
 
-void writeEpilogue (X64_code *x64_code) 
+void writeEpilogue (Host_code *host_code) 
 {
     writeMaskingOp (OP_POP_REG, MASK_RBP);
     
@@ -166,12 +166,12 @@ void writeEpilogue (X64_code *x64_code)
 
 //-----------------------------------------------------------------------------
 
-void saveDataAddress (X64_code *x64_code, char *ram) // r12 <- ptr to 'ram' (troll-code representation)
+void saveDataAddress (Host_code *host_code, char *ram) // r12 <- ptr to 'ram' (troll-code representation)
 {
     writeMaskingOp (OP_MOV_REG_IMM, MASK_R12);
 
     #ifdef ELF_MODE
-    uint64_t abs_ptr = (uint64_t)(x64_code->buffer + RAM_ADDR - TEXT_ADDR); // make correct addressing 
+    uint64_t abs_ptr = (uint64_t)(host_code->buffer + RAM_ADDR - TEXT_ADDR); // make correct addressing 
     #else
     uint64_t abs_ptr = (uint64_t)(ram); 
     #endif
@@ -197,10 +197,10 @@ void *alignedCalloc (int alignment, int size)
 
 #define TARGET CURR_IR_NODE.imm_value
 
-void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table, 
+void handleHostJmpTargets (Host_code *host_code, IR *ir, Jmp_table *jmp_table, 
                           char *in_addr, char *out_addr                    )
 {
-    printf ("-- handleJmpTargetsX64\n\n");
+    printf ("-- handleHostJmpTargets\n\n");
 
     for(int i = 0; i < ir->size; i++) // ir->size == jmp_table
     {
@@ -210,12 +210,12 @@ void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table,
         {
             case IN:
             case OUT:
-                handleIOAddress (x64_code, ir->buffer[i], in_addr, out_addr);
+                handleIOAddress (host_code, ir->buffer[i], in_addr, out_addr);
                 break;
             CONDITIONAL_JMP_CASE
             case JMP:
             case CALL:
-                translateTargetPtr (x64_code, ir->buffer[i], jmp_table);
+                translateTargetPtr (host_code, ir->buffer[i], jmp_table);
                 break;
             default:
                 break; 
@@ -226,7 +226,7 @@ void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table,
 
 //-----------------------------------------------------------------------------
 
-void handleIOAddress (X64_code *x64_code, IR_node ir_node, 
+void handleIOAddress (Host_code *host_code, IR_node ir_node, 
                       char *in_addr, char *out_addr       )
 {
     if(ir_node.command == IN)
@@ -243,7 +243,7 @@ void handleIOAddress (X64_code *x64_code, IR_node ir_node,
     {
         #ifdef ELF_MODE
         uint32_t ptr = (uint64_t) out_addr - 
-                       (uint64_t)(CURR_POS - x64_code->buffer + TEXT_ADDR + POS_OUT + SIZE_OF_PTR); 
+                       (uint64_t)(CURR_POS - host_code->buffer + TEXT_ADDR + POS_OUT + SIZE_OF_PTR); 
         #else
         uint32_t ptr = (uint64_t) double_printf - 
                        (uint64_t)(CURR_POS + POS_OUT + SIZE_OF_PTR); 
@@ -257,7 +257,7 @@ void handleIOAddress (X64_code *x64_code, IR_node ir_node,
 
 //-----------------------------------------------------------------------------
 
-void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_table)
+void translateTargetPtr (Host_code *host_code, IR_node ir_node, Jmp_table *jmp_table)
 {
     uint64_t ptr_pos = 0;
 
@@ -292,35 +292,35 @@ void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_tab
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size)
+void writeCode_(Host_code *host_code, uint64_t value, const char *name, int size)
 {
-    memcpy (x64_code->curr_pos, &value, size);
-    dumpCode (x64_code, name, size);
+    memcpy (host_code->curr_pos, &value, size);
+    dumpCode (host_code, name, size);
 
-    x64_code->curr_pos += size;
-    x64_code->size     += size;  
+    host_code->curr_pos += size;
+    host_code->size     += size;  
 
     #ifndef ELF_MODE
-    if(x64_code->size + X64_CODE_SIZE_DIFF > x64_code->capacity)
+    if(host_code->size + X64_CODE_SIZE_DIFF > host_code->capacity)
     {
-        x64CodeResize (x64_code);
+        hostCodeResize (host_code);
     }
     #endif
 }
 
 //-----------------------------------------------------------------------------
 
-void dumpCode (X64_code *x64_code, const char *name, int size)
+void dumpCode (Host_code *host_code, const char *name, int size)
 {
-    fprintf (x64_code->dump_file, "%-25s | ", name);
+    fprintf (host_code->dump_file, "%-25s | ", name);
 
     for(int i = 0; i < size; i++)
     {
-        uint32_t num = (uint32_t) (uint8_t) x64_code->curr_pos[i];
-        fprintf (x64_code->dump_file, "%02X ", num);
+        uint32_t num = (uint32_t) (uint8_t) host_code->curr_pos[i];
+        fprintf (host_code->dump_file, "%02X ", num);
     }
 
-    fprintf (x64_code->dump_file, "\n");
+    fprintf (host_code->dump_file, "\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -350,33 +350,33 @@ void troll_dump ()
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-void translateCmd (X64_code *x64_code, IR_node *curr_node)
+void translateCmd (Host_code *host_code, IR_node *curr_node)
 {
     switch(curr_node->command)
     {
         case HLT:
-            translateHlt (x64_code, curr_node);
+            translateHlt (host_code, curr_node);
             break;
         case PUSH:
-            translatePush (x64_code, curr_node);
+            translatePush (host_code, curr_node);
             break;
         case POP:
-            translatePop (x64_code, curr_node);
+            translatePop (host_code, curr_node);
             break;
         case ADD:
         case SUB:
         case MUL:
         case DIV:
-            translateArithmOperations (x64_code, curr_node);
+            translateArithmOperations (host_code, curr_node);
             break;
         case OUT:
-            translateOut (x64_code, curr_node);
+            translateOut (host_code, curr_node);
             break;
         case IN:
-            translateIn (x64_code, curr_node);
+            translateIn (host_code, curr_node);
             break;
         case DUMP:
-            translateDump (x64_code, curr_node);
+            translateDump (host_code, curr_node);
             break; 
         case JBE:
         case JAE:
@@ -384,21 +384,21 @@ void translateCmd (X64_code *x64_code, IR_node *curr_node)
         case JB:
         case JE:
         case JNE:
-            translateConditionalJmps (x64_code, curr_node);
+            translateConditionalJmps (host_code, curr_node);
             break;
         case JMP:
-            translateJmp (x64_code, curr_node);
+            translateJmp (host_code, curr_node);
             break;
         case CALL:
-            translateCall (x64_code, curr_node);
+            translateCall (host_code, curr_node);
             break;
         case RET:
-            translateRet (x64_code, curr_node);
+            translateRet (host_code, curr_node);
             break;
         case SQRT:
         case SIN:
         case COS:
-            translateMathFunctions (x64_code, curr_node);
+            translateMathFunctions (host_code, curr_node);
             break;
         default:
             printf ("UNKNOWN COMMAND!\n\n");
@@ -434,7 +434,7 @@ void translateReg (IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translateHlt (X64_code *x64_code, IR_node *curr_node)
+void translateHlt (Host_code *host_code, IR_node *curr_node)
 {
     #ifdef ELF_MODE
     // mov rax, 0x3c
@@ -456,7 +456,7 @@ void translateHlt (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void calculateRamAddrPushPop (X64_code *x64_code, IR_node *curr_node)
+void calculateRamAddrPushPop (Host_code *host_code, IR_node *curr_node)
 {
     // put imm64 value into R13 (R13 is tmp register)
     writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
@@ -507,27 +507,27 @@ void calculateRamAddrPushPop (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translatePush (X64_code *x64_code, IR_node *curr_node)
+void translatePush (Host_code *host_code, IR_node *curr_node)
 {  
     // I have 2 different types of push that have different purposes:
     // push from ram
     // push reg + imm
     if(curr_node->ram_flag)
     {
-        translatePushRam (x64_code, curr_node);
+        translatePushRam (host_code, curr_node);
     }
 
     else 
     {
-        translatePushRegImm (x64_code, curr_node);
+        translatePushRegImm (host_code, curr_node);
     } 
 }
 
 //-----------------------------------------------------------------------------
 
-void translatePushRam (X64_code *x64_code, IR_node *curr_node)
+void translatePushRam (Host_code *host_code, IR_node *curr_node)
 {
-    calculateRamAddrPushPop (x64_code, curr_node);
+    calculateRamAddrPushPop (host_code, curr_node);
 
     writeSimpleOp (OP_MOV_R13_RAM); // mov r13, [r13]
 
@@ -537,7 +537,7 @@ void translatePushRam (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translatePushRegImm (X64_code *x64_code, IR_node *curr_node)
+void translatePushRegImm (Host_code *host_code, IR_node *curr_node)
 {
     writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
 
@@ -557,26 +557,26 @@ void translatePushRegImm (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translatePop (X64_code *x64_code, IR_node *curr_node)
+void translatePop (Host_code *host_code, IR_node *curr_node)
 {
     // separate into two occasions (similar to push)
     if(curr_node->ram_flag)
     {
-        translatePopRam (x64_code, curr_node);
+        translatePopRam (host_code, curr_node);
     }
 
     // pop [reg + val]
     else
     {
-        translatePopReg (x64_code, curr_node);
+        translatePopReg (host_code, curr_node);
     }
 }
 
 //-----------------------------------------------------------------------------
 
-void translatePopRam (X64_code *x64_code, IR_node *curr_node)
+void translatePopRam (Host_code *host_code, IR_node *curr_node)
 {
-    calculateRamAddrPushPop (x64_code, curr_node);
+    calculateRamAddrPushPop (host_code, curr_node);
         
     // pull out from stack num value
     writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
@@ -589,7 +589,7 @@ void translatePopRam (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translatePopReg (X64_code *x64_code, IR_node *curr_node)
+void translatePopReg (Host_code *host_code, IR_node *curr_node)
 {
     if(curr_node->reg_value)
     {
@@ -606,7 +606,7 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translateArithmOperations (X64_code *x64_code, IR_node *curr_node)
+void translateArithmOperations (Host_code *host_code, IR_node *curr_node)
 {
     // pull out numbers from stack and do arithm operation
     // arithm xmm1, xmm0
@@ -641,7 +641,7 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translateIn (X64_code *x64_code, IR_node *curr_node)
+void translateIn (Host_code *host_code, IR_node *curr_node)
 {
     // reserve 8 bytes for input number
     writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
@@ -649,18 +649,18 @@ void translateIn (X64_code *x64_code, IR_node *curr_node)
 
     // save ptr in rdi (as first argument of function)
     writeSimpleOp (OP_LEA_RDI_STK_ARG);
-    writePrologue (x64_code);
+    writePrologue (host_code);
 
     writeSimpleOp (OP_CALL);
 
     // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
-    writeEpilogue (x64_code);
+    host_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    writeEpilogue (host_code);
 }
 
 //-----------------------------------------------------------------------------
 
-void translateOut (X64_code *x64_code, IR_node *curr_node)
+void translateOut (Host_code *host_code, IR_node *curr_node)
 {
     #ifdef ELF_MODE
     writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
@@ -668,13 +668,13 @@ void translateOut (X64_code *x64_code, IR_node *curr_node)
 
     // cvttsd2si reg, xmm0 <- translate double to int
     writeMaskingOp (OP_CVTTSD2SI_REG, MASK_RAX);
-    writePrologue (x64_code);
+    writePrologue (host_code);
 
     writeSimpleOp (OP_CALL);
 
     // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
-    writeEpilogue (x64_code);
+    host_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    writeEpilogue (host_code);
     writeMaskingOp (OP_POP_REG, MASK_RAX); 
 
     // pull out outputed number
@@ -684,13 +684,13 @@ void translateOut (X64_code *x64_code, IR_node *curr_node)
     #else
     // save ptr in rdi (as first argument of function)
     writeSimpleOp (OP_LEA_RDI_STK_ARG);
-    writePrologue (x64_code);
+    writePrologue (host_code);
 
     writeSimpleOp (OP_CALL);
 
     // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
-    writeEpilogue (x64_code);
+    host_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    writeEpilogue (host_code);
 
     // pull out outputed number
     writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
@@ -700,23 +700,23 @@ void translateOut (X64_code *x64_code, IR_node *curr_node)
 
 //-----------------------------------------------------------------------------
 
-void translateDump (X64_code *x64_code, IR_node *curr_node)
+void translateDump (Host_code *host_code, IR_node *curr_node)
 {
-    writePrologue (x64_code);
+    writePrologue (host_code);
 
     // You can change troll_print on your own purposes
     writeSimpleOp (OP_CALL);
-    uint32_t funct_ptr = (uint64_t) troll_dump - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
+    uint32_t funct_ptr = (uint64_t) troll_dump - (uint64_t)(host_code->curr_pos + SIZE_OF_PTR); 
     writePtr (funct_ptr);
 
-    writeEpilogue (x64_code);
+    writeEpilogue (host_code);
 
     // DUMP IS NOT SUPPORTED IN ELF
 }
 
 //-----------------------------------------------------------------------------
 
-void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node)
+void translateConditionalJmps (Host_code *host_code, IR_node *curr_node)
 {
     // pull out numbers from stack
     writeSimpleOp (OP_MOV_XMM0_STK); 
@@ -754,39 +754,39 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node)
     }
     
     // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    host_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
 }
 
 //-----------------------------------------------------------------------------
 
-void translateJmp (X64_code *x64_code, IR_node *curr_node)
+void translateJmp (Host_code *host_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_JMP); 
 
     // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr
+    host_code->curr_pos += SIZE_OF_PTR; // skip ptr
 }
 
 //-----------------------------------------------------------------------------
 
-void translateCall (X64_code *x64_code, IR_node *curr_node)
+void translateCall (Host_code *host_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_CALL);
 
     // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr
+    host_code->curr_pos += SIZE_OF_PTR; // skip ptr
 }
 
 //-----------------------------------------------------------------------------
 
-void translateRet (X64_code *x64_code, IR_node *curr_node)
+void translateRet (Host_code *host_code, IR_node *curr_node)
 {
     writeSimpleOp (OP_RET);
 }
 
 //-----------------------------------------------------------------------------
 
-void translateMathFunctions (X64_code *x64_code, IR_node *curr_node)
+void translateMathFunctions (Host_code *host_code, IR_node *curr_node)
 {
     // there is only one supported math function: SQRT
     writeSimpleOp (OP_MOV_XMM0_STK);  // pop  xmm0
@@ -802,16 +802,16 @@ void translateMathFunctions (X64_code *x64_code, IR_node *curr_node)
 
 // Create header in dump file (some useful information about code will represent here)
 
-void CodeX64DumpHeader (X64_code *x64_code)
+void hostDumpHeader (Host_code *host_code)
 {
     printf ("-- dump x64 code\n\n");
 
-    fprintf (x64_code->dump_file, 
+    fprintf (host_code->dump_file, 
             "-----------------------------------------------------------------------------\n"
             "                          X64 TRANSLATED BIN CODE                            \n"
             "-----------------------------------------------------------------------------\n\n");
 
-    fprintf (x64_code->dump_file, "- x64 buffer capacity: %d\n\n", x64_code->capacity);
+    fprintf (host_code->dump_file, "- x64 buffer capacity: %d\n\n", host_code->capacity);
 }
 
 //-----------------------------------------------------------------------------

@@ -13,10 +13,8 @@ int main (int argc, char *argv[])
         printf ("ERROR (while assembling)\n\n");
     }
 
-    assembling (&Asm);
-
-    asm_dump (&Asm);
-
+    assembling     (&Asm);
+    asm_dump       (&Asm);
     assembler_dtor (&Asm);
 
     return 0;

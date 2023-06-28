@@ -11,27 +11,27 @@ int main ()
 
     printf ("-- traslate to IR\n\n");
 
-    FILE *code_file = fopen ("processor/COMMON/files/code.bin", "rb");
-    Troll_code *bin_code = readCodeFile (code_file);
-    int bin_size = bin_code->size;
+    FILE *guest_file = fopen ("processor/COMMON/files/code.bin", "rb");
+    Guest_code *guest_code = readCodeFile (guest_file, log_file);
+    int bin_size = guest_code->size;
     
-    IR *ir = translateBinToIr (bin_code);
-    IrDump (ir);
+    IR *ir = translateGuestToIr (guest_code, log_file);
+    irDump (ir);
 
-    BinCodeDtor (bin_code);
-    fclose (code_file);
+    guestCodeDtor (guest_code);
+    fclose (guest_file);
     
-    X64_code *x64_code = translateIrToX64 (ir, bin_size);
-    IrDtor (ir);
+    Host_code *Host_code = translateIrToHost (ir, bin_size);
+    irDtor (ir);
                                                                     
     #ifdef ELF_MODE
-    createELF (x64_code);
+    createELF (Host_code);
     #else
-    runCode (x64_code->buffer, x64_code->size);
+    runCode (Host_code->buffer, Host_code->size);
     #endif
     
-    fclose (x64_code->dump_file);
-    x64CodeDtor (x64_code);
+    fclose (Host_code->dump_file);
+    hostCodeDtor (Host_code);
 
     printf ("-- finishing\n\n");
 

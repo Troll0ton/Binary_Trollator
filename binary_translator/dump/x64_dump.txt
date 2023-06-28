@@ -5,7 +5,7 @@
 - x64 buffer capacity: 4096
 
 OP_MOV_REG_IMM R12        | 49 BC 
-ABS PTR 8 BYTE            | 00 70 F6 7F EC 55 00 00 
+ABS PTR 8 BYTE            | 00 50 9E C2 20 56 00 00 
 OP_MOV_REG_IMM R13        | 49 BD 
 DOUBLE 8 BYTE             | 00 00 00 00 00 00 10 40 
 OP_PUSH_REG R13           | 41 55 

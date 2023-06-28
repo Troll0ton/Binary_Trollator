@@ -153,9 +153,7 @@ void swap_lines (void* first_pointer, void* second_pointer, size_t size_of_struc
 void clear_mem (Line *Text, File *File_input)
 {
     free (File_input->file_buffer);
-
     free (File_input);
-
     free (Text);
 }
 

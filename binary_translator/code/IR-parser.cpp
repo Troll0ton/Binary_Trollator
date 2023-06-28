@@ -2,121 +2,103 @@
 
 //-----------------------------------------------------------------------------
 
-Troll_code *readCodeFile (FILE *code_file)
+Guest_code *readCodeFile (FILE *code_file, FILE *log_file)
 {
-    printf ("-- open the code.bin\n\n");
+    log_print ("__________|Read Guest code|__________\n\n"
+               "- open the code.bin                  \n\n");
 
-    Troll_code *bin_code = (Troll_code*) calloc (1, sizeof (Troll_code));
+    Guest_code *guest_code = (Guest_code*) calloc (1, sizeof (Guest_code));
 
-    elem_t code_signature = 0;
-    elem_t res_sum        = 0;
+    guest_code->size   = get_file_size  (code_file);
+    guest_code->buffer = (char*) calloc (guest_code->size, sizeof (char));
 
-    // ???
-    fread (&res_sum,        sizeof(char), OFFSET_ARG, code_file);
-    fread (&code_signature, sizeof(char), OFFSET_ARG, code_file);
+    fread (guest_code->buffer, sizeof (char), guest_code->size, code_file);
 
-    bin_code->size = res_sum;
+    // SIGNATURE
+    int code_signature = *(int*)(guest_code->buffer);
 
-    printf ("-------- bin res sum: %d   \n\n", bin_code->size);
-    printf ("-- code.bin SIGNATURE: %llx\n\n", code_signature);
-
-    if(code_signature == SIGNATURE)
+    if(code_signature != GUEST_CODE_SIGNATURE)
     {
-        printf ("-- copy data to array\n\n");
+        log_print ("ERROR: wrong signature!\n\n");
+        free (guest_code);
 
-        bin_code->buffer = (char*) calloc (bin_code->size, sizeof (char));
-
-        *(elem_t*)(bin_code->buffer) = res_sum;
-        *(elem_t*)(bin_code->buffer + OFFSET_ARG) = code_signature;
-
-        if(bin_code->buffer == NULL)
-        {
-            printf ("__________|ERROR - NULL pointer code|__________\n\n");
-        } 
-
-        fread (bin_code->buffer + OFFSET_CODE_SIGNATURE, 
-               sizeof(char), 
-               bin_code->size - OFFSET_CODE_SIGNATURE, 
-               code_file                                );
-
-        printf ("-- successful copying\n\n");
-
-        return bin_code;
+        return NULL;
     }
 
-    printf ("__________|WRONG SIGNATURE!|__________\n\n");
+    log_print ("    - guest code size: %d   \n\n"
+               "    - code.bin SIGNATURE: %X\n\n", 
+                guest_code->size,
+                (unsigned int) code_signature     );
 
-    if(code_signature == DESTROYED)
-    {
-        printf ("This file was destroyed by someone.\n");
-    }
-    
-    free (bin_code);
+    log_print ("- successful copying\n\n");
 
-    return NULL;
+    return guest_code;
 }
 
 //-----------------------------------------------------------------------------
 
 #define CURR_IR_NODE ir->buffer[num_cmd]
 
-IR *translateBinToIr (Troll_code *bin_code)
+IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file)
 {
-    printf ("-- translating to Intermediate Representation\n\n");
+    log_print ("__________|Translating to IR|__________\n\n");
 
-    IR *ir = (IR*) calloc (1, sizeof (IR));
-    ir->buffer = (IR_node*) calloc (bin_code->size, sizeof (IR_node));
+    IR *ir     = (IR*)      calloc (1,                sizeof (IR));
+    ir->buffer = (IR_node*) calloc (guest_code->size, sizeof (IR_node));
 
-    printf ("-------- ir start size: %d\n\n", bin_code->size);
+    log_print ("-   ir start size: %d\n\n", guest_code->size);
 
-    handleBinCode (ir, bin_code);
+    handleGuestCode (ir, guest_code, log_file);
 
-    printf ("-------- ir final size: %d\n\n", ir->size + 1);
-    printf ("-- successful translating\n\n");
+    log_print ("-   ir final size: %d\n\n"  
+               "- successful translating\n\n",
+                ir->size + 1                  );
 
     return ir;
 }
 
 //-----------------------------------------------------------------------------
 
-void handleBinCode (IR *ir, Troll_code *bin_code)
+void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file)
 {
     int num_cmd = 0;
                         // skip signature and result sum
-    for(int curr_pos = 2 * OFFSET_ARG; curr_pos < bin_code->size; curr_pos++)
-    {
-        CURR_IR_NODE.troll_pos = curr_pos; // this is position in troll file
+    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < guest_code->size; curr_pos++)
+    {       
+        CURR_IR_NODE.address.guest = curr_pos; // this is position in troll file
 
-        curr_pos += handleTrollMask (&ir->buffer[num_cmd], bin_code, curr_pos);            
+        curr_pos += handleBinMask (&ir->buffer[num_cmd], guest_code, curr_pos);            
 
-        ir->size = ++num_cmd;
+        num_cmd++;
     }
 
     ir->size = num_cmd;
 
-    if(translateJmpTargetsIR (ir) == JUMP_TARGET_EMPTY)
-    {
-        printf ("ERROR: jump targets translating!\n\n");
-    }
+    translateGuestJmpTargets (ir, log_file);
 }
 
 //-----------------------------------------------------------------------------
 
-int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos)
+int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
 {
-    int curr_cmd = bin_code->buffer[curr_pos];
-    int offset = 0;
+    int curr_cmd = guest_code->buffer[curr_pos];
+    int offset   = 0;
 
     if(curr_cmd & MASK_REG)
     {
-        ir_node->reg_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + OFFSET_CMD) + IR_REG; // rax = 1, ...
-        offset += OFFSET_ARG;
+        ir_node->reg_num = (int) *(double*)(guest_code->buffer + 
+                                            curr_pos +        // rax = 1, ...
+                                            SIZE_OF_INSTRUCTION + 1) ; 
+        offset += SIZE_OF_ARGUMENT_SPECIFIER;
     }
 
     if(curr_cmd & MASK_IMM)
     {
-        ir_node->imm_value = (int) *(elem_t*)(bin_code->buffer + curr_pos + offset + OFFSET_CMD);
-        offset += OFFSET_ARG;
+        ir_node->imm_val.num = *(double*)(guest_code->buffer + 
+                                          curr_pos + 
+                                          offset + 
+                                          SIZE_OF_INSTRUCTION );
+        offset += SIZE_OF_ARGUMENT_SPECIFIER;
     }
 
     ir_node->ram_flag = 0;
@@ -138,7 +120,7 @@ int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos)
 
 // changed addressing of jumps into Intermediate Representation
 
-int translateJmpTargetsIR (IR *ir)
+void translateGuestJmpTargets (IR *ir, FILE *log_file)
 {
     for(int i = 0; i < ir->size; i++)
     {
@@ -146,42 +128,35 @@ int translateJmpTargetsIR (IR *ir)
         {
             COMMON_JMP_CASE
             {
-                char find_flag = 0;
-
-                for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
-                {
-                    if(CURR_IR_NODE.troll_pos == TARGET)
-                    {
-                        TARGET = num_cmd;
-                        find_flag = 1;
-                    }
-
-                    if(!CURR_IR_NODE.troll_pos)
-                    {
-                        break;
-                    }
-                } 
-
-                if(!find_flag)
-                {
-                    return JUMP_TARGET_EMPTY;
-                }
-                
-                break;
+                searchForTarget (ir, &ir->buffer[i], log_file);
             }
-            default:
-                break;
         }
     }
-
-    return 0;
 }
 
 #undef TARGET
 
 //-----------------------------------------------------------------------------
 
-void IrDump (IR *ir)
+void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file)
+{
+    for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
+    {
+        // set already known target in jmp
+        if(CURR_IR_NODE.troll_pos == *target)
+        {
+            *target = num_cmd;
+            break;
+        }
+    } 
+
+    log_print ("ERROR: jump targets translating!\n\n");
+    exit (ERROR_MISS_JMP_TARGET);
+}
+
+//-----------------------------------------------------------------------------
+
+void irDump (IR *ir)
 {
     printf ("-- generate dump Intermediate Representation\n\n");
 
@@ -239,7 +214,7 @@ void IrDump (IR *ir)
 
 //-----------------------------------------------------------------------------
 
-void IrDtor (IR *ir)
+void irDtor (IR *ir)
 {
     free (ir->buffer);
     ir->size = DELETED;
@@ -247,10 +222,10 @@ void IrDtor (IR *ir)
 
 //-----------------------------------------------------------------------------
 
-void BinCodeDtor (Troll_code *bin_code)
+void guestCodeDtor (Guest_code *guest_code)
 {
-    free (bin_code->buffer);
-    bin_code->size = DELETED;
+    free (guest_code->buffer);
+    guest_code->size = DELETED;
 }
 
 //-----------------------------------------------------------------------------

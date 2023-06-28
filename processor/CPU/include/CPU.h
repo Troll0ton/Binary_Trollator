@@ -78,6 +78,8 @@ void execute_cmd     (int curr_cmd,  double    *curr_arg, double arg_value,
 
 void cpu_dump        (Processor *cpu);
 
+int get_file_size (FILE *file);
+
 //-----------------------------------------------------------------------------
 
 #endif //CPU_H

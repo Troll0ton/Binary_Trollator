@@ -6,22 +6,22 @@
 //-----------------------------------------------------------------------------
 
 #include "binary_translator/include/common.h"
+#include "binary_translator/include/input_output.h" 
 
 //-----------------------------------------------------------------------------
 
 enum BYTE_CODE_OFFSETS
 {
-    OFFSET_CMD = 1,
-    OFFSET_ARG = sizeof (elem_t),
+    SIZE_OF_INSTRUCTION        = 1,
+    SIZE_OF_ARGUMENT_SPECIFIER = sizeof(double),
 };
 
 //-----------------------------------------------------------------------------
 
 enum BYTE_CODE_SIGNATURE_INFO
 {
-    OFFSET_CODE_SIGNATURE = 2 * OFFSET_ARG,
-    SIGNATURE             = 0xBACAFE,
-    DESTROYED             = 0xBADBAD,
+    GUEST_CODE_SIGNATURE  = 0xBACAFE,
+    OFFSET_CODE_SIGNATURE = sizeof(int),
 };
 
 //-----------------------------------------------------------------------------
@@ -37,14 +37,11 @@ enum BYTE_CODE_BIT_MASKS
 //-----------------------------------------------------------------------------
 
 // This is actually (in my format) byte code
-typedef struct Troll_code
+typedef struct Guest_code
 {
     char *buffer;
     int   size;
-} Troll_code;
-
-
-// Guest
+} Guest_code;
 
 //-----------------------------------------------------------------------------
 
@@ -65,14 +62,28 @@ enum IR_INFO
 
 //-----------------------------------------------------------------------------
 
+typedef union imm_val
+{
+    double num;
+    int offset;
+} imm_val;
+
+typedef union address
+{
+    int guest;
+    char *x64;
+} address;
+
+//-----------------------------------------------------------------------------
+
 typedef struct IR_node
 {
     cmd_code command;
-    int      imm_value;
-    int      reg_value;
-    char     ram_flag;
-    int      troll_pos;
-    char    *x64_pos;
+    imm_val  imm_val;
+    int      reg_num  : 2;
+    int      ram_flag : 1;
+
+    address  address;
 } IR_node;
 
 //-----------------------------------------------------------------------------
@@ -85,21 +96,23 @@ typedef struct IR
 
 //-----------------------------------------------------------------------------
 
-Troll_code *readCodeFile (FILE *code_file);
+Guest_code *readCodeFile (FILE *code_file, FILE *log_file);
 
-IR *translateBinToIr (Troll_code *bin_code);
+IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file);
 
-void handleBinCode (IR *ir, Troll_code *bin_code);
+void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file);
 
-int translateJmpTargetsIR (IR *ir);
+void translateGuestJmpTargets (IR *ir, FILE *log_file);
 
-int handleTrollMask (IR_node *ir_node, Troll_code *bin_code, int curr_pos);
+void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file);
 
-void IrDump (IR *ir);
+int handleBinMask (IR_node *ir_node, Guest_code *bin_code, int curr_pos);
 
-void IrDtor (IR *ir);
+void irDump (IR *ir);
 
-void BinCodeDtor (Troll_code *bin_code);
+void irDtor (IR *ir);
+
+void guestCodeDtor (Guest_code *bin_code);
 
 //-----------------------------------------------------------------------------
 

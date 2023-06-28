@@ -1,0 +1,18 @@
+__________|Read Guest code|__________
+
+- open the code.bin                  
+
+    - bin res sum: 178         
+
+    - code.bin SIGNATURE: 562cdbc91110
+
+- copy data to array
+
+- successful copying
+
+__________|Translating to IR|__________
+
+-   ir start size: 178
+
+ERROR: jump targets translating!
+

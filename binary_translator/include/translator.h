@@ -12,57 +12,57 @@
 
 //-----------------------------------------------------------------------------
 
-#define CURR_POS x64_code->curr_pos
+#define CURR_POS host_code->curr_pos
 
 //-----------------------------------------------------------------------------
 //                                WRITING
 //-----------------------------------------------------------------------------
 
 #define writeSimpleOp(name)                       \
-    writeCode_(x64_code, name, #name, name##_SIZE)
+    writeCode_(host_code, name, #name, name##_SIZE)
 
 
 #define writeByte(value)                     \
-    writeCode_(x64_code, value, "BYTE", BYTE)
+    writeCode_(host_code, value, "BYTE", BYTE)
 
 
 #define writePtr(value)                                   \
-    writeCode_(x64_code, value, "PTR 4 BYTE", SIZE_OF_PTR)
+    writeCode_(host_code, value, "PTR 4 BYTE", SIZE_OF_PTR)
 
 
 #define writeAbsPtr(value)                                        \
-    writeCode_(x64_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR)
+    writeCode_(host_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR)
 
 
 #define writeDouble(value)                                          \
-    writeCode_(x64_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", 8)
+    writeCode_(host_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", 8)
 
 
 #define writeInt64(value)                        \
-    writeCode_(x64_code, value, "INT 8 BYTE", 8)
+    writeCode_(host_code, value, "INT 8 BYTE", 8)
 
 
 #define writeInt32(value)                        \
-    writeCode_(x64_code, value, "INT 4 BYTE", 4)
+    writeCode_(host_code, value, "INT 4 BYTE", 4)
 
 
 #define writeMaskingOp(opname, REG)                                                                                \
     strncat (dump_name, #opname " ", 90);                                                                          \
     strncat (dump_name, reg_info[REG].name, 10);                                                                   \
                                                                                                                    \
-    writeCode_(x64_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag << MASK_R_##opname,  \
+    writeCode_(host_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag << MASK_R_##opname,  \
                dump_name, opname##_SIZE);                                                                          \
                                                                                                                    \
     memset (dump_name, '\0', 100);
 
 
 #define writeMaskingJmp(JMP)                                          \
-    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
+    writeCode_(host_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
                #JMP, OP_CONDITIONAL_JMP_SIZE);   
 
 
 #define writeFormatStr(name)                       \
-    writeCode_(x64_code, name, #name, name##_SIZE)                                                                
+    writeCode_(host_code, name, #name, name##_SIZE)                                                                
 
 //-----------------------------------------------------------------------------
 
@@ -145,14 +145,14 @@ enum JUMP_TARGETS_POS
 
 //-----------------------------------------------------------------------------
 
-typedef struct X64_code
+typedef struct Host_code
 {
     char *buffer;
     int   size;
     char *curr_pos;
     int   capacity;
     FILE *dump_file;
-} X64_code;
+} Host_code;
 
 //-----------------------------------------------------------------------------
 
@@ -223,11 +223,11 @@ static const Reg_info reg_info[] =
 
 //-----------------------------------------------------------------------------
 
-X64_code *translateIrToX64 (IR *ir, int bin_size);
+Host_code *translateIrToHost (IR *ir, int bin_size);
 
-X64_code *x64CodeCtor (int init_size, int alignment);
+Host_code *hostCodeCtor (int init_size, int alignment);
 
-void x64CodeDtor (X64_code *x64_code);
+void hostCodeDtor (Host_code *Host_code);
 
 Ram *ramCtor (int size, int alignment);
 
@@ -237,63 +237,63 @@ Jmp_table *jmpTableCtor (int size);
 
 void jmpTableDtor (Jmp_table *jmp_table);
 
-void handleJmpTargetsX64 (X64_code *x64_code, IR *ir, Jmp_table *jmp_table, 
+void handleHostJmpTargets (Host_code *Host_code, IR *ir, Jmp_table *jmp_table, 
                           char *in_addr, char *out_addr                    );
 
-void handleIOAddress (X64_code *x64_code, IR_node ir_node, 
+void handleIOAddress (Host_code *Host_code, IR_node ir_node, 
                       char *in_addr, char *out_addr       );
 
-void translateTargetPtr (X64_code *x64_code, IR_node ir_node, Jmp_table *jmp_table);
+void translateTargetPtr (Host_code *Host_code, IR_node ir_node, Jmp_table *jmp_table);
 
 void *alignedCalloc (int alignment, int size);
 
-void translateCmd (X64_code *x64_code, IR_node *curr_node);
+void translateCmd (Host_code *Host_code, IR_node *curr_node);
 
 void translateReg (IR_node *curr_node);
 
-void translateHlt (X64_code *x64_code, IR_node *curr_node);
+void translateHlt (Host_code *Host_code, IR_node *curr_node);
 
-void calculateRamAddrPushPop (X64_code *x64_code, IR_node *curr_node);
+void calculateRamAddrPushPop (Host_code *Host_code, IR_node *curr_node);
 
-void translatePush (X64_code *x64_code, IR_node *curr_node);
+void translatePush (Host_code *Host_code, IR_node *curr_node);
 
-void translatePushRam (X64_code *x64_code, IR_node *curr_node);
+void translatePushRam (Host_code *Host_code, IR_node *curr_node);
 
-void translatePushRegImm (X64_code *x64_code, IR_node *curr_node);
+void translatePushRegImm (Host_code *Host_code, IR_node *curr_node);
 
-void translatePop (X64_code *x64_code, IR_node *curr_node);
+void translatePop (Host_code *Host_code, IR_node *curr_node);
 
-void translatePopRam (X64_code *x64_code, IR_node *curr_node);
+void translatePopRam (Host_code *Host_code, IR_node *curr_node);
 
-void translatePopReg (X64_code *x64_code, IR_node *curr_node);
+void translatePopReg (Host_code *Host_code, IR_node *curr_node);
 
-void translateArithmOperations (X64_code *x64_code, IR_node *curr_node);
+void translateArithmOperations (Host_code *Host_code, IR_node *curr_node);
 
-void translateOut (X64_code *x64_code, IR_node *curr_node);
+void translateOut (Host_code *Host_code, IR_node *curr_node);
 
-void translateIn (X64_code *x64_code, IR_node *curr_node);
+void translateIn (Host_code *Host_code, IR_node *curr_node);
 
-void translateDump (X64_code *x64_code, IR_node *curr_node);
+void translateDump (Host_code *Host_code, IR_node *curr_node);
 
-void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node);
+void translateConditionalJmps (Host_code *Host_code, IR_node *curr_node);
 
-void translateJmp (X64_code *x64_code, IR_node *curr_node);
+void translateJmp (Host_code *Host_code, IR_node *curr_node);
 
-void translateCall (X64_code *x64_code, IR_node *curr_node);
+void translateCall (Host_code *Host_code, IR_node *curr_node);
 
-void translateRet (X64_code *x64_code, IR_node *curr_node);
+void translateRet (Host_code *Host_code, IR_node *curr_node);
 
-void translateMathFunctions (X64_code *x64_code, IR_node *curr_node);
+void translateMathFunctions (Host_code *Host_code, IR_node *curr_node);
 
-void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size);
+void writeCode_(Host_code *Host_code, uint64_t value, const char *name, int size);
 
-void dumpCode (X64_code *x64_code, const char *name, int size);
+void dumpCode (Host_code *Host_code, const char *name, int size);
 
-void writePrologue (X64_code *x64_code);
+void writePrologue (Host_code *Host_code);
 
-void writeEpilogue (X64_code *x64_code);
+void writeEpilogue (Host_code *Host_code);
 
-void saveDataAddress (X64_code *x64_code, char *ram);
+void saveDataAddress (Host_code *Host_code, char *ram);
 
 void double_scanf (double *value);
 
@@ -301,7 +301,7 @@ void double_printf (double *value);
 
 void runCode (char *code, int size);
 
-void CodeX64DumpHeader (X64_code *x64_code);
+void hostDumpHeader (Host_code *Host_code);
 
 void jmpTableDump (Jmp_table *jmp_table);
 

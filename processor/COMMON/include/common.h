@@ -68,8 +68,8 @@ enum SIGNATURES
 enum code_INFO
 {
     SIZE_DIFFERENCE       = 40,
-    CODE_SIZE             = 2 * OFFSET_ARG,
-    OFFSET_CODE_SIGNATURE = 2 * OFFSET_ARG,
+    CODE_SIZE             = 4,
+    OFFSET_CODE_SIGNATURE = 4,
 };
 
 //-----------------------------------------------------------------------------

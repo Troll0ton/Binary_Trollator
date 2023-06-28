@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
 
     read_code_file (&cpu);
 
-    //cpu_dump (&cpu);
+    cpu_dump (&cpu);
 
     handle_cmds (&cpu);
 
