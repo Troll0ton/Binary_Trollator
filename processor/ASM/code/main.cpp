@@ -8,7 +8,7 @@ int main (int argc, char *argv[])
 
     Assembler Asm = { 0 };
 
-    if(assembler_ctor (&Asm, argv) == ERROR_CTOR)
+    if(assembler_ctor (&Asm, argc, argv) == ERROR_CTOR)
     {
         printf ("ERROR (while assembling)\n\n");
     }

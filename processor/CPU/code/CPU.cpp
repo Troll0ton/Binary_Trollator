@@ -67,10 +67,10 @@ void read_code_file (Processor *cpu)
 {
     int code_signature = 0;
 
-    fread (&code_signature, OFFSET_CODE_SIGNATURE, 1, cpu->info.code_file);
+    fread (&code_signature, SIZE_OF_CODE_SIGNATURE, 1, cpu->info.code_file);
     fseek (cpu->info.code_file, 0, SEEK_SET);
 
-    cpu->code_size = get_file_size (cpu->info.code_file);
+    cpu->code_size = getFileSize (cpu->info.code_file);
 
     if(code_signature == SIGNATURE)
     {
@@ -92,7 +92,7 @@ void read_code_file (Processor *cpu)
 
 //-----------------------------------------------------------------------------
 
-int get_file_size (FILE *file)
+int getFileSize (FILE *file)
 {
     int file_size = 0;
 
@@ -110,7 +110,7 @@ int get_file_size (FILE *file)
 
 void handle_cmds (Processor *cpu)
 {
-    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < cpu->code_size; curr_pos++)
+    for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < cpu->code_size; curr_pos++)
     {
         int     curr_cmd   = cpu->code[curr_pos];
         int     offset     = 0;
@@ -134,7 +134,7 @@ void handle_cmds (Processor *cpu)
             offset += OFFSET_ARG;
         }
 
-        if(curr_cmd & MASK_RAM)
+        if(curr_cmd & MASK_MEM)
         {
             curr_arg = cpu->ram + (int) arg_value;
             arg_value = *curr_arg;
@@ -205,7 +205,7 @@ void cpu_dump (Processor *cpu)
                             cpu->code_size,
                             (unsigned int) *(int*)(cpu->code));
 
-    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < cpu->code_size; curr_pos++)
+    for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < cpu->code_size; curr_pos++)
     {
         char curr_cmd = *(cpu->code + curr_pos);
         int  offset   = 0;

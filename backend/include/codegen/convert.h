@@ -151,6 +151,8 @@ CONVERT(FUNCT,
 
     convert_to_asm (curr_node->right->right, info);
 
+    trprint ("pop rax\n"); 
+
     trprint ("ret\n");
 
     trprint (":%d\n", label_1);
@@ -163,6 +165,11 @@ CONVERT(CALL,
     int num_of_funct = (int) curr_node->left->val.var;
 
     trprint ("call %d:\n", num_of_funct);
+
+    if(curr_node->parent->type == OP && curr_node->parent->val.op == ASG)
+    {
+        trprint ("push rax\n");
+    }
 })
 
 //-----------------------------------------------------------------------------

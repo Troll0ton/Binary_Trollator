@@ -27,16 +27,7 @@ push 1
 push rax
 jae 5: 
 
-pop
-pop
 call 13:
 
-jmp 7:
-
 :5
-
-pop
-pop
-
-:7
 ret

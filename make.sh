@@ -11,3 +11,6 @@ make -f Makefile1
 
 cd ../../../processor/CPU/code/
 make -f Makefile2
+
+cd ../../../binary_translator/code/
+make -f Makefile

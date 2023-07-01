@@ -4,22 +4,25 @@
 
 Guest_code *readCodeFile (FILE *code_file, FILE *log_file)
 {
-    log_print ("__________|Read Guest code|__________\n\n"
+    log_print ("- traslate to IR                     \n\n"
+               "__________|Read Guest code|__________\n\n"
                "- open the code.bin                  \n\n");
 
     Guest_code *guest_code = (Guest_code*) calloc (1, sizeof (Guest_code));
+    checkAlloc (guest_code);
 
-    guest_code->size   = get_file_size  (code_file);
+    guest_code->size = getFileSize (code_file);
+
     guest_code->buffer = (char*) calloc (guest_code->size, sizeof (char));
+    checkAlloc (guest_code->buffer);
 
     fread (guest_code->buffer, sizeof (char), guest_code->size, code_file);
 
-    // SIGNATURE
     int code_signature = *(int*)(guest_code->buffer);
 
     if(code_signature != GUEST_CODE_SIGNATURE)
     {
-        log_print ("ERROR: wrong signature!\n\n");
+        err_print ("ERROR: wrong signature!\n\n");
         free (guest_code);
 
         return NULL;
@@ -41,18 +44,22 @@ Guest_code *readCodeFile (FILE *code_file, FILE *log_file)
 
 IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file)
 {
-    log_print ("__________|Translating to IR|__________\n\n");
+    log_print ("__________|Translating to IR|__________\n\n"
+               "- handle guest code                    \n\n");
 
-    IR *ir     = (IR*)      calloc (1,                sizeof (IR));
+    IR *ir = (IR*) calloc (1, sizeof (IR));
+    checkAlloc (ir);
+
     ir->buffer = (IR_node*) calloc (guest_code->size, sizeof (IR_node));
+    checkAlloc (ir->buffer);
 
-    log_print ("-   ir start size: %d\n\n", guest_code->size);
+    log_print ("    - ir start size: %d\n\n", guest_code->size);
 
     handleGuestCode (ir, guest_code, log_file);
 
-    log_print ("-   ir final size: %d\n\n"  
-               "- successful translating\n\n",
-                ir->size + 1                  );
+    log_print ("    - ir final size: %d       \n\n"  
+               "- successful translating to IR\n\n",
+                ir->size + 1                        );
 
     return ir;
 }
@@ -62,10 +69,10 @@ IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file)
 void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file)
 {
     int num_cmd = 0;
-                        // skip signature and result sum
-    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < guest_code->size; curr_pos++)
+                        // skip signature
+    for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < guest_code->size; curr_pos++)
     {       
-        CURR_IR_NODE.address.guest = curr_pos; // this is position in troll file
+        CURR_IR_NODE.address.guest = curr_pos; // this is position in guest code
 
         curr_pos += handleBinMask (&ir->buffer[num_cmd], guest_code, curr_pos);            
 
@@ -86,10 +93,10 @@ int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
 
     if(curr_cmd & MASK_REG)
     {
-        ir_node->reg_num = (int) *(double*)(guest_code->buffer + 
-                                            curr_pos +        // rax = 1, ...
-                                            SIZE_OF_INSTRUCTION + 1) ; 
-        offset += SIZE_OF_ARGUMENT_SPECIFIER;
+        ir_node->reg_num = (uint8_t) *(double*)(guest_code->buffer + 
+                                                curr_pos +         // rax = 1, ...
+                                                SIZE_OF_INSTRUCTION) + 1; 
+        offset += SIZE_OF_ARGUMENTS_SPECIFIER;
     }
 
     if(curr_cmd & MASK_IMM)
@@ -97,15 +104,15 @@ int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
         ir_node->imm_val.num = *(double*)(guest_code->buffer + 
                                           curr_pos + 
                                           offset + 
-                                          SIZE_OF_INSTRUCTION );
-        offset += SIZE_OF_ARGUMENT_SPECIFIER;
+                                          SIZE_OF_INSTRUCTION);
+        offset += SIZE_OF_ARGUMENTS_SPECIFIER;
     }
 
-    ir_node->ram_flag = 0;
+    ir_node->memory_flag = 0;
             
-    if(curr_cmd & MASK_RAM)
+    if(curr_cmd & MASK_MEM)
     {
-        ir_node->ram_flag = 1;
+        ir_node->memory_flag = 1;
     }
 
     curr_cmd &= MASK_CMD;
@@ -115,8 +122,6 @@ int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
 }
 
 //-----------------------------------------------------------------------------
-
-#define TARGET ir->buffer[i].imm_value
 
 // changed addressing of jumps into Intermediate Representation
 
@@ -134,78 +139,78 @@ void translateGuestJmpTargets (IR *ir, FILE *log_file)
     }
 }
 
-#undef TARGET
-
 //-----------------------------------------------------------------------------
 
 void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file)
 {
+    ir_node->imm_val.target = (int) ir_node->imm_val.num;
+
     for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
     {
-        // set already known target in jmp
-        if(CURR_IR_NODE.troll_pos == *target)
+        // translate target absolute address
+        if(CURR_IR_NODE.address.guest == ir_node->imm_val.target)
         {
-            *target = num_cmd;
-            break;
+            ir_node->imm_val.target = num_cmd;
+            return;
         }
     } 
 
-    log_print ("ERROR: jump targets translating!\n\n");
-    exit (ERROR_MISS_JMP_TARGET);
+    err_print ("ERROR: jump targets translating!\n\n");
 }
 
 //-----------------------------------------------------------------------------
 
-void irDump (IR *ir)
+void irDump (IR *ir, FILE *log_file)
 {
-    printf ("-- generate dump Intermediate Representation\n\n");
+    log_print ("- generate dump IR\n\n");
 
     FILE *dump_file = fopen ("binary_translator/dump/ir_dump.txt", "w+");
+    checkFilePtr (dump_file);
 
     fprintf (dump_file, 
             "-----------------------------------------------------------------------------\n"
             "                       Intermediate Representation Dump                      \n"
-            "-----------------------------------------------------------------------------\n\n");
-
-    fprintf (dump_file, "- Intermediate Representation size: %d\n\n", ir->size);
-
-    //-----------------------------------------------------------------------------  
-    // to find out commands numeration check processor/COMMON/include/codegen/codegen.h
-    //-----------------------------------------------------------------------------
+            "-----------------------------------------------------------------------------\n\n"
+            "- intermediate representation size: %d\n\n", 
+            ir->size                                                                           );
 
     for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
     {
-        fprintf (dump_file,
-                "- IR node %d\n", num_cmd);
+        fprintf (dump_file, "- IR node %d\n", num_cmd);
 
-        #define CMD_DEF(cmd, name, ...)             \
-        case cmd:                                   \
-        {                                           \
-            fprintf (dump_file,                     \
-                "       - command:   %s\n", name);  \
-            break;                                  \
+        #define CMD_DEF(cmd, name, ...)                            \
+        case cmd:                                                  \
+        {                                                          \
+            fprintf (dump_file, "       - command:   %s\n", name); \
+            break;                                                 \
         }
 
         switch(CURR_IR_NODE.command)
         {
+            //-----------------------------------------------------------------------------
+
             #include "processor/COMMON/include/codegen/codegen.h"
 
+            //-----------------------------------------------------------------------------
+
             default:
-                fprintf (dump_file,
-                "       - NUL \n"  );
+                fprintf (dump_file, "       - NULL \n\n");
                 break;
         }
 
-        fprintf (dump_file,
-                "       - reg_value: %d\n"
-                "       - imm_value: %d\n"
-                "       - ram_flag:  %d\n",
-                CURR_IR_NODE.reg_value,
-                CURR_IR_NODE.imm_value,
-                CURR_IR_NODE.ram_flag         );
+        fprintf (dump_file, "       - imm_value: %0.1lf \n"
+                            "       - ram_flag:  %u     \n",
+                            CURR_IR_NODE.imm_val.num,
+                            CURR_IR_NODE.memory_flag        );
+
+        if(CURR_IR_NODE.reg_num)
+        {
+            fprintf (dump_file, "       - reg:       R%cX\n",
+                                CURR_IR_NODE.reg_num + 'A' - 1);
+        }
     }
 
-    printf ("-- successful dumping\n\n");
+    log_print ("- successful dumping\n\n");
 
     fclose (dump_file);
 }

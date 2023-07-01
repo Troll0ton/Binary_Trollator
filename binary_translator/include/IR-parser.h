@@ -10,33 +10,34 @@
 
 //-----------------------------------------------------------------------------
 
-enum BYTE_CODE_OFFSETS
-{
-    SIZE_OF_INSTRUCTION        = 1,
-    SIZE_OF_ARGUMENT_SPECIFIER = sizeof(double),
-};
+#define SIZE_OF_INSTRUCTION 1
+#define SIZE_OF_ARGUMENTS_SPECIFIER sizeof (double)
+
+#define GUEST_CODE_SIGNATURE 0xBACAFE
+#define SIZE_OF_CODE_SIGNATURE sizeof (int)
+
+#define ERROR_ERROR_JUMP_TARGET_EMPTY 0xEAEAEA
 
 //-----------------------------------------------------------------------------
 
-enum BYTE_CODE_SIGNATURE_INFO
-{
-    GUEST_CODE_SIGNATURE  = 0xBACAFE,
-    OFFSET_CODE_SIGNATURE = sizeof(int),
-};
-
-//-----------------------------------------------------------------------------
-
-enum BYTE_CODE_BIT_MASKS
+enum GUEST_CODE_BIT_MASKS
 {
     MASK_IMM = 0x20,
     MASK_REG = 0x40,
-    MASK_RAM = 0x80,
+    MASK_MEM = 0x80,
     MASK_CMD = 0x1F,
+};
+
+enum IR_REGS_IDENTIFIERS
+{
+    IR_IDENTIFIER_RAX = 1,
+    IR_IDENTIFIER_RBX = 2,
+    IR_IDENTIFIER_RCX = 3,
+    IR_IDENTIFIER_RDX = 4,
 };
 
 //-----------------------------------------------------------------------------
 
-// This is actually (in my format) byte code
 typedef struct Guest_code
 {
     char *buffer;
@@ -45,45 +46,27 @@ typedef struct Guest_code
 
 //-----------------------------------------------------------------------------
 
-enum IR_INFO
-{
-    // This value indicates that there is a mistake in target address
-    JUMP_TARGET_EMPTY = 0xEAEAEA,
-
-    // IR register is taken from bincode + 1
-    IR_REG = 1,
-
-    // MASKS IN IR
-    IR_RAX = 1,
-    IR_RBX = 2,
-    IR_RCX = 3,
-    IR_RDX = 4,
-};
-
-//-----------------------------------------------------------------------------
-
-typedef union imm_val
+typedef union Imm_val
 {
     double num;
-    int offset;
-} imm_val;
+    int    target;
+} Imm_val;
 
-typedef union address
+typedef union Address
 {
-    int guest;
+    int   guest;
     char *x64;
-} address;
+} Address;
 
 //-----------------------------------------------------------------------------
 
 typedef struct IR_node
 {
-    cmd_code command;
-    imm_val  imm_val;
-    int      reg_num  : 2;
-    int      ram_flag : 1;
-
-    address  address;
+    uint32_t     command;
+    Imm_val      imm_val;
+    Address      address;
+    uint8_t      reg_num;
+    unsigned int memory_flag : 1;
 } IR_node;
 
 //-----------------------------------------------------------------------------
@@ -108,7 +91,7 @@ void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file);
 
 int handleBinMask (IR_node *ir_node, Guest_code *bin_code, int curr_pos);
 
-void irDump (IR *ir);
+void irDump (IR *ir, FILE *log_file);
 
 void irDtor (IR *ir);
 

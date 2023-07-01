@@ -85,7 +85,7 @@ int   get_num_of_strs (File *File_input);
 
 File *file_reader     (FILE *file);
 
-int   get_file_size   (FILE *file);
+int   getFileSize   (FILE *file);
 
 int   file_printer    (Line *Text, int num_of_lines, FILE *file);
 

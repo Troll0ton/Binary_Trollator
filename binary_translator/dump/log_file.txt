@@ -1,18 +1,34 @@
+- traslate to IR                     
+
 __________|Read Guest code|__________
 
 - open the code.bin                  
 
-    - bin res sum: 178         
+    - guest code size: 737   
 
-    - code.bin SIGNATURE: 562cdbc91110
-
-- copy data to array
+    - code.bin SIGNATURE: BACAFE
 
 - successful copying
 
 __________|Translating to IR|__________
 
--   ir start size: 178
+- handle guest code                    
 
-ERROR: jump targets translating!
+    - ir start size: 737
+
+    - ir final size: 110       
+
+- successful translating to IR
+
+- generate dump IR
+
+- successful dumping
+
+- translate from IR to x64 . . . .
+
+- dump x64 code
+
+    - handleX64JmpTargets
+
+- bin translation complete!
 

@@ -9,6 +9,8 @@ if((D)>(0)) c()
 else if((D)~(0)) d()
 else if((D)<(0)) e()
 else print(123456)
+
+0
 }
 
 
@@ -25,6 +27,8 @@ y=(0-b-sqrt(D))/(2*a)
 
 print(x)
 print(y)
+
+0
 }
 
 
@@ -33,10 +37,14 @@ funct d (){
 x=(0-b)/(2*a)
 
 print(x)
+
+0
 }
 
 
 
 funct e (){
 print(123456)
+
+0
 }

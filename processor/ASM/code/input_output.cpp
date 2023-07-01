@@ -74,7 +74,7 @@ int get_num_of_strs (File *File_input)
 
 //-----------------------------------------------------------------------------
 
-int get_file_size (FILE *file)
+int getFileSize (FILE *file)
 {
     int file_size = 0;
 
@@ -94,7 +94,7 @@ File *file_reader (FILE *file)
 {
     File *Readed_file = (File*) calloc (1, sizeof (File));
 
-    Readed_file->text_size   = get_file_size (file) + 1;
+    Readed_file->text_size   = getFileSize (file) + 1;
     Readed_file->file_buffer = (char*) calloc (Readed_file->text_size, sizeof (char));
 
     fread (Readed_file->file_buffer, sizeof (char), Readed_file->text_size, file);

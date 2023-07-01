@@ -65,7 +65,7 @@ typedef struct IR_node
 {
     cmd_code command;
     int      imm_value;
-    int      reg_value;
+    int      reg_num;
     char     ram_flag;
     int      troll_pos;
     char    *x64_pos;
@@ -200,12 +200,12 @@ HLT -> push R10
 Трансляция этих операций происходила следующим образом. Мною были написаны функции, которые использовали в себе стандартные функции ввода и вывода, при этом их аргументом являлся адрес (верхушка стека), с которым и оперировали команды.
 
 ```c++
-void double_printf (double *value)
+void doublePrintf (double *value)
 {
     printf("%0.1lf\n\n", *value);
 }
 
-void double_scanf (double *value)
+void doubleScanf (double *value)
 {
     scanf ("%lf", value);
 }
@@ -216,12 +216,12 @@ void double_scanf (double *value)
 ```
 IN -> sub rsp, 8
       lea rdi, [rsp]
-      call addr (double_scanf)
+      call addr (doubleScanf)
 ```
 
 ```
 OUT -> lea rdi, [rsp]
-       call addr (double_printf)
+       call addr (doublePrintf)
        add rsp, 8
 ```
 

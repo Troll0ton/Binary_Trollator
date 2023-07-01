@@ -2,7 +2,17 @@
 
 //-----------------------------------------------------------------------------
 
-int get_file_size (FILE *file)
+FILE *openFile (char *name, char *mode, FILE *log_file)
+{
+    FILE *new_file = fopen (name, mode);
+    checkFilePtr (log_file);
+
+    return new_file;
+}
+
+//-----------------------------------------------------------------------------
+
+int getFileSize (FILE *file)
 {
     int file_size = 0;
 

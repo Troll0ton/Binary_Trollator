@@ -1,7 +1,7 @@
-//! @file Host_codes.h
+//! @file X64_codes.h
 
-#ifndef Host_codeS_H
-#define Host_codeS_H
+#ifndef X64_CODES_H
+#define X64_CODES_H
 
 //-----------------------------------------------------------------------------
 
@@ -223,4 +223,4 @@ enum MASK_R_POS
 
 //-----------------------------------------------------------------------------
 
-#endif //Host_codeS_H
+#endif //X64_CODES_H

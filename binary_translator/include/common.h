@@ -16,7 +16,7 @@
 
 //-----------------------------------------------------------------------------
 
-#define ELF_MODE 1
+//#define ELF_MODE 1
 
 //-----------------------------------------------------------------------------
 
@@ -28,35 +28,30 @@
 
 #define log_print(...) fprintf (log_file, __VA_ARGS__)
 
-//-----------------------------------------------------------------------------
-//                                  ELF
-//-----------------------------------------------------------------------------
-// ELF header
-// Program headers:
-//      text        - size: PAGESIZE
-//      ram         - size: PAGESIZE
-//      lib (print) - size: PAGESIZE
-// Code
-//-----------------------------------------------------------------------------
-
-enum ELF_INFO
-{
-    NUM_OF_SEGMENTS = 3,
-    LOAD_ADDR   = 0x400000,
-    TEXT_ADDR   = LOAD_ADDR + sizeof (Elf64_Ehdr) + 
-                  NUM_OF_SEGMENTS * sizeof (Elf64_Phdr),
-    // ??                
-    RAM_ADDR    = TEXT_ADDR + PAGE_SIZE, 
-    FUNCT_ADDR  = RAM_ADDR  + PAGE_SIZE, 
-    TOTAL_SIZE  = sizeof (Elf64_Ehdr) + 
-                  NUM_OF_SEGMENTS * (sizeof (Elf64_Phdr) + PAGE_SIZE),
-};
+#define err_print(...) fprintf (stderr,   __VA_ARGS__); \
+                       fprintf (log_file, __VA_ARGS__); 
 
 //-----------------------------------------------------------------------------
 
-typedef double   signature;
-typedef double   elem_t;
-typedef uint32_t cmd_code;
+#define checkAlloc(name)                                                    \
+    if(!name)                                                               \
+    {                                                                       \
+        err_print ("ERROR: %s allocation, in file: %s, line: %d\n\n",       \
+                    #name,                                                  \
+                    __FILE__,                                               \
+                    __LINE__                                         );     \
+    }
+
+//-----------------------------------------------------------------------------
+
+#define checkFilePtr(name)                                                  \
+    if(!name)                                                               \
+    {                                                                       \
+        err_print ("ERROR: can't open %s, in file: %s, line: %d\n\n",       \
+                    #name,                                                  \
+                    __FILE__,                                               \
+                    __LINE__                                         );     \
+    }
 
 //-----------------------------------------------------------------------------
 
@@ -73,17 +68,20 @@ typedef uint32_t cmd_code;
 #define COMMON_JMP_CASE       \
     CONDITIONAL_JMP_CASE      \
     case JMP:                 \
-    case CALL:                 
+    case CALL:     
+    
+//-----------------------------------------------------------------------------            
 
-//-----------------------------------------------------------------------------
-
-// ??
 enum CMD_CODES
 {
     #define CMD_DEF(cmd, ...) \
         cmd,
 
+    //-----------------------------------------------------------------------------
+
     #include "processor/COMMON/include/codegen/codegen.h"
+
+    //-----------------------------------------------------------------------------
 
     #undef CMD_DEF
 };

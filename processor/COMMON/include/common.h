@@ -38,10 +38,8 @@ enum CMD_CODES
     {                                                \
         int pos_ch = arg_value;                      \
         curr_pos = pos_ch - 1;                       \
-    }                                                \
-                                                     \
-    stack_push (&cpu->Stk, first_number);            \
-    stack_push (&cpu->Stk, second_number);
+    }                                                
+                                                     
 
 //-----------------------------------------------------------------------------
 
@@ -69,7 +67,7 @@ enum code_INFO
 {
     SIZE_DIFFERENCE       = 40,
     CODE_SIZE             = 4,
-    OFFSET_CODE_SIGNATURE = 4,
+    SIZE_OF_CODE_SIGNATURE = 4,
 };
 
 //-----------------------------------------------------------------------------
@@ -78,7 +76,7 @@ enum BIT_MASKS
 {
     MASK_IMM = 0x20,
     MASK_REG = 0x40,
-    MASK_RAM = 0x80,
+    MASK_MEM = 0x80,
     MASK_CMD = 0x1F,
 };
 

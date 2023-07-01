@@ -10,9 +10,13 @@
 #include <string.h>
 #include <assert.h>
 
+#include "binary_translator/include/common.h"
+
 //-----------------------------------------------------------------------------
 
-int get_file_size (FILE *file);
+FILE *openFile (char *name, char *mode, FILE *log_file);
+
+int getFileSize (FILE *file);
 
 //-----------------------------------------------------------------------------
 

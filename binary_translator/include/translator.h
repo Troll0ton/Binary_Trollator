@@ -12,65 +12,79 @@
 
 //-----------------------------------------------------------------------------
 
-#define CURR_POS host_code->curr_pos
+#define CURR_POS x64_code->curr_pos
+
+enum ELF_INFO
+{
+    NUM_OF_SEGMENTS = 3,
+    LOAD_ADDR   = 0x400000,
+    TEXT_ADDR   = LOAD_ADDR + sizeof (Elf64_Ehdr) + 
+                  NUM_OF_SEGMENTS * sizeof (Elf64_Phdr),
+    // ??                
+    RAM_ADDR    = TEXT_ADDR + PAGE_SIZE, 
+    FUNCT_ADDR  = RAM_ADDR  + PAGE_SIZE, 
+    TOTAL_SIZE  = sizeof (Elf64_Ehdr) + 
+                  NUM_OF_SEGMENTS * (sizeof (Elf64_Phdr) + PAGE_SIZE),
+};
+
+
+//-----------------------------------------------------------------------------
+
+#define MEMORY_SIZE (3 * PAGE_SIZE)
 
 //-----------------------------------------------------------------------------
 //                                WRITING
 //-----------------------------------------------------------------------------
 
-#define writeSimpleOp(name)                       \
-    writeCode_(host_code, name, #name, name##_SIZE)
+#define writeSimpleOp(name)                                 \
+    writeCode_(x64_code, name, #name, name##_SIZE, log_file)
 
 
-#define writeByte(value)                     \
-    writeCode_(host_code, value, "BYTE", BYTE)
+#define writeByte(value)                                \
+    writeCode_(x64_code, value, "BYTE", BYTE, log_file)
 
 
-#define writePtr(value)                                   \
-    writeCode_(host_code, value, "PTR 4 BYTE", SIZE_OF_PTR)
+#define writePtr(value)                                                 \
+    writeCode_(x64_code, value, "PTR 4 BYTE", SIZE_OF_PTR, log_file)
 
 
-#define writeAbsPtr(value)                                        \
-    writeCode_(host_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR)
+#define writeAbsPtr(value)                                                      \
+    writeCode_(x64_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR, log_file)
 
 
-#define writeDouble(value)                                          \
-    writeCode_(host_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", 8)
+#define writeDouble(value)                                                      \
+    writeCode_(x64_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", 8, log_file)
 
 
-#define writeInt64(value)                        \
-    writeCode_(host_code, value, "INT 8 BYTE", 8)
+#define writeInt64(value)                                   \
+    writeCode_(x64_code, value, "INT 8 BYTE", 8, log_file)
 
 
-#define writeInt32(value)                        \
-    writeCode_(host_code, value, "INT 4 BYTE", 4)
+#define writeInt32(value)                                   \
+    writeCode_(x64_code, value, "INT 4 BYTE", 4, log_file)
 
 
 #define writeMaskingOp(opname, REG)                                                                                \
     strncat (dump_name, #opname " ", 90);                                                                          \
     strncat (dump_name, reg_info[REG].name, 10);                                                                   \
                                                                                                                    \
-    writeCode_(host_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag << MASK_R_##opname,  \
-               dump_name, opname##_SIZE);                                                                          \
+    writeCode_(x64_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag << MASK_R_##opname,  \
+               dump_name, opname##_SIZE, log_file);                                                                \
                                                                                                                    \
     memset (dump_name, '\0', 100);
 
 
 #define writeMaskingJmp(JMP)                                          \
-    writeCode_(host_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
-               #JMP, OP_CONDITIONAL_JMP_SIZE);   
+    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
+               #JMP, OP_CONDITIONAL_JMP_SIZE, log_file);   
 
 
 #define writeFormatStr(name)                       \
-    writeCode_(host_code, name, #name, name##_SIZE)                                                                
+    writeCode_(x64_code, name, #name, name##_SIZE, log_file)                                                                
 
 //-----------------------------------------------------------------------------
 
-// EsecutableInfo
-enum RAM_INFO
-{
-    RAM_INIT_SIZE = PAGE_SIZE,
-};
+
 
 //-----------------------------------------------------------------------------
 
@@ -100,6 +114,8 @@ enum JUMP_TARGETS_POS
 {
     POS_CONDITIONAL_JUMP        = OP_MOV_XMM0_STK_SIZE + 
                                   OP_MOV_XMM1_STK_SIZE + 
+                                  OP_ADD_REG_IMM_SIZE +
+                                  4 +
                                   OP_CMP_XMM0_XMM1_SIZE +
                                   OP_CONDITIONAL_JMP_SIZE,
 
@@ -145,32 +161,22 @@ enum JUMP_TARGETS_POS
 
 //-----------------------------------------------------------------------------
 
-typedef struct Host_code
+typedef struct X64_code
 {
     char *buffer;
     int   size;
     char *curr_pos;
     int   capacity;
     FILE *dump_file;
-} Host_code;
+} X64_code;
 
 //-----------------------------------------------------------------------------
 
-// ??
-typedef struct Ram
+typedef struct Memory
 {
     char *buffer;
     int   size;
-} Ram;
-
-//-----------------------------------------------------------------------------
-
-typedef struct Jmp_table
-{
-    char **buffer;
-    int    size;
-    FILE  *dump_file;
-} Jmp_table;   
+} Memory;
 
 //-----------------------------------------------------------------------------
 //                         REGS MASKING AND DUMPS UTILS
@@ -223,87 +229,81 @@ static const Reg_info reg_info[] =
 
 //-----------------------------------------------------------------------------
 
-Host_code *translateIrToHost (IR *ir, int bin_size);
+X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file);
 
-Host_code *hostCodeCtor (int init_size, int alignment);
+X64_code *x64CodeCtor (int init_size, int alignment, FILE *log_file);
 
-void hostCodeDtor (Host_code *Host_code);
+void x64CodeDtor (X64_code *X64_code);
 
-Ram *ramCtor (int size, int alignment);
+Memory *memoryCtor (int size, int alignment, FILE *log_file);
 
-void ramDtor (Ram *ram);
+void memoryDtor (Memory *ram);
 
-Jmp_table *jmpTableCtor (int size);
+void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file);
 
-void jmpTableDtor (Jmp_table *jmp_table);
+void handleIOAddress (X64_code *x64_code, IR_node ir_node, FILE *log_file);
 
-void handleHostJmpTargets (Host_code *Host_code, IR *ir, Jmp_table *jmp_table, 
-                          char *in_addr, char *out_addr                    );
+void translateTargetPtr (X64_code *x64_code, IR *ir, IR_node ir_node, FILE *log_file);
 
-void handleIOAddress (Host_code *Host_code, IR_node ir_node, 
-                      char *in_addr, char *out_addr       );
+void *alignedCalloc (int alignment, int size, FILE *log_file);
 
-void translateTargetPtr (Host_code *Host_code, IR_node ir_node, Jmp_table *jmp_table);
+void translateCmd (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void *alignedCalloc (int alignment, int size);
+void translateReg (IR_node *curr_node, FILE *log_file);
 
-void translateCmd (Host_code *Host_code, IR_node *curr_node);
+void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 
-void translateReg (IR_node *curr_node);
+void calculateMemoryAddrPushPop (X64_code *x64_code, 
+                              IR_node  *curr_node, 
+                              FILE     *log_file  );
 
-void translateHlt (Host_code *Host_code, IR_node *curr_node);
+void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 
-void calculateRamAddrPushPop (Host_code *Host_code, IR_node *curr_node);
+void translatePushMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 
-void translatePush (Host_code *Host_code, IR_node *curr_node);
+void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 
-void translatePushRam (Host_code *Host_code, IR_node *curr_node);
+void translatePop (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translatePushRegImm (Host_code *Host_code, IR_node *curr_node);
+void translatePopMemory (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translatePop (Host_code *Host_code, IR_node *curr_node);
+void translatePopReg (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translatePopRam (Host_code *Host_code, IR_node *curr_node);
+void translateArithmOperations (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translatePopReg (Host_code *Host_code, IR_node *curr_node);
+void translateOut (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateArithmOperations (Host_code *Host_code, IR_node *curr_node);
+void translateIn (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateOut (Host_code *Host_code, IR_node *curr_node);
+void translateDump (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateIn (Host_code *Host_code, IR_node *curr_node);
+void translateConditionalJmps (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateDump (Host_code *Host_code, IR_node *curr_node);
+void x64CodeResize (X64_code *x64_code, FILE *log_file);
 
-void translateConditionalJmps (Host_code *Host_code, IR_node *curr_node);
+void translateJmp (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateJmp (Host_code *Host_code, IR_node *curr_node);
+void translateCall (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateCall (Host_code *Host_code, IR_node *curr_node);
+void translateRet (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateRet (Host_code *Host_code, IR_node *curr_node);
+void translateMathFunctions (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void translateMathFunctions (Host_code *Host_code, IR_node *curr_node);
+void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size, FILE *log_file);
 
-void writeCode_(Host_code *Host_code, uint64_t value, const char *name, int size);
+void dumpCode (X64_code *X64_code, const char *name, int size, FILE *log_file);
 
-void dumpCode (Host_code *Host_code, const char *name, int size);
+void writePrologue (X64_code *X64_code, FILE *log_file);
 
-void writePrologue (Host_code *Host_code);
+void writeEpilogue (X64_code *X64_code, FILE *log_file);
 
-void writeEpilogue (Host_code *Host_code);
+void saveDataAddress (X64_code *x64_code, char *ram, FILE *log_file);
 
-void saveDataAddress (Host_code *Host_code, char *ram);
+void doubleScanf (double *value);
 
-void double_scanf (double *value);
+void doublePrintf (double *value);
 
-void double_printf (double *value);
-
-void runCode (char *code, int size);
-
-void hostDumpHeader (Host_code *Host_code);
-
-void jmpTableDump (Jmp_table *jmp_table);
+void x64DumpHeader (X64_code *X64_code, FILE *log_file);
 
 //-----------------------------------------------------------------------------
 

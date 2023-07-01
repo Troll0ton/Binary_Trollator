@@ -9,12 +9,24 @@
 #include "binary_translator/include/translator.h" 
 
 //-----------------------------------------------------------------------------
+//                                  ELF
+//-----------------------------------------------------------------------------
+// ELF header
+// Program headers:
+//      text        - size: PAGESIZE
+//      ram         - size: PAGESIZE
+//      lib (print) - size: PAGESIZE
+// Code
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 void programHeaderInit (char **curr_pos, int pos, Elf64_Word p_flags);
 
-void createELF (Host_code *Host_code);
+void runCode (char *code, int size);
 
-void writeInBinCode (char *pos, char *file_name, Host_code *Host_code);
+void createELF (X64_code *x64_code);
+
+void writeInBinCode (char *pos, char *file_name, X64_code *x64_code);
 
 //-----------------------------------------------------------------------------
 

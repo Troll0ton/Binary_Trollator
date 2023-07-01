@@ -106,9 +106,9 @@ typedef struct Assembler
 
 //-----------------------------------------------------------------------------
 
-int  assembler_ctor (Assembler *Asm, char *argv[]);
+int assembler_ctor  (Assembler *Asm, int argc, char *argv[]);
 
-int  asm_info_ctor  (Asm_info *info, char *argv[]);
+int  asm_info_ctor  (Asm_info *info, int argc, char *argv[]);
 
 void assembling     (Assembler *Asm);
 

@@ -2,7 +2,7 @@
 
 //-----------------------------------------------------------------------------
 
-int assembler_ctor (Assembler *Asm, char *argv[])
+int assembler_ctor (Assembler *Asm, int argc, char *argv[])
 {                                   //INITIALIZING
     Asm->code.array  = (char*) calloc (CODE_SIZE,  sizeof (char));
     Asm->label.array = (int*)  calloc (LABEL_SIZE, sizeof (int));
@@ -21,30 +21,44 @@ int assembler_ctor (Assembler *Asm, char *argv[])
         return ERROR_CTOR;
     }
                         //OFFSET
-    Asm->code.size      = OFFSET_CODE_SIGNATURE;
+    Asm->code.size      = SIZE_OF_CODE_SIGNATURE;
     Asm->code.capacity  = CODE_SIZE;
 
     Asm->label.size     = OFFSET_LABEL_SIGNATURE;
     Asm->label.capacity = LABEL_SIZE;
 
-    Asm->curr_pos = OFFSET_CODE_SIGNATURE;
+    Asm->curr_pos = SIZE_OF_CODE_SIGNATURE;
     Asm->offset   = 0;
 
     Asm->info      = { 0 };
     Asm->curr_line = { 0 };
 
-    return asm_info_ctor (&Asm->info, argv);
+    return asm_info_ctor (&Asm->info, argc, argv);
 }
 
 //-----------------------------------------------------------------------------
 
 #define DOUBLE_PASS (info->double_pass)
 
-int asm_info_ctor (Asm_info *info, char *argv[])
+int asm_info_ctor (Asm_info *info, int argc, char *argv[])
 {
     info->code_signature = SIGNATURE;
 
-    info->file_in   = fopen ("COMMON/files/input.asm",          "rb");
+    if(argc == 1)
+    {
+        info->file_in = fopen ("COMMON/files/input.asm", "rb");
+    }
+
+    else if(argc == 2)
+    {
+        info->file_in = fopen (argv[1], "rb");
+    }
+
+    else
+    {
+        printf ("UNDEFINED ARGUMENTS OF COMMAND LINE!\n\n");
+    }
+
     info->code_file = fopen ("processor/COMMON/files/code.bin", "wb");
 
     DOUBLE_PASS = false;
@@ -102,7 +116,7 @@ void parse_text (Assembler *Asm, Line *Text, File *File_input)
     }
 
     Asm->code.size = Asm->curr_pos;
-    Asm->curr_pos  = OFFSET_CODE_SIGNATURE;
+    Asm->curr_pos  = SIZE_OF_CODE_SIGNATURE;
 
     if(DOUBLE_PASS)
     {
@@ -359,7 +373,7 @@ void asm_dump (Assembler *Asm)
                             Asm->code.size,
                             (unsigned int) *(int*)(Asm->code.array));
 
-    for(int curr_pos = OFFSET_CODE_SIGNATURE; curr_pos < Asm->code.size; curr_pos++)
+    for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < Asm->code.size; curr_pos++)
     {
         char curr_cmd = *(Asm->code.array + curr_pos);
         int  offset   = 0;
