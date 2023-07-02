@@ -28,12 +28,12 @@ enum GUEST_CODE_BIT_MASKS
     MASK_CMD = 0x1F,
 };
 
-enum IR_REGS_IDENTIFIERS
+enum IR_REGS_IDS
 {
-    IR_IDENTIFIER_RAX = 1,
-    IR_IDENTIFIER_RBX = 2,
-    IR_IDENTIFIER_RCX = 3,
-    IR_IDENTIFIER_RDX = 4,
+    IR_RAX_ID = 1,
+    IR_RBX_ID = 2,
+    IR_RCX_ID = 3,
+    IR_RDX_ID = 4,
 };
 
 //-----------------------------------------------------------------------------

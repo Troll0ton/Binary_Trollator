@@ -69,10 +69,10 @@ IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file)
 void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file)
 {
     int num_cmd = 0;
-                        // skip signature
+                                                                               // skip signature
     for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < guest_code->size; curr_pos++)
     {       
-        CURR_IR_NODE.address.guest = curr_pos; // this is position in guest code
+        CURR_IR_NODE.address.guest = curr_pos;                                 // this is position in guest code
 
         curr_pos += handleBinMask (&ir->buffer[num_cmd], guest_code, curr_pos);            
 
@@ -94,7 +94,7 @@ int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
     if(curr_cmd & MASK_REG)
     {
         ir_node->reg_num = (uint8_t) *(double*)(guest_code->buffer + 
-                                                curr_pos +         // rax = 1, ...
+                                                curr_pos +                     // rax = 1, ...
                                                 SIZE_OF_INSTRUCTION) + 1; 
         offset += SIZE_OF_ARGUMENTS_SPECIFIER;
     }
@@ -123,9 +123,7 @@ int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
 
 //-----------------------------------------------------------------------------
 
-// changed addressing of jumps into Intermediate Representation
-
-void translateGuestJmpTargets (IR *ir, FILE *log_file)
+void translateGuestJmpTargets (IR *ir, FILE *log_file)                         // changed addressing of jumps into Intermediate Representation
 {
     for(int i = 0; i < ir->size; i++)
     {
@@ -147,8 +145,7 @@ void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file)
 
     for(int num_cmd = 0; num_cmd < ir->size; num_cmd++)
     {
-        // translate target absolute address
-        if(CURR_IR_NODE.address.guest == ir_node->imm_val.target)
+        if(CURR_IR_NODE.address.guest == ir_node->imm_val.target)              // translate target absolute address
         {
             ir_node->imm_val.target = num_cmd;
             return;

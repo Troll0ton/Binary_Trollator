@@ -14,27 +14,19 @@
 
 #define CURR_POS x64_code->curr_pos
 
-enum ELF_INFO
-{
-    NUM_OF_SEGMENTS = 3,
-    LOAD_ADDR   = 0x400000,
-    TEXT_ADDR   = LOAD_ADDR + sizeof (Elf64_Ehdr) + 
-                  NUM_OF_SEGMENTS * sizeof (Elf64_Phdr),
-    // ??                
-    RAM_ADDR    = TEXT_ADDR + PAGE_SIZE, 
-    FUNCT_ADDR  = RAM_ADDR  + PAGE_SIZE, 
-    TOTAL_SIZE  = sizeof (Elf64_Ehdr) + 
-                  NUM_OF_SEGMENTS * (sizeof (Elf64_Phdr) + PAGE_SIZE),
-};
-
-
-//-----------------------------------------------------------------------------
-
-#define MEMORY_SIZE (3 * PAGE_SIZE)
+#define MEMORY_SIZE PAGE_SIZE
 
 //-----------------------------------------------------------------------------
 //                                WRITING
 //-----------------------------------------------------------------------------
+
+#define makeRegMask(op, reg) \
+    makeRegMask_(reg, op##_ID_POS, op##_REG_BIT_POS)
+
+
+#define writeCode(name, mask)                                               \
+    writeCode_(x64_code, name##_OPCODE | mask, #name, name##_SIZE, log_file)
+
 
 #define writeSimpleOp(name)                                 \
     writeCode_(x64_code, name, #name, name##_SIZE, log_file)
@@ -84,7 +76,15 @@ enum ELF_INFO
 
 //-----------------------------------------------------------------------------
 
-
+enum ELF_INFO
+{
+    NUM_OF_SEGMENTS = 3,
+    LOAD_ADDR       = 0x400000,
+    TEXT_ADDR       = 0x4000E8,          
+    MEMORY_ADDRESS  = 0x4010E8, 
+    FUNCT_ADDR      = 0x4020E8, 
+    TOTAL_SIZE      = 0x30E8,
+};
 
 //-----------------------------------------------------------------------------
 
@@ -185,47 +185,7 @@ typedef struct Memory
 static char dump_name[100] = { 0 };
 
 // another header file
-
-typedef struct Reg_info
-{
-    const char *name;
-    char        reg_flag;
-    uint64_t    mask;
-} Reg_info;
-
 // make functons 
-
-// This array allow us to use more codegeneration in writeCode function
-// Register's masks are similar in different opcodes but there is a nuance here
-// For example: Difference between push rax, r8:
-//  push rax | 40 50
-//  push r8  | 41 50
-// To select correct opcode I need to set register's bit
-// In common occassion opcodes of some instructions which includes rax, rbx ...
-// are shorter than r8, r9 ...
-// But in way to follow standart I desided to use similar sizes of these opcodes.
-static const Reg_info reg_info[] =
-{
-    //  register's bit
-    //      |
-    //      V
-    {"RAX", 0, MASK_RAX},
-    {"RCX", 0, MASK_RCX},
-    {"RDX", 0, MASK_RDX},
-    {"RBX", 0, MASK_RBX},
-    {"RSP", 0, MASK_RSP},
-    {"RBP", 0, MASK_RBP},
-    {"RSI", 0, MASK_RSI},
-    {"RDI", 0, MASK_RDI},
-    {"R8",  1, MASK_R8  - X64_CODE_REG_MASK},
-    {"R9",  1, MASK_R9  - X64_CODE_REG_MASK},
-    {"R10", 1, MASK_R10 - X64_CODE_REG_MASK},
-    {"R11", 1, MASK_R11 - X64_CODE_REG_MASK},
-    {"R12", 1, MASK_R12 - X64_CODE_REG_MASK},
-    {"R13", 1, MASK_R13 - X64_CODE_REG_MASK},
-    {"R14", 1, MASK_R14 - X64_CODE_REG_MASK},
-    {"R15", 1, MASK_R15 - X64_CODE_REG_MASK},
-};
 
 //-----------------------------------------------------------------------------
 
@@ -250,6 +210,8 @@ void *alignedCalloc (int alignment, int size, FILE *log_file);
 void translateCmd (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
 void translateReg (IR_node *curr_node, FILE *log_file);
+
+uint64_t makeRegMask_(int reg_id, int reg_id_pos, int reg_bit, int reg_bit_pos);
 
 void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 

@@ -89,7 +89,7 @@ void createELF (X64_code *x64_code)
     printf ("Created ELF header\n\n");
     
     programHeaderInit (&curr_pos, TEXT_ADDR,  PF_R | PF_X);
-    programHeaderInit (&curr_pos, RAM_ADDR,   PF_R | PF_W);
+    programHeaderInit (&curr_pos, MEMORY_ADDRESS,   PF_R | PF_W);
     programHeaderInit (&curr_pos, FUNCT_ADDR, PF_R | PF_W | PF_X);
 
     printf ("Created program headers\n\n");

@@ -10,23 +10,21 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 
     X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE, log_file);
     x64DumpHeader (x64_code, log_file);
-
-    // so we can store only MEMORY_SIZE / 8 nums in memory
-    Memory *memory = memoryCtor (MEMORY_SIZE, PAGE_SIZE, log_file);
-
-    // save absolute address of RAM in R12 
-    saveDataAddress (x64_code, memory->buffer, log_file); 
+                                                                                 
+    Memory *memory = memoryCtor (MEMORY_SIZE, PAGE_SIZE, log_file);            // so we can store only MEMORY_SIZE / 8 nums in memory
+    
+    saveDataAddress (x64_code, memory->buffer, log_file);                      // save absolute address of RAM in R12 
 
     #ifndef ELF_MODE
-    writeMaskingOp (OP_POP_REG, MASK_R10); // save return address
+    uint64_t mask = makeRegMask (POP_REG, R10_ID);
+    writeCode (POP_REG, mask);                                                 // save return address
     #endif
-    
-    // now translate IR to opcodes and in filling jmp table
-    for(int i = 0; i < ir->size; i++)
-    {
+                                                                                  
+    for(int i = 0; i < ir->size; i++)                                          // now translate IR to opcodes and fill jmp table
+    {   
         CURR_IR_NODE.address.x64 = CURR_POS;
 
-        translateCmd (x64_code, &CURR_IR_NODE, log_file); // translate command
+        translateCmd (x64_code, &CURR_IR_NODE, log_file);                      // translate command
     }
     
     handleX64JmpTargets (x64_code, ir, log_file); 
@@ -45,12 +43,9 @@ X64_code *x64CodeCtor (int init_size, int alignment, FILE *log_file)
     X64_code *x64_code = (X64_code*) calloc (1, sizeof (X64_code));
     checkAlloc (x64_code);
 
-    x64_code->buffer = (char*) alignedCalloc (PAGE_SIZE, init_size, log_file); 
-
+    x64_code->buffer   = (char*) alignedCalloc (PAGE_SIZE, init_size, log_file); 
     x64_code->curr_pos = x64_code->buffer;
-
-    // Because of unknowing of the final size, the buffer is self-expanding 
-    x64_code->capacity = init_size; 
+    x64_code->capacity = init_size;                                            // Because of unknowing of the final size, the buffer is self-expanding 
 
     x64_code->dump_file = fopen ("binary_translator/dump/x64_dump.txt", "w+");
     checkFilePtr (x64_code->dump_file);
@@ -62,18 +57,15 @@ X64_code *x64CodeCtor (int init_size, int alignment, FILE *log_file)
 
 void x64CodeResize (X64_code *x64_code, FILE *log_file)
 {
-    // There is no analogue of realloc for aligned buffers, so I simply copy old buffer into the new
-    char *new_buffer = (char*) alignedCalloc (PAGE_SIZE, 
+    char *new_buffer = (char*) alignedCalloc (PAGE_SIZE,                       // There is no analogue of realloc for aligned buffers, so I simply copy old buffer into the new
                                               x64_code->capacity + X64_CODE_INCREASE_PAR, 
                                               log_file                                   ); 
 
     memcpy (new_buffer, x64_code->buffer, x64_code->capacity);
-    free   (x64_code->buffer);
+    free (x64_code->buffer);
 
     x64_code->buffer = new_buffer;
-
-    // new_size = old_size + X64_CODE_INCREASE_PAR
-    x64_code->capacity += X64_CODE_INCREASE_PAR;
+    x64_code->capacity += X64_CODE_INCREASE_PAR;                                // new_size = old_size + X64_CODE_INCREASE_PAR
 }
 
 //-----------------------------------------------------------------------------
@@ -89,7 +81,7 @@ void x64CodeDtor (X64_code *x64_code)
 }
 
 //-----------------------------------------------------------------------------
-// memory ????
+
 Memory *memoryCtor (int size, int alignment, FILE *log_file)
 {
     Memory *memory = (Memory*) calloc (1, sizeof (Memory));
@@ -117,37 +109,52 @@ void memoryDtor (Memory *memory)
 
 void writePrologue (X64_code *x64_code, FILE *log_file)
 {
+    uint64_t mask = 0;
     // create lite version of stack's frame
-    writeSimpleOp  (OP_PUSHA);
-    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
-    writeSimpleOp  (OP_MOV_RBP_RSP);
+    writeCode (PUSHA, 0);
 
-    writeSimpleOp  (OP_ALIGN_STK); 
-    writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
-    writeInt32     (8);
-    writeMaskingOp (OP_PUSH_REG, MASK_RBP);
+    mask = makeRegMask (POP_REG, RSP_ID);
+    writeCode (PUSH_REG, mask);
+
+    writeCode (MOV_RBP_RSP, 0);
+    writeCode (ALIGN_STK,   0); 
+
+    mask = makeRegMask (SUB_REG_IMM, RSP_ID);
+    writeCode (SUB_REG_IMM, mask);
+    writeInt32 (8);
+
+    mask = makeRegMask (SUB_REG_IMM, RBP_ID);
+    writeCode (PUSH_REG, mask);
 }
 
 //-----------------------------------------------------------------------------
 
 void writeEpilogue (X64_code *x64_code, FILE *log_file) 
 {
-    writeMaskingOp (OP_POP_REG, MASK_RBP);
+    uint64_t mask = 0;
+
+    mask = makeRegMask (POP_REG, RBP_ID);
+    writeCode (POP_REG, mask);
     
-    writeSimpleOp  (OP_MOV_RSP_RBP);
-    writeMaskingOp (OP_POP_REG, MASK_RBP);
-    writeSimpleOp  (OP_POPA);
+    writeCode (MOV_RSP_RBP, 0);
+
+    mask = makeRegMask (POP_REG, RBP_ID);
+    writeCode (POP_REG, mask);
+
+    writeCode (POPA, 0);
 }
 
 //-----------------------------------------------------------------------------
-
-// r12 <- ptr to 'memory' (troll-code representation)
-void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file) 
+                                                                     
+void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file)        // r12 <- ptr to 'memory' (troll-code representation)
 {
-    writeMaskingOp (OP_MOV_REG_IMM, MASK_R12);
+    uint64_t mask = 0;
 
-    #ifdef ELF_MODE
-    uint64_t abs_ptr = (uint64_t)(x64_code->buffer + RAM_ADDR - TEXT_ADDR); // make correct addressing 
+    mask = makeRegMask (MOV_REG_IMM, R12_ID);
+    writeCode (MOV_REG_IMM, mask);
+
+    #ifdef ELF_MODE                                                            // make correct addressing 
+    uint64_t abs_ptr = (uint64_t)(x64_code->buffer + MEMORY_ADDRESS - TEXT_ADDR); 
     #else
     uint64_t abs_ptr = (uint64_t)(memory); 
     #endif
@@ -196,7 +203,7 @@ void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file)
                 break;
             default:
                 break; 
-            // else skip this command -> not jump type (nothing to translate here)
+                                                                               // else skip this command -> not jump type (nothing to translate here)
         }   
     }
 }
@@ -212,11 +219,10 @@ void handleIOAddress (X64_code *x64_code, IR_node ir_node, FILE *log_file)
         CURR_POS += POS_IN;
 
         writePtr (ptr);
-
-        // IN IS NOT SUPPORTED IN ELF MODE
+                                                                               // IN IS NOT SUPPORTED IN ELF MODE
     }
 
-    else // OUT
+    else                                                                       // OUT
     {
         #ifdef ELF_MODE
         uint32_t ptr = (uint64_t) FUNCT_ADDR - 
@@ -385,23 +391,21 @@ void translateCmd (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
-void translateReg (IR_node *curr_node, FILE *log_file)
+void translateReg (IR_node *curr_node, FILE *log_file)                         // this function translate IR register ids into X86-64 register ids
 {
-    // this function translate IR register into X86-64 register masks
-
     switch(curr_node->reg_num)
     {
-        case IR_IDENTIFIER_RAX:
-            curr_node->reg_num = MASK_RAX;
+        case IR_RAX_ID:
+            curr_node->reg_num = RAX_ID;
             break; 
-        case IR_IDENTIFIER_RBX:
-            curr_node->reg_num = MASK_RBX;
+        case IR_RBX_ID:
+            curr_node->reg_num = RBX_ID;
             break; 
-        case IR_IDENTIFIER_RCX:
-            curr_node->reg_num = MASK_RCX;
+        case IR_RCX_ID:
+            curr_node->reg_num = RCX_ID;
             break; 
-        case IR_IDENTIFIER_RDX:
-            curr_node->reg_num = MASK_RDX;
+        case IR_RDX_ID:
+            curr_node->reg_num = RDX_ID;
             break; 
         default:
             log_print ("UNKNOWN REG VALUE IN IR!\n\n");
@@ -411,23 +415,45 @@ void translateReg (IR_node *curr_node, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
+uint64_t makeRegMask_(int reg_id, int reg_id_pos, int reg_bit_pos)
+{
+    uint64_t reg_mask = 0;
+    uint64_t reg_bit  = 0;
+
+    if(reg_id >= 0b1000)                                                       // handle rnums ids
+    {
+        reg_id -= 0b1000;
+        reg_bit = 1;
+    }
+
+    reg_mask |= reg_id  << reg_id_pos;
+    reg_mask |= reg_bit << reg_bit_pos;
+
+    return reg_mask;
+}
+
+//-----------------------------------------------------------------------------
+
 void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
+    uint64_t mask = 0;
+
     #ifdef ELF_MODE
-    // mov rax, 0x3c
-    writeMaskingOp (OP_MOV_REG_IMM, MASK_RAX);
+    mask = makeRegMask (MOV_REG_IMM, RAX_ID);
+    writeCode (MOV_REG_IMM, mask);                                              // mov rax, 0x3c
     writeInt64 (0x3C);
 
-    // xor rdi, rdi
-    writeMaskingOp (OP_MOV_REG_IMM, MASK_RDI);
+    mask = makeRegMask (MOV_REG_IMM, RDI_ID);                                   // xor rdi, rdi
+    writeCode (MOV_REG_IMM, mask);
     writeInt64 (0x0);
-
-    // syscall
-    writeSimpleOp (OP_SYSCALL);
+                                                        
+    writeCode (OP_SYSCALL, 0);                                                  // syscall
 
     #else
-    writeMaskingOp (OP_PUSH_REG, MASK_R10);
-    writeSimpleOp  (OP_RET);
+    mask = makeRegMask (PUSH_REG, R10_ID);
+    writeCode (PUSH_REG, mask);
+
+    writeCode (RET, 0);
     #endif
 }
 
@@ -437,60 +463,53 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
                               IR_node  *curr_node, 
                               FILE     *log_file  )
 {
-    // put imm64 value into R13 (R13 is tmp register)
-    writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
+    uint64_t mask = 0;
+                                                                                
+    mask = makeRegMask (MOV_REG_IMM, R13_ID);                                  // put imm64 value into R13 (R13 is tmp register)
+    writeCode (MOV_REG_IMM, mask);
 
-    // put int if it will used in memory access
-    uint64_t num = (uint64_t) curr_node->imm_val.num;
+    uint64_t num = (uint64_t) curr_node->imm_val.num;                          // put int if it will used in memory access
     writeInt64 (num);
-    
-    // I store all numbers in double representation 
-    // So firstly I need to translate register value to int
-    if(curr_node->reg_num)
-    {   
-        // support PUSH/POP [reg + imm]
-        translateReg (curr_node, log_file);
+                                                                               // I store all numbers in double representation 
+                                                                               // So firstly I need to translate register value to int
+    if(curr_node->reg_num)                                                      
+    {                                  
+        translateReg (curr_node, log_file);                                    // support PUSH/POP [reg + imm]
+                                                                                
+        mask = makeRegMask (PUSH_REG, curr_node->reg_num);                     // save double value of register
+        writeCode (PUSH_REG, mask);
 
-        // save double value of register
-        writeMaskingOp (OP_PUSH_REG, curr_node->reg_num); 
+        mask = makeRegMask (PUSH_REG, curr_node->reg_num);                     // push reg
+        writeCode (PUSH_REG, mask);  
+        
+        writeCode (MOV_XMM0_STK, 0);                                           // pop xmm0
 
-        writeMaskingOp (OP_PUSH_REG, curr_node->reg_num);  // push reg
-        writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
-        writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+        mask = makeRegMask (ADD_REG_IMM, RSP_ID);
+        writeCode (ADD_REG_IMM, mask);
         writeInt32 (8);
 
-        // cvttsd2si reg, xmm0 <- translate double to int
-        writeMaskingOp (OP_CVTTSD2SI_REG, curr_node->reg_num);
+        mask = makeRegMask (CVTTSD2SI_REG, curr_node->reg_num);                // cvttsd2si reg, xmm0 <- translate double to int           
+        writeCode (CVTTSD2SI_REG, mask);
 
-        writeMaskingOp (OP_ADD_R13_REG, curr_node->reg_num); // add r13, r_x
+        mask = makeRegMask (ADD_R13_REG, curr_node->reg_num);                  // add r13, r_x
+        writeCode (ADD_R13_REG, mask); 
 
-        // load double value of register
-        writeMaskingOp (OP_POP_REG, curr_node->reg_num);
+        mask = makeRegMask (POP_REG, curr_node->reg_num);                      // load double value of register
+        writeCode (POP_REG, mask);                       
     }
+                                                                               // shl is used here because of imm's size: push/pop [a] <=> push/pop [8*a]
+    mask = makeRegMask (SHL_REG, R13_ID);                                      // I had relative addressing in my assembler and processor
+    writeCode (SHL_REG, mask); 
+    writeByte (3);                                                             // shl reg, 3 <=> mul reg, 8
 
-    // shl is used here because of imm's size: push/pop [a] <=> push/pop [8*a]
-    // I had relative addressing in my assembler and processor
-    writeMaskingOp (OP_SHL_REG, MASK_R13); 
-    writeByte (3); // shl reg, 3 <=> mul reg, 8
-
-    //                                 data address
-    //                                     |
-    //                                     V
-    // in result I operate with memory cell  r12[r13]
-    writeMaskingOp (OP_ADD_R13_REG, MASK_R12); // add r13, data address
-
-    //--------------------------------
-    // So I store final address in R13
-    //--------------------------------
+    mask = makeRegMask (ADD_R13_REG, R12_ID);                                  // in result I operate with memory cell  r12[r13]
+    writeCode (ADD_R13_REG, mask);                                             // add r13, data address
 }
 
 //-----------------------------------------------------------------------------
 
 void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {  
-    // I have 2 different types of push that have different purposes:
-    // push from memory
-    // push reg + imm
     if(curr_node->memory_flag)
     {
         translatePushMemory (x64_code, curr_node, log_file);
@@ -506,45 +525,49 @@ void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
 void translatePushMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
+    uint64_t mask = 0;
+
     calculateMemoryAddrPushPop (x64_code, curr_node, log_file);
 
-    writeSimpleOp (OP_MOV_R13_RAM); // mov r13, [r13]
-
-    // and pushing it into stack
-    writeMaskingOp (OP_PUSH_REG, MASK_R13);  // push r13
+    writeCode (MOV_R13_RAM, 0);                                                // mov r13, [r13]
+    
+    mask = makeRegMask (PUSH_REG, R13_ID);                                     // and pushing it into stack
+    writeCode (PUSH_REG, mask);                                                // push r13
 }
 
 //-----------------------------------------------------------------------------
 
 void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    writeMaskingOp (OP_MOV_REG_IMM, MASK_R13);
+    uint64_t mask = 0;
 
-    // put double value if it is just num
-    writeDouble (curr_node->imm_val.num);
+    mask = makeRegMask (MOV_REG_IMM, R13_ID);  
+    writeCode (MOV_REG_IMM, mask);
+    
+    writeDouble (curr_node->imm_val.num);                                      // put double value if it is just num
 
     if(curr_node->reg_num)
     {
-        // support PUSH reg + imm
-        translateReg (curr_node, log_file);
-        writeMaskingOp (OP_ADD_R13_REG, curr_node->reg_num); // add r13, reg
+        translateReg (curr_node, log_file);                                    // support PUSH reg + imm
+
+        mask = makeRegMask (ADD_R13_REG, curr_node->reg_num);                  // add r13, reg
+        writeCode (ADD_R13_REG, mask);              
     }
 
-    writeMaskingOp (OP_PUSH_REG, MASK_R13);  // push r13
+    mask = makeRegMask (PUSH_REG, R13_ID);                                     // push r13
+    writeCode (PUSH_REG, mask);  
 }
 
 //-----------------------------------------------------------------------------
 
 void translatePop (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    // separate into two occasions (similar to push)
-    if(curr_node->memory_flag)
+    if(curr_node->memory_flag)                                                 // separate into two occasions (similar to push)
     {
         translatePopMemory (x64_code, curr_node, log_file);
     }
 
-    // pop [reg + val]
-    else
+    else                                                                       // pop [reg + val]
     {
         translatePopReg (x64_code, curr_node, log_file);
     }
@@ -554,31 +577,36 @@ void translatePop (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
 void translatePopMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
+    uint64_t mask = 0;
+
     calculateMemoryAddrPushPop (x64_code, curr_node, log_file);
         
-    // pull out from stack num value
-    writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
-    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    writeCode (MOV_XMM0_STK, 0);                                               // pull out from stack num value
+    
+    mask = makeRegMask (PUSH_REG, RSP_ID); 
+    writeCode (ADD_REG_IMM, mask);
     writeInt32 (8);
 
     // mov it to memory
-    writeSimpleOp (OP_MOV_MEM_XMM0);
+    writeCode (MOV_MEM_XMM0, 0);
 }
 
 //-----------------------------------------------------------------------------
 
 void translatePopReg (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
+    uint64_t mask = 0;
+
     if(curr_node->reg_num)
     {
         translateReg (curr_node, log_file);
 
-        // pull out num from stack and store in register
-        writeMaskingOp (OP_MOV_REG_STK, curr_node->reg_num);
+        mask = makeRegMask (MOV_REG_STK, curr_node->reg_num);                  // pull out num from stack and store in register
+        writeCode (MOV_REG_STK, mask);
     }
 
-    // pop 
-    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pop 
+    writeCode (ADD_REG_IMM, mask);
     writeInt32 (8);
 }
 
@@ -586,53 +614,54 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
 void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    // pull out numbers from stack and do arithm operation
-    // arithm xmm1, xmm0
-    writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
-    writeSimpleOp (OP_MOV_XMM1_STK); // pop xmm1
+    uint64_t mask = 0;
+                                                                               // pull out numbers from stack and do arithm operation
+                                                                               // arithm xmm1, xmm0
+    writeCode (MOV_XMM0_STK, 0);                                               // pop xmm0
+    writeCode (MOV_XMM1_STK, 0);                                               // pop xmm1
 
     switch(curr_node->command)
     {
         case ADD:
-            writeSimpleOp (OP_ADDSD_XMM1_XMM0);
+            writeCode (ADDSD_XMM1_XMM0, 0);
             break;
         case SUB:
-            writeSimpleOp (OP_SUBSD_XMM1_XMM0);
+            writeCode (SUBSD_XMM1_XMM0, 0);
             break;
         case MUL:
-            writeSimpleOp (OP_MULSD_XMM1_XMM0);
+            writeCode (MULSD_XMM1_XMM0, 0);
             break;
         case DIV:
-            writeSimpleOp (OP_DIVSD_XMM1_XMM0);
+            writeCode (DIVSD_XMM1_XMM0, 0);
             break;
         default:
             log_print ("ARITHM OPERATION - UNKNOWN COMMAND!\n");
             break;
     }
 
-    // save only one value (second is not useful anymore)
-    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // save only one value (second is not useful anymore)                  
+    writeCode (ADD_REG_IMM, mask);
     writeInt32 (8);
 
-    writeSimpleOp (OP_MOV_STK_XMM1);  // push xmm1   
+    writeCode (MOV_STK_XMM1, 0);                                               // push xmm1   
 }
 
 //-----------------------------------------------------------------------------
 
 void translateIn (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    // reserve 8 bytes for input number
-    writeMaskingOp (OP_SUB_REG_IMM, MASK_RSP);
+    uint64_t mask = 0;
+
+    mask = makeRegMask (SUB_REG_IMM, RSP_ID);                                   // reserve 8 bytes for input number
+    writeCode (SUB_REG_IMM, mask);
     writeInt32 (8);
 
-    // save ptr in rdi (as first argument of function)
-    writeSimpleOp (OP_LEA_RDI_STK_ARG);
+    writeCode (LEA_RDI_STK_ARG, 0);                                             // save ptr in rdi (as first argument of function)
     writePrologue (x64_code, log_file);
 
-    writeSimpleOp (OP_CALL);
-
-    // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    writeCode (CALL, 0);
+                                                                                // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR;                                          // skip ptr for now
     writeEpilogue (x64_code, log_file);
 }
 
@@ -640,38 +669,42 @@ void translateIn (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
 void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    #ifdef ELF_MODE
-    writeSimpleOp (OP_MOV_XMM0_STK); // pop xmm0
-    writeMaskingOp (OP_PUSH_REG, MASK_RAX); 
+    uint64_t mask = 0;
 
-    // cvttsd2si reg, xmm0 <- translate double to int
-    writeMaskingOp (OP_CVTTSD2SI_REG, MASK_RAX);
+    #ifdef ELF_MODE
+    writeCode (MOV_XMM0_STK, 0);                                               // pop xmm0
+
+    mask = makeRegMask (PUSH_REG, RAX_ID); 
+    writeCode (PUSH_REG, mask); 
+
+    mask = makeRegMask (CVTTSD2SI_REG, RAX_ID);                                // cvttsd2si reg, xmm0 <- translate double to int
+    writeCode (CVTTSD2SI_REG, mask);
+
     writePrologue (x64_code);
 
-    writeSimpleOp (OP_CALL);
-
-    // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    writeCode (CALL, 0);
+                                                                               // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr for now
     writeEpilogue (x64_code);
-    writeMaskingOp (OP_POP_REG, MASK_RAX); 
 
-    // pull out outputed number
-    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    mask = makeRegMask (POP_REG, RAX_ID);
+    writeCode (POP_REG, mask); 
+
+    mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out outputed number
+    writeCode (ADD_REG_IMM, mask);
     writeInt32 (8);
 
     #else
-    // save ptr in rdi (as first argument of function)
-    writeSimpleOp (OP_LEA_RDI_STK_ARG);
+    writeCode (LEA_RDI_STK_ARG, 0);                                            // save ptr in rdi (as first argument of function)
     writePrologue (x64_code, log_file);
 
-    writeSimpleOp (OP_CALL);
-
-    // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+    writeCode (CALL, 0);
+                                                                               // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr for now
     writeEpilogue (x64_code, log_file);
 
-    // pull out outputed number
-    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
+    mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out already printed number
+    writeCode (ADD_REG_IMM, mask);
     writeInt32 (8);
     #endif
 }
@@ -680,10 +713,12 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
 void translateDump (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
+    uint64_t mask = 0;
+    
     writePrologue (x64_code, log_file);
 
     // You can change troll_print on your own purposes
-    writeSimpleOp (OP_CALL);
+    writeCode (CALL, 0);
     uint32_t funct_ptr = (uint64_t) trollDump - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writePtr (funct_ptr);
 
