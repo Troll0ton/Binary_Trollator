@@ -14,7 +14,7 @@
 // ELF header
 // Program headers:
 //      text        - size: PAGESIZE
-//      ram         - size: PAGESIZE
+//      memory      - size: PAGESIZE
 //      lib (print) - size: PAGESIZE
 // Code
 //-----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
-//! @file common.h <- Binary translator
+//! @file common.h 
 
-#ifndef BT_COMMON_H
-#define BT_COMMON_H
+#ifndef COMMON_H
+#define COMMON_H
 
 //-----------------------------------------------------------------------------
 
@@ -94,4 +94,4 @@ enum ERROR_CODES
 
 //-----------------------------------------------------------------------------
 
-#endif // BT_COMMON_H
+#endif // COMMON_H

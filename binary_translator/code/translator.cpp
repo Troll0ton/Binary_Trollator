@@ -14,14 +14,14 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
     X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE, log_file);
     x64DumpHeader (x64_code, log_file);
                                                                                  
-    Memory *memory = memoryCtor (PAGE_SIZE, PAGE_SIZE, log_file);            // so we can store only MEMORY_SIZE / 8 nums in memory
+    Memory *memory = memoryCtor (PAGE_SIZE, PAGE_SIZE, log_file);              // we can store only MEMORY_SIZE / 8 nums in memory
     
     saveDataAddress (x64_code, memory->buffer, log_file);                      // save absolute address of RAM in R12 
 
     #ifndef ELF_MODE
     char op_name[MAX_LEN_OF_LINE] = { 0 };
     uint64_t mask = makeRegMask (POP_REG, R10_ID);
-    writeCode (POP_REG, mask);                                                 // save return address
+    writeOpcode (POP_REG, mask);                                               // save return address
     #endif
                                                                                   
     for(int i = 0; i < ir->size; i++)                                          // now translate IR to opcodes and fill jmp table
@@ -116,20 +116,20 @@ void writePrologue (X64_code *x64_code, FILE *log_file)
     uint64_t mask = 0;
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    writeCode (PUSHA, 0);                                                      // create lite version of stack's frame
+    writeOpcode (PUSHA, 0);                                                      // create lite version of stack's frame
 
     mask = makeRegMask (PUSH_REG, RBP_ID);
-    writeCode (PUSH_REG, mask);
+    writeOpcode (PUSH_REG, mask);
 
-    writeCode (MOV_RBP_RSP, 0);
-    writeCode (ALIGN_STK, 0); 
+    writeOpcode (MOV_RBP_RSP, 0);
+    writeOpcode (ALIGN_STK, 0); 
 
     mask = makeRegMask (SUB_REG_IMM, RSP_ID);
-    writeCode  (SUB_REG_IMM, mask);
+    writeOpcode (SUB_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
 
     mask = makeRegMask (PUSH_REG, RBP_ID);
-    writeCode (PUSH_REG, mask);
+    writeOpcode (PUSH_REG, mask);
 }
 
 //-----------------------------------------------------------------------------
@@ -140,14 +140,14 @@ void writeEpilogue (X64_code *x64_code, FILE *log_file)
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (POP_REG, RBP_ID);
-    writeCode (POP_REG, mask);
+    writeOpcode (POP_REG, mask);
     
-    writeCode (MOV_RSP_RBP, 0);
+    writeOpcode (MOV_RSP_RBP, 0);
 
     mask = makeRegMask (POP_REG, RBP_ID);
-    writeCode (POP_REG, mask);
+    writeOpcode (POP_REG, mask);
 
-    writeCode (POPA, 0);
+    writeOpcode (POPA, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -158,7 +158,7 @@ void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file)        /
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (MOV_REG_IMM, R12_ID);
-    writeCode (MOV_REG_IMM, mask);
+    writeOpcode (MOV_REG_IMM, mask);
 
     #ifdef ELF_MODE                                                            // make correct addressing 
     uint64_t abs_ptr = (uint64_t)(x64_code->buffer + MEMORY_ADDRESS - TEXT_ADDR); 
@@ -430,20 +430,20 @@ void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
     #ifdef ELF_MODE
     mask = makeRegMask (MOV_REG_IMM, RAX_ID);
-    writeCode  (MOV_REG_IMM, mask);                                             // mov rax, 0x3c
+    writeOpcode (MOV_REG_IMM, mask);                                           // mov rax, 0x3c
     writeValue (0x3C, SIZE_OF_LONG_NUM);
 
     mask = makeRegMask (MOV_REG_IMM, RDI_ID);                                   // xor rdi, rdi
-    writeCode  (MOV_REG_IMM, mask);
+    writeOpcode (MOV_REG_IMM, mask);
     writeValue (0x0, SIZE_OF_LONG_NUM);
                                                         
-    writeCode (SYSCALL, 0);                                                     // syscall
+    writeOpcode (SYSCALL, 0);                                                  // syscall
 
     #else
     mask = makeRegMask (PUSH_REG, R10_ID);
-    writeCode (PUSH_REG, mask);
+    writeOpcode (PUSH_REG, mask);
 
-    writeCode (RET, 0);
+    writeOpcode (RET, 0);
     #endif
 }
 
@@ -457,7 +457,7 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
     char op_name[MAX_LEN_OF_LINE] = { 0 };
                                                                                 
     mask = makeRegMask (MOV_REG_IMM, R13_ID);                                  // put imm64 value into R13 (R13 is tmp register)
-    writeCode (MOV_REG_IMM, mask);
+    writeOpcode (MOV_REG_IMM, mask);
 
     uint64_t num = (uint64_t) curr_node->imm_val.num;                          // put int if it will used in memory access
     writeValue (num, SIZE_OF_LONG_NUM);
@@ -468,33 +468,33 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
         translateReg (curr_node, log_file);                                    // support PUSH/POP [reg + imm]
                                                                                 
         mask = makeRegMask (PUSH_REG, curr_node->reg_num);                     // save double value of register
-        writeCode (PUSH_REG, mask);
+        writeOpcode (PUSH_REG, mask);
 
         mask = makeRegMask (PUSH_REG, curr_node->reg_num);                     // push reg
-        writeCode (PUSH_REG, mask);  
+        writeOpcode (PUSH_REG, mask);  
         
-        writeCode (MOV_XMM0_STK, 0);                                           // pop xmm0
+        writeOpcode (MOV_XMM0_STK, 0);                                         // pop xmm0
 
         mask = makeRegMask (ADD_REG_IMM, RSP_ID);
-        writeCode  (ADD_REG_IMM, mask);
+        writeOpcode (ADD_REG_IMM, mask);
         writeValue (8, SIZE_OF_NUM);
 
         mask = makeRegMask (CVTTSD2SI_REG, curr_node->reg_num);                // cvttsd2si reg, xmm0 <- translate double to int           
-        writeCode (CVTTSD2SI_REG, mask);
+        writeOpcode (CVTTSD2SI_REG, mask);
 
         mask = makeRegMask (ADD_R13_REG, curr_node->reg_num);                  // add r13, r_x
-        writeCode (ADD_R13_REG, mask); 
+        writeOpcode (ADD_R13_REG, mask); 
 
         mask = makeRegMask (POP_REG, curr_node->reg_num);                      // load double value of register
-        writeCode (POP_REG, mask);                       
+        writeOpcode (POP_REG, mask);                       
     }
                                                                                // shl is used here because of imm's size: push/pop [a] <=> push/pop [8*a]
     mask = makeRegMask (SHL_REG, R13_ID);                                      // I had relative addressing in my assembler and processor
-    writeCode  (SHL_REG, mask); 
+    writeOpcode (SHL_REG, mask); 
     writeValue (3, BYTE);                                                      // shl reg, 3 <=> mul reg, 8
 
     mask = makeRegMask (ADD_R13_REG, R12_ID);                                  // in result I operate with memory cell  r12[r13]
-    writeCode (ADD_R13_REG, mask);                                             // add r13, data address
+    writeOpcode (ADD_R13_REG, mask);                                           // add r13, data address
 }
 
 //-----------------------------------------------------------------------------
@@ -521,10 +521,10 @@ void translatePushMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file
 
     calculateMemoryAddrPushPop (x64_code, curr_node, log_file);
 
-    writeCode (MOV_R13_RAM, 0);                                                // mov r13, [r13]
+    writeOpcode (MOV_R13_RAM, 0);                                              // mov r13, [r13]
     
     mask = makeRegMask (PUSH_REG, R13_ID);                                     // and pushing it into stack
-    writeCode (PUSH_REG, mask);                                                // push r13
+    writeOpcode (PUSH_REG, mask);                                              // push r13
 }
 
 //-----------------------------------------------------------------------------
@@ -535,7 +535,7 @@ void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (MOV_REG_IMM, R13_ID);  
-    writeCode  (MOV_REG_IMM, mask);
+    writeOpcode  (MOV_REG_IMM, mask);
     writeValue (*(uint64_t*) &curr_node->imm_val.num, SIZE_OF_LONG_NUM);       // put double value if it is just num
 
     if(curr_node->reg_num)
@@ -543,11 +543,11 @@ void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file
         translateReg (curr_node, log_file);                                    // support PUSH reg + imm
 
         mask = makeRegMask (ADD_R13_REG, curr_node->reg_num);                  // add r13, reg
-        writeCode (ADD_R13_REG, mask);              
+        writeOpcode (ADD_R13_REG, mask);              
     }
 
     mask = makeRegMask (PUSH_REG, R13_ID);                                     // push r13
-    writeCode (PUSH_REG, mask);  
+    writeOpcode (PUSH_REG, mask);  
 }
  
 //-----------------------------------------------------------------------------
@@ -574,13 +574,13 @@ void translatePopMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
     calculateMemoryAddrPushPop (x64_code, curr_node, log_file);
         
-    writeCode (MOV_XMM0_STK, 0);                                               // pull out from stack num value
+    writeOpcode (MOV_XMM0_STK, 0);                                               // pull out from stack num value
     
     mask = makeRegMask (ADD_REG_IMM, RSP_ID); 
-    writeCode  (ADD_REG_IMM, mask);
+    writeOpcode (ADD_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
 
-    writeCode (MOV_MEM_XMM0, 0);                                               // mov it to memory
+    writeOpcode (MOV_MEM_XMM0, 0);                                               // mov it to memory
 }
 
 //-----------------------------------------------------------------------------
@@ -595,11 +595,11 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
         translateReg (curr_node, log_file);
 
         mask = makeRegMask (MOV_REG_STK, curr_node->reg_num);                  // pull out num from stack and store in register
-        writeCode (MOV_REG_STK, mask);
+        writeOpcode (MOV_REG_STK, mask);
     }
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pop 
-    writeCode  (ADD_REG_IMM, mask);
+    writeOpcode (ADD_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
 }
 
@@ -611,22 +611,22 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *lo
     char op_name[MAX_LEN_OF_LINE] = { 0 };
                                                                                // pull out numbers from stack and do arithm operation
                                                                                // arithm xmm1, xmm0
-    writeCode (MOV_XMM0_STK, 0);                                               // pop xmm0
-    writeCode (MOV_XMM1_STK, 0);                                               // pop xmm1
+    writeOpcode (MOV_XMM0_STK, 0);                                             // pop xmm0
+    writeOpcode (MOV_XMM1_STK, 0);                                             // pop xmm1
 
     switch(curr_node->command)
     {
         case ADD:
-            writeCode (ADDSD_XMM1_XMM0, 0);
+            writeOpcode (ADDSD_XMM1_XMM0, 0);
             break;
         case SUB:
-            writeCode (SUBSD_XMM1_XMM0, 0);
+            writeOpcode (SUBSD_XMM1_XMM0, 0);
             break;
         case MUL:
-            writeCode (MULSD_XMM1_XMM0, 0);
+            writeOpcode (MULSD_XMM1_XMM0, 0);
             break;
         case DIV:
-            writeCode (DIVSD_XMM1_XMM0, 0);
+            writeOpcode (DIVSD_XMM1_XMM0, 0);
             break;
         default:
             log_print ("ARITHM OPERATION - UNKNOWN COMMAND!\n");
@@ -634,10 +634,10 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *lo
     }
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // save only one value (second is not useful anymore)                  
-    writeCode  (ADD_REG_IMM, mask);
+    writeOpcode (ADD_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
 
-    writeCode (MOV_STK_XMM1, 0);                                               // push xmm1   
+    writeOpcode (MOV_STK_XMM1, 0);                                             // push xmm1   
 }
 
 //-----------------------------------------------------------------------------
@@ -648,13 +648,13 @@ void translateIn (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (SUB_REG_IMM, RSP_ID);                                   // reserve 8 bytes for input number
-    writeCode  (SUB_REG_IMM, mask);
+    writeOpcode (SUB_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
 
-    writeCode (LEA_RDI_STK_ARG, 0);                                             // save ptr in rdi (as first argument of function)
+    writeOpcode (LEA_RDI_STK_ARG, 0);                                           // save ptr in rdi (as first argument of function)
     writePrologue (x64_code, log_file);
 
-    writeCode (CALL, 0);                                                              
+    writeOpcode (CALL, 0);                                                              
     uint32_t ptr = (uint64_t) doubleScanf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (ptr, SIZE_OF_PTR);
 
@@ -669,17 +669,17 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     #ifdef ELF_MODE
-    writeCode (MOV_XMM0_STK, 0);                                               // pop xmm0
+    writeOpcode (MOV_XMM0_STK, 0);                                             // pop xmm0
 
     mask = makeRegMask (PUSH_REG, RAX_ID); 
-    writeCode (PUSH_REG, mask); 
+    writeOpcode (PUSH_REG, mask); 
 
     mask = makeRegMask (CVTTSD2SI_REG, RAX_ID);                                // cvttsd2si reg, xmm0 <- translate double to int
-    writeCode (CVTTSD2SI_REG, mask);
+    writeOpcode (CVTTSD2SI_REG, mask);
 
     writePrologue (x64_code, log_file);
 
-    writeCode (CALL, 0);
+    writeOpcode (CALL, 0);
                                                                                
     uint32_t ptr = (uint64_t) FUNCT_ADDR - (uint64_t)(x64_code->curr_pos - x64_code->buffer + TEXT_ADDR + SIZE_OF_PTR); 
     writeValue (ptr, SIZE_OF_PTR);
@@ -687,24 +687,24 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     writeEpilogue (x64_code, log_file); 
 
     mask = makeRegMask (POP_REG, RAX_ID);
-    writeCode (POP_REG, mask); 
+    writeOpcode (POP_REG, mask); 
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out outputed number
-    writeCode  (ADD_REG_IMM, mask);
+    writeOpcode (ADD_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
 
     #else
-    writeCode (LEA_RDI_STK_ARG, 0);                                            // save ptr in rdi (as first argument of function)
+    writeOpcode (LEA_RDI_STK_ARG, 0);                                          // save ptr in rdi (as first argument of function)
     writePrologue (x64_code, log_file);
 
-    writeCode (CALL, 0);                                                                
+    writeOpcode (CALL, 0);                                                                
     uint32_t ptr = (uint64_t) doublePrintf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (ptr, SIZE_OF_PTR);
 
     writeEpilogue (x64_code, log_file); 
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out already printed number
-    writeCode  (ADD_REG_IMM, mask);
+    writeOpcode (ADD_REG_IMM, mask);
     writeValue (8, SIZE_OF_NUM);
     #endif
 }
@@ -718,7 +718,7 @@ void translateDump (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     
     writePrologue (x64_code, log_file);
 
-    writeCode (CALL, 0);                                                       // You can change troll_print on your own purposes
+    writeOpcode (CALL, 0);                                                       // You can change troll_print on your own purposes
     uint32_t funct_ptr = (uint64_t) trollDump - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (funct_ptr, SIZE_OF_PTR);
 
@@ -732,14 +732,14 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node, FILE *log
     uint64_t mask = 0;
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    writeCode (MOV_XMM0_STK, 0);                                               // pull out numbers from stack
-    writeCode (MOV_XMM1_STK, 0); 
+    writeOpcode (MOV_XMM0_STK, 0);                                             // pull out numbers from stack
+    writeOpcode (MOV_XMM1_STK, 0); 
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pop pop
-    writeCode  (ADD_REG_IMM, mask);
+    writeOpcode (ADD_REG_IMM, mask);
     writeValue (16, SIZE_OF_NUM);
 
-    writeCode (CMP_XMM0_XMM1, 0);                                              // compare them 
+    writeOpcode (CMP_XMM0_XMM1, 0);                                            // compare them 
 
     switch(curr_node->command)                                                 // select right conditional mask
     {
@@ -766,7 +766,7 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node, FILE *log
             break;
     }
 
-    writeCode (CONDITIONAL_JMP, mask);
+    writeOpcode (CONDITIONAL_JMP, mask);
                                                                                // save bytes for unfilled target
     x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr for now
 }
@@ -777,7 +777,7 @@ void translateJmp (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    writeCode (JMP, 0); 
+    writeOpcode (JMP, 0); 
                                                                                // save bytes for unfilled target
     x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr
 }
@@ -788,7 +788,7 @@ void translateCall (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    writeCode (CALL, 0);
+    writeOpcode (CALL, 0);
                                                                                 // save bytes for unfilled target
     x64_code->curr_pos += SIZE_OF_PTR;                                          // skip ptr
 }
@@ -799,7 +799,7 @@ void translateRet (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    writeCode (RET, 0);
+    writeOpcode (RET, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -808,9 +808,9 @@ void translateMathFunctions (X64_code *x64_code, IR_node *curr_node, FILE *log_f
 {
     char op_name[MAX_LEN_OF_LINE] = { 0 };
                                                                                // there is only one supported math function: SQRT
-    writeCode (MOV_XMM0_STK, 0);                                               // pop  xmm0
-    writeCode (SQRTPD_XMM0, 0);                                                // sqrt xmm0
-    writeCode (MOV_STK_XMM0, 0);                                               // push xmm0 
+    writeOpcode (MOV_XMM0_STK, 0);                                             // pop  xmm0
+    writeOpcode (SQRTPD_XMM0, 0);                                              // sqrt xmm0
+    writeOpcode (MOV_STK_XMM0, 0);                                             // push xmm0 
 }
 
 //-----------------------------------------------------------------------------

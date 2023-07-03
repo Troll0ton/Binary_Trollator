@@ -24,7 +24,7 @@
     strncat (op_name, reg_name[reg], 30);                        
 
 
-#define writeCode(cmd, mask)                                                  \
+#define writeOpcode(cmd, mask)                                                  \
     strncat (op_name, #cmd, 70);                                              \
     writeCode_(x64_code, cmd##_OPCODE | mask, op_name, cmd##_SIZE, log_file); \
     memset (op_name, '\0', MAX_LEN_OF_LINE); 
@@ -105,7 +105,7 @@ void x64CodeDtor (X64_code *X64_code);
 
 Memory *memoryCtor (int size, int alignment, FILE *log_file);
 
-void memoryDtor (Memory *ram);
+void memoryDtor (Memory *memory);
 
 void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file);
 
@@ -167,7 +167,7 @@ void writePrologue (X64_code *X64_code, FILE *log_file);
 
 void writeEpilogue (X64_code *X64_code, FILE *log_file);
 
-void saveDataAddress (X64_code *x64_code, char *ram, FILE *log_file);
+void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file);
 
 void doubleScanf (double *value);
 

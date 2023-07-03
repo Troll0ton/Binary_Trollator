@@ -5,7 +5,7 @@
 - x64 buffer capacity: 4096
 
 (R12) MOV_REG_IMM         | 49 BC 
-VALUE                     | 00 60 5D DC 07 56 00 00 
+VALUE                     | 00 D0 E9 2D 09 56 00 00 
 (R10) POP_REG             | 41 5A 
 (R13) MOV_REG_IMM         | 49 BD 
 VALUE                     | 00 00 00 00 00 00 18 40 
@@ -33,7 +33,7 @@ ALIGN_STK                 | 48 83 E4 F0
 VALUE                     | 08 00 00 00 
 (RBP) PUSH_REG            | 40 55 
 CALL                      | E8 
-VALUE                     | 36 A4 69 FF 
+VALUE                     | 36 C4 BE FF 
 (RBP) POP_REG             | 40 5D 
 MOV_RSP_RBP               | 48 89 EC 
 (RBP) POP_REG             | 40 5D 
