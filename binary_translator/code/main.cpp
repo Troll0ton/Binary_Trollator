@@ -12,7 +12,7 @@ int main ()
     FILE *log_file = fopen ("binary_translator/dump/log_file.txt", "w+");
 
     FILE *guest_file = fopen ("processor/COMMON/files/code.bin","rb");
-    checkFilePtr (log_file);
+    checkFilePtr (guest_file);
     
     Guest_code *guest_code = readCodeFile (guest_file, log_file);
     
@@ -27,6 +27,9 @@ int main ()
     X64_code *X64_code = translateIrToX64 (ir, bin_size, log_file);
     irDtor (ir);
 
+    fclose (X64_code->dump_file);
+    fclose (log_file);
+
     printf ("-- trollating complete!\n\n");
                                                                     
     #ifdef ELF_MODE
@@ -35,12 +38,9 @@ int main ()
     runCode (X64_code->buffer, X64_code->size);
     #endif
     
-    fclose (X64_code->dump_file);
     x64CodeDtor (X64_code);
 
     printf ("-- finishing\n\n");
-
-    fclose (log_file);
 
     return 0;
 }

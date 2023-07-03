@@ -12,152 +12,47 @@
 
 //-----------------------------------------------------------------------------
 
-#define CURR_POS x64_code->curr_pos
-
-#define MEMORY_SIZE PAGE_SIZE
+#define MAX_LEN_OF_LINE 100
 
 //-----------------------------------------------------------------------------
 //                                WRITING
 //-----------------------------------------------------------------------------
 
-#define makeRegMask(op, reg) \
-    makeRegMask_(reg, op##_ID_POS, op##_REG_BIT_POS)
+
+#define makeRegMask(cmd, reg)                         \
+    makeRegMask_(reg, cmd##_ID_POS, cmd##_REX_B_POS); \
+    strncat (op_name, reg_name[reg], 30);                        
 
 
-#define writeCode(name, mask)                                               \
-    writeCode_(x64_code, name##_OPCODE | mask, #name, name##_SIZE, log_file)
+#define writeCode(cmd, mask)                                                  \
+    strncat (op_name, #cmd, 70);                                              \
+    writeCode_(x64_code, cmd##_OPCODE | mask, op_name, cmd##_SIZE, log_file); \
+    memset (op_name, '\0', MAX_LEN_OF_LINE); 
 
 
-#define writeSimpleOp(name)                                 \
-    writeCode_(x64_code, name, #name, name##_SIZE, log_file)
-
-
-#define writeByte(value)                                \
-    writeCode_(x64_code, value, "BYTE", BYTE, log_file)
-
-
-#define writePtr(value)                                                 \
-    writeCode_(x64_code, value, "PTR 4 BYTE", SIZE_OF_PTR, log_file)
-
-
-#define writeAbsPtr(value)                                                      \
-    writeCode_(x64_code, value, "ABS PTR 8 BYTE", SIZE_OF_ABS_PTR, log_file)
-
-
-#define writeDouble(value)                                                      \
-    writeCode_(x64_code, *(uint64_t*) &(value), "DOUBLE 8 BYTE", 8, log_file)
-
-
-#define writeInt64(value)                                   \
-    writeCode_(x64_code, value, "INT 8 BYTE", 8, log_file)
-
-
-#define writeInt32(value)                                   \
-    writeCode_(x64_code, value, "INT 4 BYTE", 4, log_file)
-
-
-#define writeMaskingOp(opname, REG)                                                                                \
-    strncat (dump_name, #opname " ", 90);                                                                          \
-    strncat (dump_name, reg_info[REG].name, 10);                                                                   \
-                                                                                                                   \
-    writeCode_(x64_code, opname | reg_info[REG].mask << POS_##opname | reg_info[REG].reg_flag << MASK_R_##opname,  \
-               dump_name, opname##_SIZE, log_file);                                                                \
-                                                                                                                   \
-    memset (dump_name, '\0', 100);
-
-
-#define writeMaskingJmp(JMP)                                          \
-    writeCode_(x64_code, OP_CONDITIONAL_JMP | JMP << POS_OP_MASK_JMP, \
-               #JMP, OP_CONDITIONAL_JMP_SIZE, log_file);   
-
-
-#define writeFormatStr(name)                       \
-    writeCode_(x64_code, name, #name, name##_SIZE, log_file)                                                                
+#define writeValue(value, size)                          \
+    writeCode_(x64_code, value, "VALUE", size, log_file);
+    
 
 //-----------------------------------------------------------------------------
 
-enum ELF_INFO
+enum CODE_RESIZE_INFO
 {
-    NUM_OF_SEGMENTS = 3,
-    LOAD_ADDR       = 0x400000,
-    TEXT_ADDR       = 0x4000E8,          
-    MEMORY_ADDRESS  = 0x4010E8, 
-    FUNCT_ADDR      = 0x4020E8, 
-    TOTAL_SIZE      = 0x30E8,
+    X64_CODE_SIZE_DIFF    = 16,
+    X64_CODE_INIT_SIZE    = PAGE_SIZE,
+    X64_CODE_INCREASE_PAR = PAGE_SIZE,
 };
 
 //-----------------------------------------------------------------------------
 
-enum X64_CODE_INFO
+enum X64_DATA_TYPES
 {
-    X64_CODE_SIZE_DIFF            = 16,
-    X64_CODE_INIT_SIZE            = PAGE_SIZE,
-    X64_CODE_INCREASE_PAR         = PAGE_SIZE,
-    X64_CODE_REG_MASK             = 0b1000,
+    BYTE             = 1,
+    SIZE_OF_PTR      = 4 * BYTE,                                               // DOUBLE WORD
+    SIZE_OF_ABS_PTR  = sizeof (void*),
+    SIZE_OF_LONG_NUM = sizeof (double),
+    SIZE_OF_NUM      = sizeof (int),
 };
-
-//-----------------------------------------------------------------------------
-
-enum X64_ARCHITECTURE_INFO
-{
-    BYTE            = 1,
-    SIZE_OF_PTR     = 4 * BYTE,       // DOUBLE WORD
-    SIZE_OF_ABS_PTR = sizeof (void*),
-    SIZE_OF_NUM     = sizeof (double),
-};
-
-//-----------------------------------------------------------------------------
-
-// This enum contains target's position (relative address from beginning of 
-// given IR node)
-enum JUMP_TARGETS_POS
-{
-    POS_CONDITIONAL_JUMP        = OP_MOV_XMM0_STK_SIZE + 
-                                  OP_MOV_XMM1_STK_SIZE + 
-                                  OP_ADD_REG_IMM_SIZE +
-                                  4 +
-                                  OP_CMP_XMM0_XMM1_SIZE +
-                                  OP_CONDITIONAL_JMP_SIZE,
-
-    POS_JUMP                    = OP_JMP_SIZE,
-
-    POS_CALL                    = OP_CALL_SIZE,
-
-    POS_IN                      = OP_SUB_REG_IMM_SIZE + 
-                                  4 +
-                                  OP_LEA_RDI_STK_ARG_SIZE + 
-                                  OP_PUSHA_SIZE +
-                                  OP_PUSH_REG_SIZE + 
-                                  OP_MOV_RBP_RSP_SIZE +
-                                  OP_ALIGN_STK_SIZE + 
-                                  OP_SUB_REG_IMM_SIZE +
-                                  4 +
-                                  OP_PUSH_REG_SIZE +
-                                  OP_CALL_SIZE,
-    #ifdef ELF_MODE
-    POS_OUT                     = OP_MOV_XMM0_STK_SIZE + 
-                                  OP_PUSH_REG_SIZE + 
-                                  OP_CVTTSD2SI_REG_SIZE +
-                                  OP_PUSHA_SIZE +
-                                  OP_PUSH_REG_SIZE + 
-                                  OP_MOV_RBP_RSP_SIZE +
-                                  OP_ALIGN_STK_SIZE + 
-                                  OP_SUB_REG_IMM_SIZE +
-                                  4 +
-                                  OP_PUSH_REG_SIZE +
-                                  OP_CALL_SIZE,
-    #else
-    POS_OUT                     = OP_LEA_RDI_STK_ARG_SIZE + 
-                                  OP_PUSHA_SIZE +
-                                  OP_PUSH_REG_SIZE + 
-                                  OP_MOV_RBP_RSP_SIZE +
-                                  OP_ALIGN_STK_SIZE + 
-                                  OP_SUB_REG_IMM_SIZE +
-                                  4 +
-                                  OP_PUSH_REG_SIZE +
-                                  OP_CALL_SIZE,
-    #endif
-}; 
 
 //-----------------------------------------------------------------------------
 
@@ -179,15 +74,6 @@ typedef struct Memory
 } Memory;
 
 //-----------------------------------------------------------------------------
-//                         REGS MASKING AND DUMPS UTILS
-//-----------------------------------------------------------------------------
-// ??
-static char dump_name[100] = { 0 };
-
-// another header file
-// make functons 
-
-//-----------------------------------------------------------------------------
 
 X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file);
 
@@ -201,8 +87,6 @@ void memoryDtor (Memory *ram);
 
 void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file);
 
-void handleIOAddress (X64_code *x64_code, IR_node ir_node, FILE *log_file);
-
 void translateTargetPtr (X64_code *x64_code, IR *ir, IR_node ir_node, FILE *log_file);
 
 void *alignedCalloc (int alignment, int size, FILE *log_file);
@@ -211,13 +95,15 @@ void translateCmd (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
 void translateReg (IR_node *curr_node, FILE *log_file);
 
-uint64_t makeRegMask_(int reg_id, int reg_id_pos, int reg_bit, int reg_bit_pos);
+uint64_t makeRegMask_(int reg_id, int reg_id_pos, int rex_b_pos);
+
+uint64_t makeJmpMask (int jmp_type);
 
 void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 
 void calculateMemoryAddrPushPop (X64_code *x64_code, 
-                              IR_node  *curr_node, 
-                              FILE     *log_file  );
+                                 IR_node  *curr_node, 
+                                 FILE     *log_file  );
 
 void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file);
 

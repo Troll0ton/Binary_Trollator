@@ -11,15 +11,13 @@
 #include <stdint.h>
 #include <errno.h>
 #include <elf.h>
-#include <limits.h>
 #include <sys/mman.h>
 
 //-----------------------------------------------------------------------------
 
 //#define NDEBUG 1
 //#define ELF_MODE 1
-
-//-----------------------------------------------------------------------------
+#define DELETED 0xDEDAC
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
@@ -89,18 +87,9 @@ enum CMD_CODES
 
 //-----------------------------------------------------------------------------
 
-enum TRANSLATOR_INFO
-{
-    ABSENCE        = 0xBEDBAD,
-    DELETED        = 0xDEDAC,
-    MPROTECT_ERROR = -1,
-};
-
-//-----------------------------------------------------------------------------
-
 enum ERROR_CODES
 {
-    ERROR_MISS_JMP_TARGET = 1,
+    MPROTECT_ERROR = -1,
 };
 
 //-----------------------------------------------------------------------------

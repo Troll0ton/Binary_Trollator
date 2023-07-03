@@ -10,13 +10,13 @@
 
 //-----------------------------------------------------------------------------
 
-#define SIZE_OF_INSTRUCTION 1
-#define SIZE_OF_ARGUMENTS_SPECIFIER sizeof (double)
-
-#define GUEST_CODE_SIGNATURE 0xBACAFE
-#define SIZE_OF_CODE_SIGNATURE sizeof (int)
-
-#define ERROR_ERROR_JUMP_TARGET_EMPTY 0xEAEAEA
+enum GUEST_CODE_INFO
+{
+    SIZE_OF_INSTRUCTION         = 1,
+    SIZE_OF_ARGUMENTS_SPECIFIER = sizeof (double),
+    GUEST_CODE_SIGNATURE        = 0xBACAFE,
+    SIZE_OF_CODE_SIGNATURE      = sizeof (int),
+};
 
 //-----------------------------------------------------------------------------
 
@@ -27,6 +27,8 @@ enum GUEST_CODE_BIT_MASKS
     MASK_MEM = 0x80,
     MASK_CMD = 0x1F,
 };
+
+//-----------------------------------------------------------------------------
 
 enum IR_REGS_IDS
 {
@@ -51,6 +53,8 @@ typedef union Imm_val
     double num;
     int    target;
 } Imm_val;
+
+//-----------------------------------------------------------------------------
 
 typedef union Address
 {

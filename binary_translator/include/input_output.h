@@ -1,7 +1,7 @@
 //! @file input_output.h
 
-#ifndef   INPUT_OUTPUT_H
-#define   INPUT_OUTPUT_H
+#ifndef INPUT_OUTPUT_H
+#define INPUT_OUTPUT_H
 
 //-----------------------------------------------------------------------------
 

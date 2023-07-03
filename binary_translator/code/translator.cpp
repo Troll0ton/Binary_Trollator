@@ -1,4 +1,5 @@
 #include "binary_translator/include/translator.h" 
+#include "binary_translator/include/executable_utils.h" 
 
 //-----------------------------------------------------------------------------
 
@@ -6,23 +7,26 @@
 
 X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 {
+    char cmd_dump_name[MAX_LEN_OF_LINE] = { 0 };
+
     log_print ("- translate from IR to x64 . . . .\n\n");
 
     X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE, log_file);
     x64DumpHeader (x64_code, log_file);
                                                                                  
-    Memory *memory = memoryCtor (MEMORY_SIZE, PAGE_SIZE, log_file);            // so we can store only MEMORY_SIZE / 8 nums in memory
+    Memory *memory = memoryCtor (PAGE_SIZE, PAGE_SIZE, log_file);            // so we can store only MEMORY_SIZE / 8 nums in memory
     
     saveDataAddress (x64_code, memory->buffer, log_file);                      // save absolute address of RAM in R12 
 
     #ifndef ELF_MODE
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
     uint64_t mask = makeRegMask (POP_REG, R10_ID);
     writeCode (POP_REG, mask);                                                 // save return address
     #endif
                                                                                   
     for(int i = 0; i < ir->size; i++)                                          // now translate IR to opcodes and fill jmp table
     {   
-        CURR_IR_NODE.address.x64 = CURR_POS;
+        CURR_IR_NODE.address.x64 = x64_code->curr_pos;
 
         translateCmd (x64_code, &CURR_IR_NODE, log_file);                      // translate command
     }
@@ -110,20 +114,21 @@ void memoryDtor (Memory *memory)
 void writePrologue (X64_code *x64_code, FILE *log_file)
 {
     uint64_t mask = 0;
-    // create lite version of stack's frame
-    writeCode (PUSHA, 0);
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    mask = makeRegMask (POP_REG, RSP_ID);
+    writeCode (PUSHA, 0);                                                      // create lite version of stack's frame
+
+    mask = makeRegMask (PUSH_REG, RBP_ID);
     writeCode (PUSH_REG, mask);
 
     writeCode (MOV_RBP_RSP, 0);
-    writeCode (ALIGN_STK,   0); 
+    writeCode (ALIGN_STK, 0); 
 
     mask = makeRegMask (SUB_REG_IMM, RSP_ID);
-    writeCode (SUB_REG_IMM, mask);
-    writeInt32 (8);
+    writeCode  (SUB_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
 
-    mask = makeRegMask (SUB_REG_IMM, RBP_ID);
+    mask = makeRegMask (PUSH_REG, RBP_ID);
     writeCode (PUSH_REG, mask);
 }
 
@@ -132,6 +137,7 @@ void writePrologue (X64_code *x64_code, FILE *log_file)
 void writeEpilogue (X64_code *x64_code, FILE *log_file) 
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (POP_REG, RBP_ID);
     writeCode (POP_REG, mask);
@@ -149,6 +155,7 @@ void writeEpilogue (X64_code *x64_code, FILE *log_file)
 void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file)        // r12 <- ptr to 'memory' (troll-code representation)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (MOV_REG_IMM, R12_ID);
     writeCode (MOV_REG_IMM, mask);
@@ -159,7 +166,7 @@ void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file)        /
     uint64_t abs_ptr = (uint64_t)(memory); 
     #endif
 
-    writeAbsPtr (abs_ptr);
+    writeValue (abs_ptr, SIZE_OF_ABS_PTR);
 }
 
 //-----------------------------------------------------------------------------
@@ -188,14 +195,10 @@ void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file)
 
     for(int i = 0; i < ir->size; i++) 
     {
-        CURR_POS = CURR_IR_NODE.address.x64;
+        x64_code->curr_pos = CURR_IR_NODE.address.x64;
 
         switch(CURR_IR_NODE.command)
         {
-            case IN:
-            case OUT:
-                handleIOAddress (x64_code, ir->buffer[i], log_file);
-                break;
             CONDITIONAL_JMP_CASE
             case JMP:
             case CALL:
@@ -210,58 +213,33 @@ void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
-void handleIOAddress (X64_code *x64_code, IR_node ir_node, FILE *log_file)
-{
-    if(ir_node.command == IN)
-    {
-        uint32_t ptr = (uint64_t) doubleScanf - 
-                       (uint64_t)(CURR_POS + POS_IN + SIZE_OF_PTR); 
-        CURR_POS += POS_IN;
-
-        writePtr (ptr);
-                                                                               // IN IS NOT SUPPORTED IN ELF MODE
-    }
-
-    else                                                                       // OUT
-    {
-        #ifdef ELF_MODE
-        uint32_t ptr = (uint64_t) FUNCT_ADDR - 
-                       (uint64_t)(CURR_POS - x64_code->buffer + TEXT_ADDR + POS_OUT + SIZE_OF_PTR); 
-        #else
-        uint32_t ptr = (uint64_t) doublePrintf - 
-                       (uint64_t)(CURR_POS + POS_OUT + SIZE_OF_PTR); 
-        #endif
-
-        CURR_POS += POS_OUT;
-
-        writePtr (ptr);
-    }
-}
-
-//-----------------------------------------------------------------------------
-
 void translateTargetPtr (X64_code *x64_code, IR *ir, IR_node ir_node, FILE *log_file)
 {
-    uint64_t ptr_pos = 0;
+    uint64_t ptr_pos = 0;                                                      // ptr_pos contains target's position (relative address from beginning of given IR node)
 
     switch(ir_node.command)
     {
         CONDITIONAL_JMP_CASE
-            ptr_pos = POS_CONDITIONAL_JUMP;
+            ptr_pos = MOV_XMM0_STK_SIZE + 
+                      MOV_XMM1_STK_SIZE + 
+                      ADD_REG_IMM_SIZE +
+                      4 +
+                      CMP_XMM0_XMM1_SIZE +
+                      CONDITIONAL_JMP_SIZE;
             break;
         case JMP:
-            ptr_pos = POS_JUMP;
+            ptr_pos = JMP_SIZE;
             break;
         case CALL:
-            ptr_pos = POS_CALL;
+            ptr_pos = CALL_SIZE;
             break;
     }
 
     uint32_t ptr = (uint64_t) ir->buffer[ir_node.imm_val.target].address.x64 - 
-                   (uint64_t)(CURR_POS + ptr_pos + SIZE_OF_PTR); 
-    CURR_POS += ptr_pos;
+                   (uint64_t)(x64_code->curr_pos + ptr_pos + SIZE_OF_PTR); 
+    x64_code->curr_pos += ptr_pos;
 
-    writePtr (ptr);
+    writeValue (ptr, SIZE_OF_PTR);
 }
 
 //-----------------------------------------------------------------------------
@@ -415,21 +393,32 @@ void translateReg (IR_node *curr_node, FILE *log_file)                         /
 
 //-----------------------------------------------------------------------------
 
-uint64_t makeRegMask_(int reg_id, int reg_id_pos, int reg_bit_pos)
+uint64_t makeRegMask_(int reg_id, int reg_id_pos, int rex_b_pos)
 {
-    uint64_t reg_mask = 0;
-    uint64_t reg_bit  = 0;
+    uint64_t reg_mask  = 0;
+    uint64_t rex_b_bit = 0;
 
     if(reg_id >= 0b1000)                                                       // handle rnums ids
     {
         reg_id -= 0b1000;
-        reg_bit = 1;
+        rex_b_bit = 1;
     }
 
-    reg_mask |= reg_id  << reg_id_pos;
-    reg_mask |= reg_bit << reg_bit_pos;
+    reg_mask |= reg_id    << reg_id_pos;
+    reg_mask |= rex_b_bit << rex_b_pos;
 
     return reg_mask;
+}
+
+//-----------------------------------------------------------------------------
+
+uint64_t makeJmpMask (int jmp_type)
+{
+    uint64_t jmp_mask = 0;
+
+    jmp_mask = jmp_type << JMP_MASK_POS;
+
+    return jmp_mask;  
 }
 
 //-----------------------------------------------------------------------------
@@ -437,17 +426,18 @@ uint64_t makeRegMask_(int reg_id, int reg_id_pos, int reg_bit_pos)
 void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     #ifdef ELF_MODE
     mask = makeRegMask (MOV_REG_IMM, RAX_ID);
-    writeCode (MOV_REG_IMM, mask);                                              // mov rax, 0x3c
-    writeInt64 (0x3C);
+    writeCode  (MOV_REG_IMM, mask);                                             // mov rax, 0x3c
+    writeValue (0x3C, SIZE_OF_LONG_NUM);
 
     mask = makeRegMask (MOV_REG_IMM, RDI_ID);                                   // xor rdi, rdi
-    writeCode (MOV_REG_IMM, mask);
-    writeInt64 (0x0);
+    writeCode  (MOV_REG_IMM, mask);
+    writeValue (0x0, SIZE_OF_LONG_NUM);
                                                         
-    writeCode (OP_SYSCALL, 0);                                                  // syscall
+    writeCode (SYSCALL, 0);                                                     // syscall
 
     #else
     mask = makeRegMask (PUSH_REG, R10_ID);
@@ -460,16 +450,17 @@ void translateHlt (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 //-----------------------------------------------------------------------------
 
 void calculateMemoryAddrPushPop (X64_code *x64_code, 
-                              IR_node  *curr_node, 
-                              FILE     *log_file  )
+                                 IR_node  *curr_node, 
+                                 FILE     *log_file  )
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
                                                                                 
     mask = makeRegMask (MOV_REG_IMM, R13_ID);                                  // put imm64 value into R13 (R13 is tmp register)
     writeCode (MOV_REG_IMM, mask);
 
     uint64_t num = (uint64_t) curr_node->imm_val.num;                          // put int if it will used in memory access
-    writeInt64 (num);
+    writeValue (num, SIZE_OF_LONG_NUM);
                                                                                // I store all numbers in double representation 
                                                                                // So firstly I need to translate register value to int
     if(curr_node->reg_num)                                                      
@@ -485,8 +476,8 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
         writeCode (MOV_XMM0_STK, 0);                                           // pop xmm0
 
         mask = makeRegMask (ADD_REG_IMM, RSP_ID);
-        writeCode (ADD_REG_IMM, mask);
-        writeInt32 (8);
+        writeCode  (ADD_REG_IMM, mask);
+        writeValue (8, SIZE_OF_NUM);
 
         mask = makeRegMask (CVTTSD2SI_REG, curr_node->reg_num);                // cvttsd2si reg, xmm0 <- translate double to int           
         writeCode (CVTTSD2SI_REG, mask);
@@ -499,8 +490,8 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
     }
                                                                                // shl is used here because of imm's size: push/pop [a] <=> push/pop [8*a]
     mask = makeRegMask (SHL_REG, R13_ID);                                      // I had relative addressing in my assembler and processor
-    writeCode (SHL_REG, mask); 
-    writeByte (3);                                                             // shl reg, 3 <=> mul reg, 8
+    writeCode  (SHL_REG, mask); 
+    writeValue (3, BYTE);                                                      // shl reg, 3 <=> mul reg, 8
 
     mask = makeRegMask (ADD_R13_REG, R12_ID);                                  // in result I operate with memory cell  r12[r13]
     writeCode (ADD_R13_REG, mask);                                             // add r13, data address
@@ -526,6 +517,7 @@ void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 void translatePushMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     calculateMemoryAddrPushPop (x64_code, curr_node, log_file);
 
@@ -540,11 +532,11 @@ void translatePushMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file
 void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (MOV_REG_IMM, R13_ID);  
-    writeCode (MOV_REG_IMM, mask);
-    
-    writeDouble (curr_node->imm_val.num);                                      // put double value if it is just num
+    writeCode  (MOV_REG_IMM, mask);
+    writeValue (*(uint64_t*) &curr_node->imm_val.num, SIZE_OF_LONG_NUM);       // put double value if it is just num
 
     if(curr_node->reg_num)
     {
@@ -557,7 +549,7 @@ void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file
     mask = makeRegMask (PUSH_REG, R13_ID);                                     // push r13
     writeCode (PUSH_REG, mask);  
 }
-
+ 
 //-----------------------------------------------------------------------------
 
 void translatePop (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
@@ -578,17 +570,17 @@ void translatePop (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 void translatePopMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     calculateMemoryAddrPushPop (x64_code, curr_node, log_file);
         
     writeCode (MOV_XMM0_STK, 0);                                               // pull out from stack num value
     
-    mask = makeRegMask (PUSH_REG, RSP_ID); 
-    writeCode (ADD_REG_IMM, mask);
-    writeInt32 (8);
+    mask = makeRegMask (ADD_REG_IMM, RSP_ID); 
+    writeCode  (ADD_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
 
-    // mov it to memory
-    writeCode (MOV_MEM_XMM0, 0);
+    writeCode (MOV_MEM_XMM0, 0);                                               // mov it to memory
 }
 
 //-----------------------------------------------------------------------------
@@ -596,6 +588,7 @@ void translatePopMemory (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 void translatePopReg (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     if(curr_node->reg_num)
     {
@@ -606,8 +599,8 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     }
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pop 
-    writeCode (ADD_REG_IMM, mask);
-    writeInt32 (8);
+    writeCode  (ADD_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
 }
 
 //-----------------------------------------------------------------------------
@@ -615,6 +608,7 @@ void translatePopReg (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
                                                                                // pull out numbers from stack and do arithm operation
                                                                                // arithm xmm1, xmm0
     writeCode (MOV_XMM0_STK, 0);                                               // pop xmm0
@@ -640,8 +634,8 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *lo
     }
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // save only one value (second is not useful anymore)                  
-    writeCode (ADD_REG_IMM, mask);
-    writeInt32 (8);
+    writeCode  (ADD_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
 
     writeCode (MOV_STK_XMM1, 0);                                               // push xmm1   
 }
@@ -651,17 +645,19 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *lo
 void translateIn (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     mask = makeRegMask (SUB_REG_IMM, RSP_ID);                                   // reserve 8 bytes for input number
-    writeCode (SUB_REG_IMM, mask);
-    writeInt32 (8);
+    writeCode  (SUB_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
 
     writeCode (LEA_RDI_STK_ARG, 0);                                             // save ptr in rdi (as first argument of function)
     writePrologue (x64_code, log_file);
 
-    writeCode (CALL, 0);
-                                                                                // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR;                                          // skip ptr for now
+    writeCode (CALL, 0);                                                              
+    uint32_t ptr = (uint64_t) doubleScanf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
+    writeValue (ptr, SIZE_OF_PTR);
+
     writeEpilogue (x64_code, log_file);
 }
 
@@ -670,6 +666,7 @@ void translateIn (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     #ifdef ELF_MODE
     writeCode (MOV_XMM0_STK, 0);                                               // pop xmm0
@@ -680,32 +677,35 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     mask = makeRegMask (CVTTSD2SI_REG, RAX_ID);                                // cvttsd2si reg, xmm0 <- translate double to int
     writeCode (CVTTSD2SI_REG, mask);
 
-    writePrologue (x64_code);
+    writePrologue (x64_code, log_file);
 
     writeCode (CALL, 0);
-                                                                               // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr for now
-    writeEpilogue (x64_code);
+                                                                               
+    uint32_t ptr = (uint64_t) FUNCT_ADDR - (uint64_t)(x64_code->curr_pos - x64_code->buffer + TEXT_ADDR + SIZE_OF_PTR); 
+    writeValue (ptr, SIZE_OF_PTR);
+
+    writeEpilogue (x64_code, log_file); 
 
     mask = makeRegMask (POP_REG, RAX_ID);
     writeCode (POP_REG, mask); 
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out outputed number
-    writeCode (ADD_REG_IMM, mask);
-    writeInt32 (8);
+    writeCode  (ADD_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
 
     #else
     writeCode (LEA_RDI_STK_ARG, 0);                                            // save ptr in rdi (as first argument of function)
     writePrologue (x64_code, log_file);
 
-    writeCode (CALL, 0);
-                                                                               // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr for now
-    writeEpilogue (x64_code, log_file);
+    writeCode (CALL, 0);                                                                
+    uint32_t ptr = (uint64_t) doublePrintf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
+    writeValue (ptr, SIZE_OF_PTR);
+
+    writeEpilogue (x64_code, log_file); 
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out already printed number
-    writeCode (ADD_REG_IMM, mask);
-    writeInt32 (8);
+    writeCode  (ADD_REG_IMM, mask);
+    writeValue (8, SIZE_OF_NUM);
     #endif
 }
 
@@ -714,101 +714,103 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 void translateDump (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
     uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
     
     writePrologue (x64_code, log_file);
 
-    // You can change troll_print on your own purposes
-    writeCode (CALL, 0);
+    writeCode (CALL, 0);                                                       // You can change troll_print on your own purposes
     uint32_t funct_ptr = (uint64_t) trollDump - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
-    writePtr (funct_ptr);
+    writeValue (funct_ptr, SIZE_OF_PTR);
 
-    writeEpilogue (x64_code, log_file);
-
-    // DUMP IS NOT SUPPORTED IN ELF
+    writeEpilogue (x64_code, log_file);                                        // DUMP IS NOT SUPPORTED IN ELF
 }
 
 //-----------------------------------------------------------------------------
 
 void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    // pull out numbers from stack
-    writeSimpleOp (OP_MOV_XMM0_STK); 
-    writeSimpleOp (OP_MOV_XMM1_STK); 
+    uint64_t mask = 0;
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    // pop pop
-    writeMaskingOp (OP_ADD_REG_IMM, MASK_RSP);
-    writeInt32 (16);
+    writeCode (MOV_XMM0_STK, 0);                                               // pull out numbers from stack
+    writeCode (MOV_XMM1_STK, 0); 
 
-    // compare them
-    writeSimpleOp (OP_CMP_XMM0_XMM1); 
+    mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pop pop
+    writeCode  (ADD_REG_IMM, mask);
+    writeValue (16, SIZE_OF_NUM);
 
-    // select right conditional mask
-    switch(curr_node->command)
+    writeCode (CMP_XMM0_XMM1, 0);                                              // compare them 
+
+    switch(curr_node->command)                                                 // select right conditional mask
     {
-        // this cringe because of form of my J__ instruction:
-        // JA -> jb ... 
         case JAE:
-            writeMaskingJmp (MASK_JBE);
+            mask = makeJmpMask (MASK_JBE);
             break;
         case JBE:
-            writeMaskingJmp (MASK_JAE);
+            mask = makeJmpMask (MASK_JAE);
             break;
         case JA:
-            writeMaskingJmp (MASK_JB);    
+            mask = makeJmpMask (MASK_JB);    
             break;
         case JB:
-            writeMaskingJmp (MASK_JA);
+            mask = makeJmpMask (MASK_JA);
             break;
         case JE:
-            writeMaskingJmp (MASK_JE);
+            mask = makeJmpMask (MASK_JE);
             break;
         case JNE:
-            writeMaskingJmp (MASK_JNE);
+            mask = makeJmpMask (MASK_JNE);
             break;
         default:
             log_print ("CONDITIONAL JUMP - UNKNOWN COMMAND!\n");
             break;
     }
-    
-    // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr for now
+
+    writeCode (CONDITIONAL_JMP, mask);
+                                                                               // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr for now
 }
 
 //-----------------------------------------------------------------------------
 
 void translateJmp (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    writeSimpleOp (OP_JMP); 
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr
+    writeCode (JMP, 0); 
+                                                                               // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR;                                         // skip ptr
 }
 
 //-----------------------------------------------------------------------------
 
 void translateCall (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    writeSimpleOp (OP_CALL);
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
 
-    // save bytes for unfilled target
-    x64_code->curr_pos += SIZE_OF_PTR; // skip ptr
+    writeCode (CALL, 0);
+                                                                                // save bytes for unfilled target
+    x64_code->curr_pos += SIZE_OF_PTR;                                          // skip ptr
 }
 
 //-----------------------------------------------------------------------------
 
 void translateRet (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    writeSimpleOp (OP_RET);
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
+
+    writeCode (RET, 0);
 }
 
 //-----------------------------------------------------------------------------
 
 void translateMathFunctions (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    // there is only one supported math function: SQRT
-    writeSimpleOp (OP_MOV_XMM0_STK);  // pop  xmm0
-    writeSimpleOp (OP_SQRTPD_XMM0);   // sqrt xmm0
-    writeSimpleOp (OP_MOV_STK_XMM0);  // push xmm0 
+    char op_name[MAX_LEN_OF_LINE] = { 0 };
+                                                                               // there is only one supported math function: SQRT
+    writeCode (MOV_XMM0_STK, 0);                                               // pop  xmm0
+    writeCode (SQRTPD_XMM0, 0);                                                // sqrt xmm0
+    writeCode (MOV_STK_XMM0, 0);                                               // push xmm0 
 }
 
 //-----------------------------------------------------------------------------
@@ -817,9 +819,7 @@ void translateMathFunctions (X64_code *x64_code, IR_node *curr_node, FILE *log_f
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-// Create header in dump file (some useful information about code will represent here)
-
-void x64DumpHeader (X64_code *x64_code, FILE *log_file)
+void x64DumpHeader (X64_code *x64_code, FILE *log_file)                        // Create header in dump file (some useful information about code will represent here)
 {
     log_print ("- dump x64 code\n\n");
 

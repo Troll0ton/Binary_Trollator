@@ -16,7 +16,7 @@ int getFileSize (FILE *file)
 {
     int file_size = 0;
 
-    while (fgetc (file) != EOF)
+    while(fgetc (file) != EOF)
     {
         file_size++;
     }
