@@ -9,9 +9,7 @@
 
 //-----------------------------------------------------------------------------
 
-// this enum contains masks of registers
-// they later used in masking with complex ops
-typedef enum REGS_IDS
+enum REGS_IDS
 {
      RAX_ID,
      RCX_ID,
@@ -29,31 +27,11 @@ typedef enum REGS_IDS
      R13_ID,
      R14_ID,
      R15_ID,
-} REGS_IDS; 
-
-static char *reg_name[] = 
-{
-     "(RAX) ",
-     "(RCX) ",
-     "(RDX) ",
-     "(RBX) ",
-     "(RSP) ",
-     "(RBP) ",
-     "(RSI) ",
-     "(RDI) ",
-     "(R8) ", 
-     "(R9) ",
-     "(R10) ",
-     "(R11) ",
-     "(R12) ",
-     "(R13) ",
-     "(R14) ",
-     "(R15) ",
-};
+}; 
 
 //-----------------------------------------------------------------------------
 
-typedef enum JUMP_MASKS
+enum JUMP_MASKS
 {             
      MASK_JNE = 0b101,
      MASK_JE  = 0b100,
@@ -61,7 +39,7 @@ typedef enum JUMP_MASKS
      MASK_JAE = 0b011,
      MASK_JB  = 0b010,
      MASK_JBE = 0b110,
-} JUMP_MASKS;
+};
 
 //-----------------------------------------------------------------------------
 
@@ -166,7 +144,6 @@ typedef enum OP_CODES : uint64_t
 
 //-----------------------------------------------------------------------------
 
-// this enum contains sizes of different opcodes 
 enum OP_SIZES
 {   
      PUSH_REG_SIZE        = 2, 
@@ -205,9 +182,7 @@ enum OP_SIZES
 
 //-----------------------------------------------------------------------------
 
-#define JMP_MASK_POS 8
-
-enum REG_ID_POS
+enum REG_ID_POSITIONS
 {
      PUSH_REG_ID_POS      = 8,
      POP_REG_ID_POS       = 8,
@@ -218,6 +193,7 @@ enum REG_ID_POS
      ADD_REG_IMM_ID_POS   = 16,
      SUB_REG_IMM_ID_POS   = 16,
      CVTTSD2SI_REG_ID_POS = 35,
+     JMP_MASK_POS         = 8,
 };
 
 //-----------------------------------------------------------------------------

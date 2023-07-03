@@ -32,7 +32,29 @@
 
 #define writeValue(value, size)                          \
     writeCode_(x64_code, value, "VALUE", size, log_file);
-    
+
+
+//-----------------------------------------------------------------------------
+
+static char *reg_name[] = 
+{
+     "(RAX) ",
+     "(RCX) ",
+     "(RDX) ",
+     "(RBX) ",
+     "(RSP) ",
+     "(RBP) ",
+     "(RSI) ",
+     "(RDI) ",
+     "(R8) ", 
+     "(R9) ",
+     "(R10) ",
+     "(R11) ",
+     "(R12) ",
+     "(R13) ",
+     "(R14) ",
+     "(R15) ",
+};
 
 //-----------------------------------------------------------------------------
 
@@ -48,7 +70,7 @@ enum CODE_RESIZE_INFO
 enum X64_DATA_TYPES
 {
     BYTE             = 1,
-    SIZE_OF_PTR      = 4 * BYTE,                                               // DOUBLE WORD
+    SIZE_OF_PTR      = 4 * BYTE,                                              
     SIZE_OF_ABS_PTR  = sizeof (void*),
     SIZE_OF_LONG_NUM = sizeof (double),
     SIZE_OF_NUM      = sizeof (int),

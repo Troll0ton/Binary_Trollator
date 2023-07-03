@@ -63,12 +63,11 @@ typedef struct IR
 ```c++
 typedef struct IR_node
 {
-    cmd_code command;
-    int      imm_value;
-    int      reg_num;
-    char     ram_flag;
-    int      troll_pos;
-    char    *x64_pos;
+    uint32_t     command;
+    Imm_val      imm_val;
+    Address      address;
+    uint8_t      reg_num;
+    unsigned int memory_flag : 1;
 } IR_node;
 ```
 

@@ -5,12 +5,25 @@
 - x64 buffer capacity: 4096
 
 (R12) MOV_REG_IMM         | 49 BC 
-VALUE                     | 00 C0 60 DA 15 56 00 00 
+VALUE                     | 00 60 5D DC 07 56 00 00 
 (R10) POP_REG             | 41 5A 
-CALL                      | E8 
-JMP                       | E9 
-(RSP) SUB_REG_IMM         | 48 81 EC 
+(R13) MOV_REG_IMM         | 49 BD 
+VALUE                     | 00 00 00 00 00 00 18 40 
+(R13) PUSH_REG            | 41 55 
+(RAX) MOV_REG_STK         | 48 8B 04 24 
+(RSP) ADD_REG_IMM         | 48 81 C4 
 VALUE                     | 08 00 00 00 
+(R13) MOV_REG_IMM         | 49 BD 
+VALUE                     | 00 00 00 00 00 00 F0 3F 
+(R13) PUSH_REG            | 41 55 
+(RBX) MOV_REG_STK         | 48 8B 1C 24 
+(RSP) ADD_REG_IMM         | 48 81 C4 
+VALUE                     | 08 00 00 00 
+CALL                      | E8 
+(R13) MOV_REG_IMM         | 49 BD 
+VALUE                     | 00 00 00 00 00 00 00 00 
+(RBX) ADD_R13_REG         | 49 01 DD 
+(R13) PUSH_REG            | 41 55 
 LEA_RDI_STK_ARG           | 48 8D 3C 24 
 PUSHA                     | 50 53 51 52 41 54 41 52 
 (RBP) PUSH_REG            | 40 55 
@@ -20,578 +33,63 @@ ALIGN_STK                 | 48 83 E4 F0
 VALUE                     | 08 00 00 00 
 (RBP) PUSH_REG            | 40 55 
 CALL                      | E8 
-VALUE                     | 9A D4 4C FF 
+VALUE                     | 36 A4 69 FF 
 (RBP) POP_REG             | 40 5D 
 MOV_RSP_RBP               | 48 89 EC 
 (RBP) POP_REG             | 40 5D 
 POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 61 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
 (RSP) ADD_REG_IMM         | 48 81 C4 
 VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | 3D D4 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 62 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | E0 D3 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 63 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-CALL                      | E8 
+(R10) PUSH_REG            | 41 52 
+RET                       | C3 
 (R13) MOV_REG_IMM         | 49 BD 
 VALUE                     | 00 00 00 00 00 00 00 00 
 (RAX) ADD_R13_REG         | 49 01 C5 
 (R13) PUSH_REG            | 41 55 
 (R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 44 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 44 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
 VALUE                     | 00 00 00 00 00 00 00 00 
+(RBX) ADD_R13_REG         | 49 01 DD 
 (R13) PUSH_REG            | 41 55 
 MOV_XMM0_STK              | F2 0F 10 44 24 00 
 MOV_XMM1_STK              | F2 0F 10 4C 24 08 
+MULSD_XMM1_XMM0           | F2 0F 59 C8 
 (RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 10 00 00 00 
-CMP_XMM0_XMM1             | 66 0F 2E C1 
-CONDITIONAL_JMP           | 0F 82 
+VALUE                     | 08 00 00 00 
+MOV_STK_XMM1              | F2 0F 11 4C 24 00 
+(RBX) MOV_REG_STK         | 48 8B 1C 24 
+(RSP) ADD_REG_IMM         | 48 81 C4 
+VALUE                     | 08 00 00 00 
 (R13) MOV_REG_IMM         | 49 BD 
 VALUE                     | 00 00 00 00 00 00 00 00 
+(RAX) ADD_R13_REG         | 49 01 C5 
 (R13) PUSH_REG            | 41 55 
-JMP                       | E9 
+(R13) MOV_REG_IMM         | 49 BD 
+VALUE                     | 00 00 00 00 00 00 F0 3F 
+(R13) PUSH_REG            | 41 55 
+MOV_XMM0_STK              | F2 0F 10 44 24 00 
+MOV_XMM1_STK              | F2 0F 10 4C 24 08 
+SUBSD_XMM1_XMM0           | F2 0F 5C C8 
+(RSP) ADD_REG_IMM         | 48 81 C4 
+VALUE                     | 08 00 00 00 
+MOV_STK_XMM1              | F2 0F 11 4C 24 00 
+(RAX) MOV_REG_STK         | 48 8B 04 24 
+(RSP) ADD_REG_IMM         | 48 81 C4 
+VALUE                     | 08 00 00 00 
 (R13) MOV_REG_IMM         | 49 BD 
 VALUE                     | 00 00 00 00 00 00 F0 3F 
 (R13) PUSH_REG            | 41 55 
 (R13) MOV_REG_IMM         | 49 BD 
 VALUE                     | 00 00 00 00 00 00 00 00 
+(RAX) ADD_R13_REG         | 49 01 C5 
 (R13) PUSH_REG            | 41 55 
 MOV_XMM0_STK              | F2 0F 10 44 24 00 
 MOV_XMM1_STK              | F2 0F 10 4C 24 08 
 (RSP) ADD_REG_IMM         | 48 81 C4 
 VALUE                     | 10 00 00 00 
 CMP_XMM0_XMM1             | 66 0F 2E C1 
-CONDITIONAL_JMP           | 0F 84 
+CONDITIONAL_JMP           | 0F 86 
 CALL                      | E8 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 44 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 10 00 00 00 
-CMP_XMM0_XMM1             | 66 0F 2E C1 
-CONDITIONAL_JMP           | 0F 84 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 F0 3F 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 10 00 00 00 
-CMP_XMM0_XMM1             | 66 0F 2E C1 
-CONDITIONAL_JMP           | 0F 84 
-CALL                      | E8 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 44 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 10 00 00 00 
-CMP_XMM0_XMM1             | 66 0F 2E C1 
-CONDITIONAL_JMP           | 0F 87 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 F0 3F 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 10 00 00 00 
-CMP_XMM0_XMM1             | 66 0F 2E C1 
-CONDITIONAL_JMP           | 0F 84 
-CALL                      | E8 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 24 FE 40 
-(R13) PUSH_REG            | 41 55 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | 63 D1 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(RAX) MOV_REG_STK         | 48 8B 04 24 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
 RET                       | C3 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 62 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 62 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-MULSD_XMM1_XMM0           | F2 0F 59 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 10 40 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 61 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-MULSD_XMM1_XMM0           | F2 0F 59 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 63 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-MULSD_XMM1_XMM0           | F2 0F 59 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-SUBSD_XMM1_XMM0           | F2 0F 5C C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(RAX) MOV_REG_STK         | 48 8B 04 24 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-RET                       | C3 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 62 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-SUBSD_XMM1_XMM0           | F2 0F 5C C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 44 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-SQRTPD_XMM0               | 66 0F 51 C0 
-MOV_STK_XMM0              | F2 0F 11 44 24 00 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-ADDSD_XMM1_XMM0           | F2 0F 58 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 40 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 61 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-MULSD_XMM1_XMM0           | F2 0F 59 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-DIVSD_XMM1_XMM0           | F2 0F 5E C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 78 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 62 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-SUBSD_XMM1_XMM0           | F2 0F 5C C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 44 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-SQRTPD_XMM0               | 66 0F 51 C0 
-MOV_STK_XMM0              | F2 0F 11 44 24 00 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-SUBSD_XMM1_XMM0           | F2 0F 5C C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 40 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 61 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-MULSD_XMM1_XMM0           | F2 0F 59 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-DIVSD_XMM1_XMM0           | F2 0F 5E C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 79 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 78 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | FF CD 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 79 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | AF CD 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(RAX) MOV_REG_STK         | 48 8B 04 24 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-RET                       | C3 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 62 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-SUBSD_XMM1_XMM0           | F2 0F 5C C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 40 
-(R13) PUSH_REG            | 41 55 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 61 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-MULSD_XMM1_XMM0           | F2 0F 59 C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-MOV_XMM1_STK              | F2 0F 10 4C 24 08 
-DIVSD_XMM1_XMM0           | F2 0F 5E C8 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_STK_XMM1              | F2 0F 11 4C 24 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 78 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_XMM0_STK              | F2 0F 10 44 24 00 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-MOV_MEM_XMM0              | F2 41 0F 11 45 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 78 00 00 00 00 00 00 00 
-(R13) SHL_REG             | 49 C1 E5 
-VALUE                     | 03 
-(R12) ADD_R13_REG         | 4D 01 E5 
-MOV_R13_RAM               | 4D 8B 6D 00 
-(R13) PUSH_REG            | 41 55 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | 81 CC 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(RAX) MOV_REG_STK         | 48 8B 04 24 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-RET                       | C3 
-JMP                       | E9 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 24 FE 40 
-(R13) PUSH_REG            | 41 55 
-LEA_RDI_STK_ARG           | 48 8D 3C 24 
-PUSHA                     | 50 53 51 52 41 54 41 52 
-(RBP) PUSH_REG            | 40 55 
-MOV_RBP_RSP               | 48 89 E5 
-ALIGN_STK                 | 48 83 E4 F0 
-(RSP) SUB_REG_IMM         | 48 81 EC 
-VALUE                     | 08 00 00 00 
-(RBP) PUSH_REG            | 40 55 
-CALL                      | E8 
-VALUE                     | 1F CC 4C FF 
-(RBP) POP_REG             | 40 5D 
-MOV_RSP_RBP               | 48 89 EC 
-(RBP) POP_REG             | 40 5D 
-POPA                      | 41 5A 41 5C 5A 59 5B 58 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-(R13) MOV_REG_IMM         | 49 BD 
-VALUE                     | 00 00 00 00 00 00 00 00 
-(R13) PUSH_REG            | 41 55 
-(RAX) MOV_REG_STK         | 48 8B 04 24 
-(RSP) ADD_REG_IMM         | 48 81 C4 
-VALUE                     | 08 00 00 00 
-RET                       | C3 
-(R10) PUSH_REG            | 41 52 
-RET                       | C3 
+VALUE                     | 4B 00 00 00 
 VALUE                     | 05 00 00 00 
-VALUE                     | 5C 03 00 00 
-VALUE                     | 45 02 00 00 
-VALUE                     | 11 00 00 00 
-VALUE                     | 0C 00 00 00 
-VALUE                     | 0A 00 00 00 
-VALUE                     | 74 02 00 00 
-VALUE                     | 65 01 00 00 
-VALUE                     | 11 00 00 00 
-VALUE                     | 0C 00 00 00 
-VALUE                     | 0A 00 00 00 
-VALUE                     | AB 04 00 00 
-VALUE                     | D5 00 00 00 
-VALUE                     | 11 00 00 00 
-VALUE                     | 0C 00 00 00 
-VALUE                     | 0A 00 00 00 
-VALUE                     | 49 05 00 00 
-VALUE                     | 45 00 00 00 
-VALUE                     | E8 00 00 00 
-VALUE                     | C2 02 00 00 
-VALUE                     | 29 01 00 00 
-VALUE                     | 5D 00 00 00 
+VALUE                     | 3A FF FF FF 

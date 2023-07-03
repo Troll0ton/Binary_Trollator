@@ -722,7 +722,7 @@ void translateDump (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     uint32_t funct_ptr = (uint64_t) trollDump - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (funct_ptr, SIZE_OF_PTR);
 
-    writeEpilogue (x64_code, log_file);                                        // DUMP IS NOT SUPPORTED IN ELF
+    writeEpilogue (x64_code, log_file);                                       
 }
 
 //-----------------------------------------------------------------------------

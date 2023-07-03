@@ -1,7 +1,7 @@
 //! @file IR-parser.h
 
-#ifndef IRPARSER_H
-#define IRPARSER_H
+#ifndef IR_PARSER_H
+#define IR_PARSER_H
 
 //-----------------------------------------------------------------------------
 
@@ -66,11 +66,11 @@ typedef union Address
 
 typedef struct IR_node
 {
-    uint32_t     command;
-    Imm_val      imm_val;
-    Address      address;
-    uint8_t      reg_num;
-    unsigned int memory_flag : 1;
+    uint32_t command;
+    Imm_val  imm_val;
+    Address  address;
+    uint8_t  reg_num;
+    uint32_t memory_flag : 1;
 } IR_node;
 
 //-----------------------------------------------------------------------------
@@ -103,4 +103,4 @@ void guestCodeDtor (Guest_code *bin_code);
 
 //-----------------------------------------------------------------------------
 
-#endif //IRPARSER_H
+#endif //IR_PARSER_H
