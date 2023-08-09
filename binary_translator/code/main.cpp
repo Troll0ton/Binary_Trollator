@@ -7,30 +7,9 @@
 
 int main ()
 {
-    printf ("-- trollating . . . . . . \n\n");
-
     FILE *log_file = fopen ("binary_translator/dump/log_file.txt", "w+");
 
-    FILE *guest_file = fopen ("processor/COMMON/files/code.bin","rb");
-    checkFilePtr (guest_file);
-    
-    Guest_code *guest_code = readCodeFile (guest_file, log_file);
-    
-    int bin_size = guest_code->size;
-    
-    IR *ir = translateGuestToIr (guest_code, log_file);
-    irDump (ir, log_file);
-
-    guestCodeDtor (guest_code);
-    fclose (guest_file);
-    
-    X64_code *X64_code = translateIrToX64 (ir, bin_size, log_file);
-    irDtor (ir);
-
-    fclose (X64_code->dump_file);
-    fclose (log_file);
-
-    printf ("-- trollating complete!\n\n");
+    X64_code *X64_code = translateBinCode ("processor/COMMON/files/code.bin", log_file);
                                                                     
     #ifdef ELF_MODE
     createELF (X64_code);
@@ -39,8 +18,6 @@ int main ()
     #endif
     
     x64CodeDtor (X64_code);
-
-    printf ("-- finishing\n\n");
 
     return 0;
 }

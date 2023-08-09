@@ -46,7 +46,7 @@
 #define checkFilePtr(name)                                                  \
     if(!name)                                                               \
     {                                                                       \
-        err_print ("ERROR: can't open %s, in file: %s, line: %d\n\n",       \
+        err_print ("ERROR: %s allocation, in file: %s, line: %d\n\n",       \
                     #name,                                                  \
                     __FILE__,                                               \
                     __LINE__                                         );     \

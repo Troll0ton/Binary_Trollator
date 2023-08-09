@@ -3,6 +3,36 @@
 
 //-----------------------------------------------------------------------------
 
+X64_code *translateBinCode (char *guest_code_file_name, FILE *log_file)
+{
+    printf ("-- trollating . . . . . . \n\n");
+
+    FILE *guest_file = fopen ("processor/COMMON/files/code.bin","rb");
+    checkFilePtr (guest_file);
+    
+    Guest_code *guest_code = readCodeFile (guest_file, log_file);
+    
+    int bin_size = guest_code->size;
+    
+    IR *ir = translateGuestToIr (guest_code, log_file);
+    irDump (ir, log_file);
+
+    guestCodeDtor (guest_code);
+    fclose (guest_file);
+    
+    X64_code *x64_code = translateIrToX64 (ir, bin_size, log_file);
+    irDtor (ir);
+
+    fclose (x64_code->dump_file);
+    fclose (log_file);
+
+    printf ("-- trollating complete!\n\n");
+
+    return x64_code;
+}
+
+//-----------------------------------------------------------------------------
+
 #define CURR_IR_NODE ir->buffer[i]
 
 X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
@@ -13,7 +43,8 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 
     X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE, log_file);
     x64DumpHeader (x64_code, log_file);
-                                                                                 
+
+    // GuestMem                                                                             
     Memory *memory = memoryCtor (PAGE_SIZE, PAGE_SIZE, log_file);              // we can store only MEMORY_SIZE / 8 nums in memory
     
     saveDataAddress (x64_code, memory->buffer, log_file);                      // save absolute address of RAM in R12 
@@ -44,6 +75,7 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 
 X64_code *x64CodeCtor (int init_size, int alignment, FILE *log_file)
 {
+    // ?
     X64_code *x64_code = (X64_code*) calloc (1, sizeof (X64_code));
     checkAlloc (x64_code);
 
@@ -111,13 +143,15 @@ void memoryDtor (Memory *memory)
 
 //-----------------------------------------------------------------------------
 
-void writePrologue (X64_code *x64_code, FILE *log_file)
+void saveCtx (X64_code *x64_code, FILE *log_file)
 {
+    // saveCtx
     uint64_t mask = 0;
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     writeOpcode (PUSHA, 0);                                                      // create lite version of stack's frame
 
+    //
     mask = makeRegMask (PUSH_REG, RBP_ID);
     writeOpcode (PUSH_REG, mask);
 
@@ -134,7 +168,7 @@ void writePrologue (X64_code *x64_code, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
-void writeEpilogue (X64_code *x64_code, FILE *log_file) 
+void loadCtx (X64_code *x64_code, FILE *log_file) 
 {
     uint64_t mask = 0;
     char op_name[MAX_LEN_OF_LINE] = { 0 };
@@ -501,6 +535,7 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
 
 void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {  
+    // is_mem_acess
     if(curr_node->memory_flag)
     {
         translatePushMemory (x64_code, curr_node, log_file);
@@ -652,13 +687,13 @@ void translateIn (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     writeValue (8, SIZE_OF_NUM);
 
     writeOpcode (LEA_RDI_STK_ARG, 0);                                           // save ptr in rdi (as first argument of function)
-    writePrologue (x64_code, log_file);
+    saveCtx (x64_code, log_file);
 
     writeOpcode (CALL, 0);                                                              
     uint32_t ptr = (uint64_t) doubleScanf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (ptr, SIZE_OF_PTR);
 
-    writeEpilogue (x64_code, log_file);
+    loadCtx (x64_code, log_file);
 }
 
 //-----------------------------------------------------------------------------
@@ -677,14 +712,14 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     mask = makeRegMask (CVTTSD2SI_REG, RAX_ID);                                // cvttsd2si reg, xmm0 <- translate double to int
     writeOpcode (CVTTSD2SI_REG, mask);
 
-    writePrologue (x64_code, log_file);
+    saveCtx (x64_code, log_file);
 
     writeOpcode (CALL, 0);
                                                                                
     uint32_t ptr = (uint64_t) FUNCT_ADDR - (uint64_t)(x64_code->curr_pos - x64_code->buffer + TEXT_ADDR + SIZE_OF_PTR); 
     writeValue (ptr, SIZE_OF_PTR);
 
-    writeEpilogue (x64_code, log_file); 
+    loadCtx (x64_code, log_file); 
 
     mask = makeRegMask (POP_REG, RAX_ID);
     writeOpcode (POP_REG, mask); 
@@ -695,13 +730,14 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
     #else
     writeOpcode (LEA_RDI_STK_ARG, 0);                                          // save ptr in rdi (as first argument of function)
-    writePrologue (x64_code, log_file);
+    saveCtx (x64_code, log_file);
 
-    writeOpcode (CALL, 0);                                                                
+    writeOpcode (CALL, 0);
+    // offset                                                                
     uint32_t ptr = (uint64_t) doublePrintf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (ptr, SIZE_OF_PTR);
 
-    writeEpilogue (x64_code, log_file); 
+    loadCtx (x64_code, log_file); 
 
     mask = makeRegMask (ADD_REG_IMM, RSP_ID);                                  // pull out already printed number
     writeOpcode (ADD_REG_IMM, mask);
@@ -716,13 +752,13 @@ void translateDump (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     uint64_t mask = 0;
     char op_name[MAX_LEN_OF_LINE] = { 0 };
     
-    writePrologue (x64_code, log_file);
+    saveCtx (x64_code, log_file);
 
     writeOpcode (CALL, 0);                                                       // You can change troll_print on your own purposes
     uint32_t funct_ptr = (uint64_t) trollDump - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
     writeValue (funct_ptr, SIZE_OF_PTR);
 
-    writeEpilogue (x64_code, log_file);                                       
+    loadCtx (x64_code, log_file);                                       
 }
 
 //-----------------------------------------------------------------------------

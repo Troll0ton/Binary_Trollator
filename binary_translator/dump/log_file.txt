@@ -4,7 +4,7 @@ __________|Read Guest code|__________
 
 - open the code.bin                  
 
-    - guest code size: 153   
+    - guest code size: 737   
 
     - code.bin SIGNATURE: BACAFE
 
@@ -14,9 +14,9 @@ __________|Translating to IR|__________
 
 - handle guest code                    
 
-    - ir start size: 153
+    - ir start size: 737
 
-    - ir final size: 22       
+    - ir final size: 110       
 
 - successful translating to IR
 

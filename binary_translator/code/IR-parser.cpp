@@ -86,6 +86,7 @@ void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
+// translateInstrToIr
 int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
 {
     int curr_cmd = guest_code->buffer[curr_pos];
