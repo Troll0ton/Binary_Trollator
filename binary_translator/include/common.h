@@ -17,15 +17,16 @@
 
 //#define NDEBUG 1
 //#define ELF_MODE 1
+//#define DETAILED 1
 #define DELETED 0xDEDAC
-
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
 #endif
 
 //-----------------------------------------------------------------------------
 
-#define log_print(...) fprintf (log_file, __VA_ARGS__)
+#define log_print(...) printf (__VA_ARGS__);            \
+                       fprintf (log_file, __VA_ARGS__);  
 
 #define err_print(...) fprintf (stderr,   __VA_ARGS__); \
                        fprintf (log_file, __VA_ARGS__); 

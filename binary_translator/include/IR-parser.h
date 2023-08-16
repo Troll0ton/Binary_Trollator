@@ -20,6 +20,14 @@ enum GUEST_CODE_INFO
 
 //-----------------------------------------------------------------------------
 
+enum IR_INFO
+{
+    IR_INIT_SIZE    = 100,
+    IR_INCREASE_PAR = 100,
+};
+
+//-----------------------------------------------------------------------------
+
 enum GUEST_CODE_BIT_MASKS
 {
     MASK_IMM = 0x20,
@@ -78,6 +86,7 @@ typedef struct IR_node
 typedef struct IR
 {
     IR_node *buffer;
+    int      capacity;
     int      size;
 } IR;
 
@@ -87,17 +96,19 @@ Guest_code *readCodeFile (FILE *code_file, FILE *log_file);
 
 IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file);
 
-void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file);
-
 void translateGuestJmpTargets (IR *ir, FILE *log_file);
 
 void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file);
 
-int handleBinMask (IR_node *ir_node, Guest_code *bin_code, int curr_pos);
+int translateInstrToIr (IR_node *ir_node, Guest_code *bin_code, int curr_pos);
 
 void irDump (IR *ir, FILE *log_file);
 
-void irDtor (IR *ir);
+IR *irCtor (FILE *log_file);
+
+void irResize (IR *ir, FILE *log_file);
+
+void irDtor (IR *ir, FILE *log_file);
 
 void guestCodeDtor (Guest_code *bin_code);
 

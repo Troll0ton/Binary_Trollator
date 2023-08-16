@@ -21,7 +21,7 @@ X64_code *translateBinCode (char *guest_code_file_name, FILE *log_file)
     fclose (guest_file);
     
     X64_code *x64_code = translateIrToX64 (ir, bin_size, log_file);
-    irDtor (ir);
+    irDtor (ir, log_file);
 
     fclose (x64_code->dump_file);
     fclose (log_file);

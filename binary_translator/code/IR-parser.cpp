@@ -40,54 +40,39 @@ Guest_code *readCodeFile (FILE *code_file, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
-#define CURR_IR_NODE ir->buffer[num_cmd]
+#define CURR_IR_NODE ir->buffer[ir->size]
 
 IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file)
 {
-    log_print ("__________|Translating to IR|__________\n\n"
-               "- handle guest code                    \n\n");
+    log_print ("- translating to IR\n\n");
 
-    IR *ir = (IR*) calloc (1, sizeof (IR));
-    checkAlloc (ir);
+    IR *ir = irCtor (log_file);
 
-    ir->buffer = (IR_node*) calloc (guest_code->size, sizeof (IR_node));
-    checkAlloc (ir->buffer);
+    // skip signature
+    for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < guest_code->size; curr_pos++)
+    {       
+        irResize (ir, log_file);
 
-    log_print ("    - ir start size: %d\n\n", guest_code->size);
+        CURR_IR_NODE.address.guest = curr_pos;                                 // this is position in guest code
 
-    handleGuestCode (ir, guest_code, log_file);
+        curr_pos += translateInstrToIr (&CURR_IR_NODE, guest_code, curr_pos);            
 
-    log_print ("    - ir final size: %d       \n\n"  
-               "- successful translating to IR\n\n",
-                ir->size + 1                        );
+        ir->size++;
+    }
+
+    translateGuestJmpTargets (ir, log_file);
+
+    log_print ("- successful translating to IR\n\n");
 
     return ir;
 }
 
-//-----------------------------------------------------------------------------
-
-void handleGuestCode (IR *ir, Guest_code *guest_code, FILE *log_file)
-{
-    int num_cmd = 0;
-                                                                               // skip signature
-    for(int curr_pos = SIZE_OF_CODE_SIGNATURE; curr_pos < guest_code->size; curr_pos++)
-    {       
-        CURR_IR_NODE.address.guest = curr_pos;                                 // this is position in guest code
-
-        curr_pos += handleBinMask (&ir->buffer[num_cmd], guest_code, curr_pos);            
-
-        num_cmd++;
-    }
-
-    ir->size = num_cmd;
-
-    translateGuestJmpTargets (ir, log_file);
-}
+#undef CURR_IR_NODE
 
 //-----------------------------------------------------------------------------
 
 // translateInstrToIr
-int handleBinMask (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
+int translateInstrToIr (IR_node *ir_node, Guest_code *guest_code, int curr_pos)
 {
     int curr_cmd = guest_code->buffer[curr_pos];
     int offset   = 0;
@@ -139,6 +124,8 @@ void translateGuestJmpTargets (IR *ir, FILE *log_file)                         /
 }
 
 //-----------------------------------------------------------------------------
+
+#define CURR_IR_NODE ir->buffer[num_cmd]
 
 void searchForTarget (IR *ir, IR_node *ir_node, FILE *log_file)
 {
@@ -217,10 +204,49 @@ void irDump (IR *ir, FILE *log_file)
 
 //-----------------------------------------------------------------------------
 
-void irDtor (IR *ir)
+IR *irCtor (FILE *log_file)
+{
+    IR *ir = (IR*) calloc (1, sizeof (IR));
+    checkAlloc (ir);
+
+    ir->buffer = (IR_node*) calloc (IR_INIT_SIZE, sizeof (IR_node));
+    checkAlloc (ir->buffer);
+
+    ir->capacity = IR_INIT_SIZE;
+
+    return ir;
+}
+
+//-----------------------------------------------------------------------------
+
+void irResize (IR *ir, FILE *log_file)
+{
+    if(ir->capacity <= ir->size)
+    {
+        #ifndef NDEBUG
+        log_print ("IR was resized | prev capacity: %d, curr capacity: %d\n\n",
+                    ir->capacity, ir->capacity + IR_INCREASE_PAR               );
+        #endif
+
+        ir->capacity += IR_INCREASE_PAR;
+
+        ir->buffer = (IR_node*) realloc (ir->buffer, ir->capacity * sizeof (IR_node));
+    }
+} 
+
+//-----------------------------------------------------------------------------
+
+void irDtor (IR *ir, FILE *log_file)
 {
     free (ir->buffer);
-    ir->size = DELETED;
+
+    #ifndef NDEBUG
+    log_print ("IR was deleted | prev size: %d, prev capacity: %d\n\n",
+                ir->size, ir->capacity                                 );
+    #endif
+
+    ir->capacity = DELETED;
+    ir->size     = DELETED;
 }
 
 //-----------------------------------------------------------------------------

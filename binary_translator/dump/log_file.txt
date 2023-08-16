@@ -4,19 +4,13 @@ __________|Read Guest code|__________
 
 - open the code.bin                  
 
-    - guest code size: 737   
+    - guest code size: 153   
 
     - code.bin SIGNATURE: BACAFE
 
 - successful copying
 
-__________|Translating to IR|__________
-
-- handle guest code                    
-
-    - ir start size: 737
-
-    - ir final size: 110       
+- translating to IR
 
 - successful translating to IR
 
@@ -31,4 +25,6 @@ __________|Translating to IR|__________
     - handleX64JmpTargets
 
 - bin translation complete!
+
+IR was deleted | prev size: 21, prev capacity: 100
 
