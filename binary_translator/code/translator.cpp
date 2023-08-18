@@ -8,19 +8,24 @@ X64_code *translateBinCode (char *guest_code_file_name, FILE *log_file)
     printf ("-- trollating . . . . . . \n\n");
 
     FILE *guest_file = fopen ("processor/COMMON/files/code.bin","rb");
-    checkFilePtr (guest_file);
+
+    if(!guest_file)
+    {
+        showError ("guest_file opening");
+    }
     
-    Guest_code *guest_code = readCodeFile (guest_file, log_file);
+    Guest_code *guest_code = readGuestFile (guest_file, log_file);
     
-    int bin_size = guest_code->size;
+    int saved_size_guest_code = guest_code->size;
     
-    IR *ir = translateGuestToIr (guest_code, log_file);
+    IR *ir = irCtor (log_file);
+    parseGuestCode (guest_code, ir, log_file);
     irDump (ir, log_file);
 
     guestCodeDtor (guest_code);
     fclose (guest_file);
     
-    X64_code *x64_code = translateIrToX64 (ir, bin_size, log_file);
+    X64_code *x64_code = translateIrToX64 (ir, saved_size_guest_code, log_file);
     irDtor (ir, log_file);
 
     fclose (x64_code->dump_file);
@@ -39,12 +44,11 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 {
     char cmd_dump_name[MAX_LEN_OF_LINE] = { 0 };
 
-    log_print ("- translate from IR to x64 . . . .\n\n");
+    logPrint ("- translate from IR to x64 . . . .\n\n");
 
     X64_code *x64_code = x64CodeCtor (X64_CODE_INIT_SIZE, PAGE_SIZE, log_file);
     x64DumpHeader (x64_code, log_file);
-
-    // GuestMem                                                                             
+                                                                         
     Memory *memory = memoryCtor (PAGE_SIZE, PAGE_SIZE, log_file);              // we can store only MEMORY_SIZE / 8 nums in memory
     
     saveDataAddress (x64_code, memory->buffer, log_file);                      // save absolute address of RAM in R12 
@@ -66,7 +70,7 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 
     memoryDtor (memory);
 
-    log_print ("- bin translation complete!\n\n");
+    logPrint ("- bin translation complete!\n\n");
 
     return x64_code;
 }
@@ -75,16 +79,23 @@ X64_code *translateIrToX64 (IR *ir, int bin_size, FILE *log_file)
 
 X64_code *x64CodeCtor (int init_size, int alignment, FILE *log_file)
 {
-    // ?
     X64_code *x64_code = (X64_code*) calloc (1, sizeof (X64_code));
-    checkAlloc (x64_code);
+
+    if(!x64_code)
+    {
+        showError ("x64_code allocation");
+    }
 
     x64_code->buffer   = (char*) alignedCalloc (PAGE_SIZE, init_size, log_file); 
     x64_code->curr_pos = x64_code->buffer;
     x64_code->capacity = init_size;                                            // Because of unknowing of the final size, the buffer is self-expanding 
 
     x64_code->dump_file = fopen ("binary_translator/dump/x64_dump.txt", "w+");
-    checkFilePtr (x64_code->dump_file);
+
+    if(!x64_code->dump_file)
+    {
+        showError ("x64_code->dump_file opening");
+    }
 
     return x64_code;
 }
@@ -121,10 +132,18 @@ void x64CodeDtor (X64_code *x64_code)
 Memory *memoryCtor (int size, int alignment, FILE *log_file)
 {
     Memory *memory = (Memory*) calloc (1, sizeof (Memory));
-    checkAlloc (memory);
+
+    if(!memory)
+    {
+        showError ("emulation memory allocation");
+    }
 
     memory->buffer = (char*) alignedCalloc (PAGE_SIZE, size, log_file);
-    checkAlloc (memory->buffer);
+
+    if(!memory->buffer)
+    {
+        showError ("emulation memory->buffer allocation");
+    }
 
     memory->size = size;
 
@@ -145,13 +164,11 @@ void memoryDtor (Memory *memory)
 
 void saveCtx (X64_code *x64_code, FILE *log_file)
 {
-    // saveCtx
     uint64_t mask = 0;
     char op_name[MAX_LEN_OF_LINE] = { 0 };
 
     writeOpcode (PUSHA, 0);                                                      // create lite version of stack's frame
 
-    //
     mask = makeRegMask (PUSH_REG, RBP_ID);
     writeOpcode (PUSH_REG, mask);
 
@@ -208,7 +225,11 @@ void saveDataAddress (X64_code *x64_code, char *memory, FILE *log_file)        /
 void *alignedCalloc (int alignment, int size, FILE *log_file)
 {
     void *buffer = (void*) aligned_alloc (alignment, size);
-    checkAlloc (buffer);
+
+    if(!buffer)
+    {
+        showError ("aligned allocation");
+    }
 
     memset (buffer, 0, size);
 
@@ -225,7 +246,7 @@ void *alignedCalloc (int alignment, int size, FILE *log_file)
 
 void handleX64JmpTargets (X64_code *x64_code, IR *ir, FILE *log_file)
 {
-    log_print ("    - handleX64JmpTargets\n\n");
+    logPrint ("    - handleX64JmpTargets\n\n");
 
     for(int i = 0; i < ir->size; i++) 
     {
@@ -287,7 +308,7 @@ void translateTargetPtr (X64_code *x64_code, IR *ir, IR_node ir_node, FILE *log_
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size, FILE *log_file)
+void writeCode(X64_code *x64_code, uint64_t value, const char *name, int size, FILE *log_file)
 {
     memcpy   (x64_code->curr_pos, &value, size);
     dumpCode (x64_code, name, size, log_file);
@@ -311,7 +332,7 @@ void dumpCode (X64_code *x64_code, const char *name, int size, FILE *log_file)
 
     for(int i = 0; i < size; i++)
     {
-        uint32_t num = (uint32_t) (uint8_t) x64_code->curr_pos[i];
+        uint32_t num = (uint8_t) x64_code->curr_pos[i];
         fprintf (x64_code->dump_file, "%02X ", num);
     }
 
@@ -396,7 +417,7 @@ void translateCmd (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
             translateMathFunctions (x64_code, curr_node, log_file);
             break;
         default:
-            log_print ("COMMON OCCASSION - UNKNOWN COMMAND!\n\n");
+            logPrint ("COMMON OCCASSION - UNKNOWN COMMAND!\n\n");
             break;
     }
 }
@@ -420,7 +441,7 @@ void translateReg (IR_node *curr_node, FILE *log_file)                         /
             curr_node->reg_num = RDX_ID;
             break; 
         default:
-            log_print ("UNKNOWN REG VALUE IN IR!\n\n");
+            logPrint ("UNKNOWN REG VALUE IN IR!\n\n");
             break;
     }
 }
@@ -535,8 +556,7 @@ void calculateMemoryAddrPushPop (X64_code *x64_code,
 
 void translatePush (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {  
-    // is_mem_acess
-    if(curr_node->memory_flag)
+    if(curr_node->is_mem_access)
     {
         translatePushMemory (x64_code, curr_node, log_file);
     }
@@ -589,7 +609,7 @@ void translatePushRegImm (X64_code *x64_code, IR_node *curr_node, FILE *log_file
 
 void translatePop (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 {
-    if(curr_node->memory_flag)                                                 // separate into two occasions (similar to push)
+    if(curr_node->is_mem_access)                                                 // separate into two occasions (similar to push)
     {
         translatePopMemory (x64_code, curr_node, log_file);
     }
@@ -664,7 +684,7 @@ void translateArithmOperations (X64_code *x64_code, IR_node *curr_node, FILE *lo
             writeOpcode (DIVSD_XMM1_XMM0, 0);
             break;
         default:
-            log_print ("ARITHM OPERATION - UNKNOWN COMMAND!\n");
+            logPrint ("ARITHM OPERATION - UNKNOWN COMMAND!\n");
             break;
     }
 
@@ -716,8 +736,8 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
 
     writeOpcode (CALL, 0);
                                                                                
-    uint32_t ptr = (uint64_t) FUNCT_ADDR - (uint64_t)(x64_code->curr_pos - x64_code->buffer + TEXT_ADDR + SIZE_OF_PTR); 
-    writeValue (ptr, SIZE_OF_PTR);
+    uint32_t offset = (uint64_t) FUNCT_ADDR - (uint64_t)(x64_code->curr_pos - x64_code->buffer + TEXT_ADDR + SIZE_OF_PTR); 
+    writeValue (offset, SIZE_OF_PTR);
 
     loadCtx (x64_code, log_file); 
 
@@ -732,10 +752,9 @@ void translateOut (X64_code *x64_code, IR_node *curr_node, FILE *log_file)
     writeOpcode (LEA_RDI_STK_ARG, 0);                                          // save ptr in rdi (as first argument of function)
     saveCtx (x64_code, log_file);
 
-    writeOpcode (CALL, 0);
-    // offset                                                                
-    uint32_t ptr = (uint64_t) doublePrintf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
-    writeValue (ptr, SIZE_OF_PTR);
+    writeOpcode (CALL, 0);                                                             
+    uint32_t offset = (uint64_t) doublePrintf - (uint64_t)(x64_code->curr_pos + SIZE_OF_PTR); 
+    writeValue (offset, SIZE_OF_PTR);
 
     loadCtx (x64_code, log_file); 
 
@@ -798,7 +817,7 @@ void translateConditionalJmps (X64_code *x64_code, IR_node *curr_node, FILE *log
             mask = makeJmpMask (MASK_JNE);
             break;
         default:
-            log_print ("CONDITIONAL JUMP - UNKNOWN COMMAND!\n");
+            logPrint ("CONDITIONAL JUMP - UNKNOWN COMMAND!\n");
             break;
     }
 
@@ -857,7 +876,7 @@ void translateMathFunctions (X64_code *x64_code, IR_node *curr_node, FILE *log_f
 
 void x64DumpHeader (X64_code *x64_code, FILE *log_file)                        // Create header in dump file (some useful information about code will represent here)
 {
-    log_print ("- dump x64 code\n\n");
+    logPrint ("- dump x64 code\n\n");
 
     fprintf (x64_code->dump_file, 
             "-----------------------------------------------------------------------------\n"

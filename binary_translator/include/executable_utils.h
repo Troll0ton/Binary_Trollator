@@ -33,6 +33,8 @@ enum ELF_INFO
 
 void programHeaderInit (char **curr_pos, int pos, Elf64_Word p_flags);
 
+void elfHeaderInit (char **curr_pos);
+
 void runCode (char *code, int size);
 
 void createELF (X64_code *x64_code);

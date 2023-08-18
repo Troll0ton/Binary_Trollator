@@ -18,23 +18,19 @@
 //                                WRITING
 //-----------------------------------------------------------------------------
 
-// do { } while ( 0 )
-// if () makeRegMask()
-// magic constant
 #define makeRegMask(cmd, reg)                         \
     makeRegMask_(reg, cmd##_ID_POS, cmd##_REX_B_POS); \
-    strncat (op_name, reg_name[reg], 30);
+    strncat (op_name, reg_name[reg], MAX_LEN_OF_LINE);
                                                         
 
 #define writeOpcode(cmd, mask)                                                \
     strncat (op_name, #cmd, 70);                                              \
-    writeCode_(x64_code, cmd##_OPCODE | mask, op_name, cmd##_SIZE, log_file); \
+    writeCode(x64_code, cmd##_OPCODE | mask, op_name, cmd##_SIZE, log_file); \
     memset (op_name, '\0', MAX_LEN_OF_LINE); 
 
 
 #define writeValue(value, size)                          \
-    writeCode_(x64_code, value, "VALUE", size, log_file);
-
+    writeCode(x64_code, value, "VALUE", size, log_file);
 
 //-----------------------------------------------------------------------------
 
@@ -72,7 +68,6 @@ enum CODE_RESIZE_INFO
 enum X64_DATA_TYPES
 {
     BYTE             = 1,
-    // ??
     SIZE_OF_PTR      = 4 * BYTE,                                              
     SIZE_OF_ABS_PTR  = sizeof (void*),
     SIZE_OF_LONG_NUM = sizeof (double),
@@ -164,7 +159,7 @@ void translateRet (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
 void translateMathFunctions (X64_code *X64_code, IR_node *curr_node, FILE *log_file);
 
-void writeCode_(X64_code *x64_code, uint64_t value, const char *name, int size, FILE *log_file);
+void writeCode(X64_code *x64_code, uint64_t value, const char *name, int size, FILE *log_file);
 
 void dumpCode (X64_code *X64_code, const char *name, int size, FILE *log_file);
 

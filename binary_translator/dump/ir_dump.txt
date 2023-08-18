@@ -2,98 +2,106 @@
                        Intermediate Representation Dump                      
 -----------------------------------------------------------------------------
 
-- intermediate representation size: 21
+- intermediate representation size: 23
 
 - IR node 0
        - command:   push
-       - imm_value: 6.0 
+       - imm_value: 1000.0 
        - ram_flag:  0     
 - IR node 1
        - command:   pop
        - imm_value: 0.0 
        - ram_flag:  0     
-       - reg:       RAX
+       - reg:       RBX
 - IR node 2
        - command:   push
-       - imm_value: 1.0 
-       - ram_flag:  0     
-- IR node 3
-       - command:   pop
        - imm_value: 0.0 
        - ram_flag:  0     
        - reg:       RBX
+- IR node 3
+       - command:   push
+       - imm_value: 1.0 
+       - ram_flag:  0     
 - IR node 4
-       - command:   call
-       - imm_value: 60.0 
+       - command:   sub
+       - imm_value: 0.0 
        - ram_flag:  0     
 - IR node 5
-       - command:   push
+       - command:   pop
        - imm_value: 0.0 
        - ram_flag:  0     
        - reg:       RBX
 - IR node 6
-       - command:   out
+       - command:   push
        - imm_value: 0.0 
        - ram_flag:  0     
+       - reg:       RBX
 - IR node 7
-       - command:   hlt
+       - command:   push
        - imm_value: 0.0 
        - ram_flag:  0     
 - IR node 8
-       - command:   push
-       - imm_value: 0.0 
+       - command:   jb
+       - imm_value: 168.0 
        - ram_flag:  0     
-       - reg:       RAX
 - IR node 9
        - command:   push
-       - imm_value: 0.0 
+       - imm_value: 40000.0 
        - ram_flag:  0     
-       - reg:       RBX
 - IR node 10
-       - command:   mul
-       - imm_value: 0.0 
-       - ram_flag:  0     
-- IR node 11
        - command:   pop
        - imm_value: 0.0 
        - ram_flag:  0     
-       - reg:       RBX
-- IR node 12
+       - reg:       RAX
+- IR node 11
        - command:   push
        - imm_value: 0.0 
        - ram_flag:  0     
        - reg:       RAX
-- IR node 13
+- IR node 12
        - command:   push
        - imm_value: 1.0 
        - ram_flag:  0     
-- IR node 14
+- IR node 13
        - command:   sub
        - imm_value: 0.0 
        - ram_flag:  0     
-- IR node 15
+- IR node 14
        - command:   pop
+       - imm_value: 0.0 
+       - ram_flag:  0     
+       - reg:       RAX
+- IR node 15
+       - command:   push
        - imm_value: 0.0 
        - ram_flag:  0     
        - reg:       RAX
 - IR node 16
        - command:   push
-       - imm_value: 1.0 
+       - imm_value: 0.0 
        - ram_flag:  0     
 - IR node 17
+       - command:   jb
+       - imm_value: 159.0 
+       - ram_flag:  0     
+- IR node 18
+       - command:   jmp
+       - imm_value: 95.0 
+       - ram_flag:  0     
+- IR node 19
+       - command:   jmp
+       - imm_value: 22.0 
+       - ram_flag:  0     
+- IR node 20
        - command:   push
        - imm_value: 0.0 
        - ram_flag:  0     
-       - reg:       RAX
-- IR node 18
-       - command:   jae
-       - imm_value: 152.0 
+       - reg:       RBX
+- IR node 21
+       - command:   out
+       - imm_value: 0.0 
        - ram_flag:  0     
-- IR node 19
-       - command:   call
-       - imm_value: 60.0 
-       - ram_flag:  0     
-- IR node 20
-       - command:   ret
+- IR node 22
+       - command:   hlt
        - imm_value: 0.0 
        - ram_flag:  0     

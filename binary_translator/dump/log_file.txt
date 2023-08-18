@@ -1,18 +1,14 @@
-- traslate to IR                     
+- reading guest code file
 
-__________|Read Guest code|__________
+ - guest code size:    179
 
-- open the code.bin                  
+ - code.bin signature: BACAFE
 
-    - guest code size: 153   
+- successful reading guest code file
 
-    - code.bin SIGNATURE: BACAFE
+- parse guest code
 
-- successful copying
-
-- translating to IR
-
-- successful translating to IR
+- successful parsing guest code
 
 - generate dump IR
 
@@ -26,5 +22,5 @@ __________|Read Guest code|__________
 
 - bin translation complete!
 
-IR was deleted | prev size: 21, prev capacity: 100
+IR was deleted | prev size: 23, prev capacity: 100
 

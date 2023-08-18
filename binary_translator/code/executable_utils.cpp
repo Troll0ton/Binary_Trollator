@@ -48,16 +48,11 @@ void programHeaderInit (char **curr_pos, int pos, Elf64_Word p_flags)
     memcpy (*curr_pos, (const char*) &program_header, sizeof (Elf64_Phdr));
     *curr_pos += sizeof (Elf64_Phdr);
 }
+
 //-----------------------------------------------------------------------------
 
-void createELF (X64_code *x64_code)
+void elfHeaderInit (char **curr_pos)
 {
-    printf ("Start creating ELF\n\n");
-
-    FILE *executable = fopen ("executable", "w+");
-
-    char *elf_buffer = (char*) calloc (1, TOTAL_SIZE);
-
     Elf64_Ehdr elf_header = 
     {
         .e_ident = 
@@ -82,9 +77,22 @@ void createELF (X64_code *x64_code)
         .e_phnum     = NUM_OF_SEGMENTS, 
     };
 
-    char *curr_pos = elf_buffer;
-    memcpy (elf_buffer, (char*) &elf_header, sizeof (Elf64_Ehdr));
-    curr_pos += sizeof (Elf64_Ehdr);
+    memcpy (*curr_pos, (char*) &elf_header, sizeof (Elf64_Ehdr));
+    *curr_pos += sizeof (Elf64_Ehdr);
+}
+
+//-----------------------------------------------------------------------------
+
+void createELF (X64_code *x64_code)
+{
+    printf ("Start creating ELF\n\n");
+
+    FILE *executable = fopen ("executable", "w+");
+
+    char *elf_buffer = (char*) calloc (1, TOTAL_SIZE);
+    char *curr_pos   = elf_buffer;
+
+    elfHeaderInit (&curr_pos);
 
     printf ("Created ELF header\n\n");
     

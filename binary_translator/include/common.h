@@ -16,8 +16,7 @@
 //-----------------------------------------------------------------------------
 
 //#define NDEBUG 1
-//#define ELF_MODE 1
-//#define DETAILED 1
+#define ELF_MODE 1
 #define DELETED 0xDEDAC
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
@@ -25,33 +24,18 @@
 
 //-----------------------------------------------------------------------------
 
-#define log_print(...) printf (__VA_ARGS__);            \
-                       fprintf (log_file, __VA_ARGS__);  
+#define logPrint(...) fprintf (log_file, __VA_ARGS__);  
 
-#define err_print(...) fprintf (stderr,   __VA_ARGS__); \
-                       fprintf (log_file, __VA_ARGS__); 
-
-//-----------------------------------------------------------------------------
-
-#define checkAlloc(name)                                                    \
-    if(!name)                                                               \
-    {                                                                       \
-        err_print ("ERROR: %s allocation, in file: %s, line: %d\n\n",       \
-                    #name,                                                  \
-                    __FILE__,                                               \
-                    __LINE__                                         );     \
-    }
+#define errPrint(...) fprintf (stderr,   __VA_ARGS__); \
+                      fprintf (log_file, __VA_ARGS__); 
 
 //-----------------------------------------------------------------------------
 
-#define checkFilePtr(name)                                                  \
-    if(!name)                                                               \
-    {                                                                       \
-        err_print ("ERROR: %s allocation, in file: %s, line: %d\n\n",       \
-                    #name,                                                  \
-                    __FILE__,                                               \
-                    __LINE__                                         );     \
-    }
+#define showError(name)                                                     \
+    errPrint ("ERROR: %s allocation, in file: %s, line: %d\n\n",            \
+              #name,                                                        \
+              __FILE__,                                                     \
+              __LINE__                                          );     
 
 //-----------------------------------------------------------------------------
 

@@ -12,8 +12,8 @@
 
 enum GUEST_CODE_INFO
 {
-    SIZE_OF_INSTRUCTION         = 1,
-    SIZE_OF_ARGUMENTS_SPECIFIER = sizeof (double),
+    SIZE_OF_OPCODE         = 1,
+    SIZE_OF_ARGUMENT_SPECIFIER = sizeof (double),
     GUEST_CODE_SIGNATURE        = 0xBACAFE,
     SIZE_OF_CODE_SIGNATURE      = sizeof (int),
 };
@@ -78,7 +78,7 @@ typedef struct IR_node
     Imm_val  imm_val;
     Address  address;
     uint8_t  reg_num;
-    uint32_t memory_flag : 1;
+    uint32_t is_mem_access : 1;
 } IR_node;
 
 //-----------------------------------------------------------------------------
@@ -92,9 +92,9 @@ typedef struct IR
 
 //-----------------------------------------------------------------------------
 
-Guest_code *readCodeFile (FILE *code_file, FILE *log_file);
+Guest_code *readGuestFile (FILE *code_file, FILE *log_file);
 
-IR *translateGuestToIr (Guest_code *guest_code, FILE *log_file);
+void parseGuestCode (Guest_code *guest_code, IR *ir, FILE *log_file);
 
 void translateGuestJmpTargets (IR *ir, FILE *log_file);
 
